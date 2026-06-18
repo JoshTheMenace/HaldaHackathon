@@ -30,6 +30,15 @@ function barColor(n: number) {
 
 function cap(s: string) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
 
+function collegeShortName(college: Record<string, unknown>): string {
+  const map: Record<string, string> = {
+    asu: "ASU", byu: "BYU", caltech: "Caltech", gatech: "Georgia Tech",
+    mit: "MIT", nyu: "NYU", osu: "Ohio State", sjsu: "SJSU", unc: "UNC",
+    utep: "UTEP", uvu: "UVU", uw: "UW", boisestate: "Boise State", miamidade: "Miami Dade",
+  };
+  return map[college.slug as string] || cap(college.slug as string) || (college.name as string).split(" ")[0];
+}
+
 const FACTOR_LABELS: Record<string, string> = {
   rigor_of_coursework: "Course Rigor", gpa: "GPA", class_rank: "Class Rank",
   test_scores: "Test Scores", standardized_tests: "Test Scores",
@@ -42,6 +51,169 @@ const FACTOR_LABELS: Record<string, string> = {
   work_experience: "Work Experience", demonstrated_interest: "Demonstrated Interest",
   level_of_applicant_interest: "Demonstrated Interest",
 };
+
+function renderStatsTable(student: Record<string, unknown> | null, college: Record<string, unknown> | null): string {
+  if (!student || !college) return "";
+  const ts  = (student.test_scores  as Record<string, Record<string, number>>) || {};
+  const sel = (college.selectivity  as Record<string, number>) || {};
+  const cp  = (college.class_profile as Record<string, number>) || {};
+  const ac  = (student.academic     as Record<string, number | string>) || {};
+  const hs  = (student.high_school  as Record<string, unknown>) || {};
+  const rows: string[] = [];
+
+  const gpa = ac.gpa_unweighted as number | undefined;
+  if (gpa) {
+    const pct4 = cp.gpa_4_0_plus;
+    const range = pct4 != null ? `${Math.round(pct4 * 100)}% admitted had 4.0+` : "—";
+    let badge = "";
+    if (pct4 != null) {
+      if (gpa >= 4.0)   badge = `<span class="stats-badge sb-great">Top tier</span>`;
+      else if (gpa >= 3.75) badge = `<span class="stats-badge sb-warn">Below most</span>`;
+      else              badge = `<span class="stats-badge sb-danger">Well below</span>`;
+    }
+    const tierLabels = ["", "Very Low", "Low", "Average", "High", "Very High"];
+    const tierLabel = tierLabels[(hs.rigor_tier as number) || 0] || "";
+    const adjustCls  = hs.gpa_adjustment === "read_up" ? "sa-up" : "sa-neutral";
+    const adjustNote = hs.gpa_adjustment === "read_up"
+      ? "↑ Committee reads this GPA higher given school context"
+      : "Read at face value for this school type";
+    const schoolCtx = `<div class="school-context-row">
+      ${hs.name ? `<span class="school-chip">${hs.name}</span>` : ""}
+      ${tierLabel ? `<span class="school-chip">Rigor: ${tierLabel}</span>` : ""}
+      ${hs.ap_courses_offered ? `<span class="school-chip">${hs.ap_courses_offered} APs offered</span>` : ""}
+    </div>
+    <div class="school-context-row" style="margin-top:3px">
+      <span class="school-adjust ${adjustCls}">${adjustNote}</span>
+    </div>`;
+    rows.push(`<div class="stats-row">
+      <div class="stats-label">GPA</div>
+      <div class="stats-value">${gpa.toFixed(2)}</div>
+      <div class="stats-range">${range}</div>
+      <div>${badge}</div>
+    </div><div style="padding:0 0 10px">${schoolCtx}</div>`);
+  }
+
+  if (ts.sat) {
+    const s25 = sel.sat_math_25, s75 = sel.sat_math_75;
+    const val = ts.sat.total, mathVal = ts.sat.math;
+    const rangeStr = s25 && s75 ? `Math range: ${s25}–${s75}` : "School range N/A";
+    let badge = "";
+    if (s25 && s75 && mathVal) {
+      const mid = (s25 + s75) / 2;
+      if (mathVal >= s75)    badge = `<span class="stats-badge sb-great">Math above 75th</span>`;
+      else if (mathVal >= mid) badge = `<span class="stats-badge sb-good">Math above median</span>`;
+      else if (mathVal >= s25) badge = `<span class="stats-badge sb-warn">Math below median</span>`;
+      else                   badge = `<span class="stats-badge sb-danger">Math below 25th</span>`;
+    }
+    rows.push(`<div class="stats-row"><div class="stats-label">SAT</div><div class="stats-value">${val}</div><div class="stats-range">${rangeStr}</div><div>${badge}</div></div>`);
+  }
+  if (ts.act) {
+    const a25 = sel.act_25, a75 = sel.act_75, val = ts.act.composite;
+    const range = a25 && a75 ? `${a25} – ${a75}` : "Range N/A";
+    let badge = "";
+    if (a25 && a75) {
+      const mid = (a25 + a75) / 2;
+      if (val >= a75)    badge = `<span class="stats-badge sb-great">Above 75th</span>`;
+      else if (val >= mid) badge = `<span class="stats-badge sb-good">Above median</span>`;
+      else if (val >= a25) badge = `<span class="stats-badge sb-warn">Below median</span>`;
+      else               badge = `<span class="stats-badge sb-danger">Below 25th</span>`;
+    }
+    rows.push(`<div class="stats-row"><div class="stats-label">ACT</div><div class="stats-value">${val}</div><div class="stats-range">${range}</div><div>${badge}</div></div>`);
+  }
+  if (!rows.length) return "";
+  return `<div><div class="card-section-title neutral">Stats at a Glance</div><div class="stats-table">${rows.join("")}</div></div>`;
+}
+
+function renderFinancialAid(fa: Record<string, unknown>): string {
+  if (!fa) return "";
+  const items = [
+    { label: "Need Blind",       val: fa.need_blind,          isBool: true },
+    { label: "Meets Full Need",  val: fa.meets_full_need,     isBool: true },
+    { label: "No-Loan Policy",   val: fa.no_loan_policy,      isBool: true },
+    { label: "Merit Aid",        val: fa.merit_aid_available, isBool: true },
+    { label: "Avg Need-Based Aid", val: fa.avg_need_based_aid ? `$${(fa.avg_need_based_aid as number).toLocaleString()}` : null, isBool: false },
+  ].filter((i) => i.val !== undefined && i.val !== null);
+  const gridHTML = items.map((i) => {
+    const display = i.isBool ? (i.val ? "Yes" : "No") : i.val;
+    const cls = i.isBool ? (i.val ? "fa-yes" : "fa-no") : "";
+    return `<div class="fa-item"><div class="fa-label">${i.label}</div><div class="fa-value ${cls}">${display}</div></div>`;
+  }).join("");
+  return `<details class="fin-aid-details">
+    <summary>Financial Aid Profile</summary>
+    <div class="fin-aid-body">${gridHTML}</div>
+    ${fa.notes ? `<div class="fin-aid-notes">${fa.notes}</div>` : ""}
+  </details>`;
+}
+
+function renderHowWeEvaluate(college: Record<string, unknown>): string {
+  const af  = (college.admission_factors as Record<string, string>) || {};
+  const pol = (college.policies          as Record<string, unknown>) || {};
+  const req = (college.requirements      as Record<string, unknown>) || {};
+  const cp  = (college.class_profile     as Record<string, number>)  || {};
+  const sc  = (college.special_considerations as string[]) || [];
+
+  const groups: Record<string, string[]> = { "Very Important": [], "Important": [], "Considered": [], "Not Considered": [] };
+  Object.entries(af).forEach(([k, v]) => {
+    if (k === "source") return;
+    const label = FACTOR_LABELS[k] || k;
+    if (groups[v]) groups[v].push(label);
+  });
+
+  const tierCfg = [
+    { key: "Very Important", cls: "fpill-vi", color: "#1B6B51" },
+    { key: "Important",      cls: "fpill-i",  color: "#006B5F" },
+    { key: "Considered",     cls: "fpill-c",  color: "var(--sim-outline)" },
+  ];
+  const pillsHTML = tierCfg.filter((t) => groups[t.key].length > 0).map((t) => `
+    <div class="factor-tier-group">
+      <div class="factor-tier-label" style="color:${t.color}">${t.key}</div>
+      <div class="factor-pill-row">${groups[t.key].map((f) => `<span class="fpill ${t.cls}">${f}</span>`).join("")}</div>
+    </div>`).join("");
+
+  const nc = groups["Not Considered"];
+  const notConsideredHTML = nc.length ? `<div class="not-considered-row">
+    <span class="not-considered-label">Does not consider:</span>
+    ${nc.map((f) => `<span class="fpill fpill-nc">${f}</span>`).join("")}
+  </div>` : "";
+
+  const signals: { i: string; t: string }[] = [];
+  const demoInterest = af.demonstrated_interest || af.level_of_applicant_interest;
+  if (["Very Important", "Important"].includes(demoInterest))
+    signals.push({ i: "⚡", t: "Demonstrated interest is tracked — campus visits and direct contact matter" });
+  if (["Very Important", "Important"].includes(af.alumni_relation))
+    signals.push({ i: "🎖", t: "Legacy applicants receive meaningful advantage in committee review" });
+  if (["Very Important", "Important"].includes(af.first_generation))
+    signals.push({ i: "🌱", t: "First-generation college students receive significant additional consideration" });
+  if (["Required", "Recommended"].includes(req.interview as string))
+    signals.push({ i: "🗣", t: `Interview ${(req.interview as string || "").toLowerCase()} — carries real weight` });
+  if (pol.test_optional === false && af.test_scores === "Very Important")
+    signals.push({ i: "📝", t: "Test scores are required — no test-optional path at this institution" });
+  const signalsHTML = signals.length ? `<div class="signals-group">${signals.slice(0, 3).map((s) =>
+    `<div class="signal-item"><span class="signal-icon">${s.i}</span><span>${s.t}</span></div>`).join("")}</div>` : "";
+
+  const cpRows: { v: string; l: string }[] = [];
+  if (cp.hs_rank_top_10_pct) cpRows.push({ v: `${Math.round(cp.hs_rank_top_10_pct * 100)}%`, l: "Top 10%\nof HS class" });
+  if (cp.gpa_4_0_plus)       cpRows.push({ v: `${Math.round(cp.gpa_4_0_plus * 100)}%`,       l: "GPA\n4.0+" });
+  if (cp.gpa_3_75_to_3_99)   cpRows.push({ v: `${Math.round(cp.gpa_3_75_to_3_99 * 100)}%`,   l: "GPA\n3.75–3.99" });
+  const classProfileHTML = cpRows.length ? `<div>
+    <div class="subsection-label">Last Admitted Class</div>
+    <div class="class-profile-grid">${cpRows.map((r) => `<div class="cp-stat"><div class="cp-value">${r.v}</div><div class="cp-label">${r.l}</div></div>`).join("")}</div>
+  </div>` : "";
+
+  const reqRows: { i: string; l: string }[] = [];
+  if (req.essays_required != null)    reqRows.push({ i: req.essays_required ? "✓" : "○", l: req.essays_required ? "Essays required" : "No essay required" });
+  if (req.recommendations_required)   reqRows.push({ i: "✓", l: `${req.recommendations_required} recommendations` });
+  if (req.interview)                  reqRows.push({ i: "💬", l: `Interview: ${req.interview}` });
+  if (pol.common_app != null)         reqRows.push({ i: pol.common_app ? "✓" : "✗", l: pol.common_app ? "Common App accepted" : "Own application only" });
+  const reqHTML = reqRows.length ? `<div>
+    <div class="subsection-label">Requirements</div>
+    <div class="req-grid">${reqRows.map((r) => `<div class="req-item"><span class="req-icon">${r.i}</span><span>${r.l}</span></div>`).join("")}</div>
+  </div>` : "";
+
+  const ethosHTML = sc.length ? `<div class="ethos-quote">✦ "${sc[0]}"</div>` : "";
+
+  return `<div class="how-evaluate-section">${pillsHTML}${notConsideredHTML}${signalsHTML}${classProfileHTML}${reqHTML}${ethosHTML}</div>`;
+}
 
 function renderBullets(items: unknown[], type: "strength" | "concern" | "improve"): string {
   if (!items?.length) return "";
@@ -81,14 +253,14 @@ function renderCommitteeNote(note: string): string {
   </div>`;
 }
 
-function renderCard(r: Record<string, unknown>, college: Record<string, unknown> | null): string {
+function renderCard(r: Record<string, unknown>, college: Record<string, unknown> | null, student: Record<string, unknown> | null = null): string {
   if (r.error) return `<div class="college-card"><div class="verdict-strip" style="border-left-color:var(--sim-error)"><div class="verdict-main"><div class="verdict-college-name" style="color:var(--sim-error)">${r.college}</div><div style="font-size:13px;color:var(--sim-error);padding:8px 0">⚠ ${r.error}</div></div></div></div>`;
 
   const score = (r.score as number) || 0;
   const tc = tierColors(score);
   const bd = (r.score_breakdown as Record<string, number>) || {};
   const rate = (college as Record<string, Record<string, number>>)?.selectivity?.acceptance_rate;
-  const rateStr = rate ? `${(rate * 100).toFixed(1)}% acceptance rate` : "Acceptance rate not reported";
+  const rateStr = rate ? `${(rate * 100).toFixed(1)}% acceptance rate` : "Open admissions";
 
   const miniCats: [string, string][] = [
     ["Academic", "academic_fit"], ["Tests", "test_scores"],
@@ -153,13 +325,20 @@ function renderCard(r: Record<string, unknown>, college: Record<string, unknown>
     </div>
     <div class="card-body">
       ${narrativeBanner}
+      ${renderStatsTable(student, college)}
       ${renderBullets((r.strengths as unknown[]) || [], "strength")}
       ${renderBullets((r.concerns  as unknown[]) || [], "concern")}
       ${renderBullets((r.what_to_improve as unknown[]) || [], "improve")}
       ${renderCommitteeNote((r.committee_note as string) || "")}
+      ${college ? renderFinancialAid((college.financial_aid as Record<string, unknown>) || {}) : ""}
       ${r.profile_completeness && r.profile_completeness !== "complete"
         ? `<div class="completeness-banner">⚠ Profile status: ${(r.profile_completeness as string).toUpperCase()} — some scores are projections</div>` : ""}
     </div>
+    ${college ? `<div class="how-evaluates-divider"></div>
+    <div class="how-evaluates-outer">
+      <div class="how-evaluates-title">How ${collegeShortName(college)} Evaluates</div>
+      ${renderHowWeEvaluate(college)}
+    </div>` : ""}
   </div>`;
 }
 
@@ -199,6 +378,11 @@ export default function SimulatorClient({ colleges, students, seniors }: Props) 
   const [currentStudent, setCurrentStudent] = useState<Record<string, unknown> | null>(null);
   const [seniorFill, setSeniorFill]         = useState(false);
   const [useSample, setUseSample]           = useState(false);
+
+  const [collegeSearch, setCollegeSearch]       = useState("");
+  const [additionalColleges, setAdditionalColleges] = useState<Record<string, unknown>[]>([]);
+  const [buildingUniversity, setBuildingUniversity] = useState(false);
+  const [buildStatus, setBuildStatus]           = useState("");
 
   const haldaStudent = profile.id
     ? translateHaldaProfile(profile, seniors, seniorFill)
@@ -294,15 +478,48 @@ export default function SimulatorClient({ colleges, students, seniors }: Props) 
     }
   }, [selectedSlug, currentStudent, selectedColleges]);
 
-  const collegeBySlug = Object.fromEntries(colleges.map((c) => [c.slug, c]));
+  const allColleges = [...colleges, ...additionalColleges];
+  const collegeBySlug = Object.fromEntries(allColleges.map((c) => [c.slug, c]));
   const canRun = !!selectedSlug && selectedColleges.length > 0;
+
+  const filteredColleges = collegeSearch.trim()
+    ? allColleges.filter((c) => (c.name as string).toLowerCase().includes(collegeSearch.trim().toLowerCase()))
+    : allColleges;
+  const showBuildBtn = collegeSearch.trim().length > 0 && filteredColleges.length === 0;
+
+  async function buildUniversity(name: string) {
+    setBuildingUniversity(true);
+    setBuildStatus(`Fetching data for "${name}"…`);
+    const timer = setTimeout(() => setBuildStatus("Building acceptance committee with Claude AI…"), 2500);
+    try {
+      const resp = await fetch("/api/build_university", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      clearTimeout(timer);
+      if (!resp.ok) {
+        const err = await resp.json() as { error?: string };
+        throw new Error(err.error || "Build failed");
+      }
+      const profile = await resp.json() as Record<string, unknown>;
+      setAdditionalColleges((prev) => [...prev, profile]);
+      setCollegeSearch("");
+      toggleCollege(profile.slug as string, profile.name as string);
+    } catch (e) {
+      clearTimeout(timer);
+      alert(`Could not build university profile: ${(e as Error).message}`);
+    } finally {
+      setBuildingUniversity(false);
+    }
+  }
 
   // ── Views ────────────────────────────────────────────────────────────────
 
   const displayStudents = useSample
     ? students
     : haldaStudent
-    ? [haldaStudent, ...students]
+    ? [haldaStudent]
     : students;
 
   return (
@@ -412,12 +629,27 @@ export default function SimulatorClient({ colleges, students, seniors }: Props) 
             <div className="sim-section-label">
               Colleges <span>{selectedColleges.length} / 5 selected</span>
             </div>
+
+            {/* Search */}
+            <div className="sim-college-search-wrap">
+              <input
+                type="text"
+                className="sim-college-search"
+                placeholder="Search universities…"
+                value={collegeSearch}
+                onChange={(e) => setCollegeSearch(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+
             <div className="sim-college-list">
-              {colleges.map((c) => {
+              {filteredColleges.map((c) => {
                 const slug = c.slug as string;
                 const chosen = selectedColleges.some((x) => x.slug === slug);
                 const disabled = !chosen && selectedColleges.length >= 5;
                 const rate = (c as Record<string, Record<string, number>>).selectivity?.acceptance_rate;
+                const isNew = additionalColleges.some((a) => a.slug === slug);
                 return (
                   <div
                     key={slug}
@@ -428,15 +660,36 @@ export default function SimulatorClient({ colleges, students, seniors }: Props) 
                       {chosen && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                     </div>
                     <div className="sim-college-info">
-                      <div className="sim-college-name">{c.name as string}</div>
+                      <div className="sim-college-name">
+                        {c.name as string}
+                        {isNew && <span className="sim-ai-badge">AI-BUILT</span>}
+                      </div>
                       <div className="sim-college-rate">
-                        {rate ? `${(rate * 100).toFixed(1)}% acceptance rate` : "Acceptance rate not reported"}
+                        {rate ? `${(rate * 100).toFixed(1)}% acceptance rate` : "Open admissions"}
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Not found: show build button */}
+            {showBuildBtn && !buildingUniversity && (
+              <div className="sim-not-found">
+                <div className="sim-not-found-text">University not in our database</div>
+                <button className="sim-build-btn" onClick={() => buildUniversity(collegeSearch.trim())}>
+                  ⚡ Build &ldquo;{collegeSearch.trim()}&rdquo; Acceptance Committee
+                </button>
+              </div>
+            )}
+
+            {/* Building state */}
+            {buildingUniversity && (
+              <div className="sim-building-state">
+                <div className="sim-building-spinner" />
+                <div className="sim-building-status">Building University Committee…</div>
+              </div>
+            )}
           </div>
 
           <div className="sim-run-footer">
@@ -498,7 +751,7 @@ export default function SimulatorClient({ colleges, students, seniors }: Props) 
                 __html:
                   [...results]
                     .sort((a, b) => ((b.score as number) || 0) - ((a.score as number) || 0))
-                    .map((r) => renderCard(r, collegeBySlug[(r._slug as string)] ?? null))
+                    .map((r) => renderCard(r, collegeBySlug[(r._slug as string)] ?? null, currentStudent))
                     .join("") +
                   `<div class="sim-disclaimer"><strong>Disclaimer:</strong> AI simulation based on publicly available data. Not affiliated with any university. Not a prediction of actual admissions outcomes.</div>`,
               }}

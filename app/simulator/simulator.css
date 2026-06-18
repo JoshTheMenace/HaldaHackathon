@@ -119,6 +119,54 @@
 .sim-completeness-label { font-size: 10px; font-weight: 700; color: var(--sim-outline); white-space: nowrap; }
 .sim-completeness-pct   { font-size: 10px; font-weight: 700; color: var(--sim-ink-var); }
 
+/* ── College search ────────────────────────────────────────── */
+.sim-college-search-wrap { padding: 0 12px 8px; }
+.sim-college-search {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--sim-outline-var); border-radius: 12px;
+  font-size: 14px; font-family: inherit; background: var(--sim-card);
+  color: var(--sim-ink); outline: none; transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.sim-college-search:focus { border-color: var(--sim-primary); }
+.sim-college-search::placeholder { color: var(--sim-outline); }
+
+/* ── Not found / build state ───────────────────────────────── */
+.sim-not-found {
+  margin: 8px 12px 0; padding: 16px;
+  background: var(--sim-card); border-radius: 14px;
+  border: 1.5px dashed var(--sim-outline-var);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+}
+.sim-not-found-text { font-size: 12px; color: var(--sim-outline); }
+.sim-build-btn {
+  width: 100%; padding: 12px 14px; background: var(--sim-accent); color: var(--sim-primary-deep);
+  border: none; border-radius: 12px; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.sim-build-btn:active { opacity: 0.75; }
+
+.sim-building-state {
+  margin: 8px 12px 0; padding: 20px 16px;
+  background: var(--sim-card); border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+}
+.sim-building-spinner {
+  width: 30px; height: 30px;
+  border: 3px solid var(--sim-cont); border-top-color: var(--sim-accent);
+  border-radius: 50%; animation: sim-spin 0.8s linear infinite;
+}
+@keyframes sim-spin { to { transform: rotate(360deg); } }
+.sim-building-status { font-size: 13px; font-weight: 600; color: var(--sim-ink-var); }
+.sim-building-note   { font-size: 11px; color: var(--sim-outline); max-width: 240px; line-height: 1.5; }
+
+/* ── AI-built badge ────────────────────────────────────────── */
+.sim-ai-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+  background: var(--sim-accent); color: var(--sim-primary-deep);
+  padding: 1px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+}
+
 /* ── College list ──────────────────────────────────────────── */
 .sim-college-list { padding: 0 12px; display: flex; flex-direction: column; gap: 6px; }
 .sim-college-row {
@@ -134,7 +182,7 @@
 }
 .sim-college-row.selected .sim-checkbox { background: var(--sim-primary); border-color: var(--sim-primary); }
 .sim-college-info { flex: 1; min-width: 0; }
-.sim-college-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sim-college-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
 .sim-college-rate { font-size: 11px; color: var(--sim-outline); margin-top: 1px; }
 
 /* ── Run button ────────────────────────────────────────────── */
@@ -235,3 +283,63 @@
 .reveal-content { display: none; font-size: 11px; color: var(--sim-outline); margin-top: 4px; line-height: 1.5; font-style: italic; }
 .reveal-content.open { display: block; }
 .completeness-banner { font-size: 12px; font-weight: 500; padding: 10px 14px; background: var(--sim-error-cont); color: var(--sim-error); border-radius: 8px; }
+
+/* ── How _______ Evaluates section ────────────────────────── */
+.how-evaluates-divider { height: 1px; background: var(--sim-cont); margin: 0 18px; }
+.how-evaluates-outer   { padding: 18px; }
+.how-evaluates-title   { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--sim-outline); margin-bottom: 14px; }
+.how-evaluate-section  { display: flex; flex-direction: column; gap: 16px; }
+.factor-tier-group     { display: flex; flex-direction: column; gap: 5px; }
+.factor-tier-label     { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.factor-pill-row       { display: flex; flex-wrap: wrap; gap: 5px; }
+.fpill                 { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.fpill-vi              { background: rgba(27,107,81,0.12); color: #1B6B51; border: 1px solid rgba(27,107,81,0.3); }
+.fpill-i               { background: rgba(0,107,95,0.08); color: #006B5F; border: 1px solid rgba(0,107,95,0.25); }
+.fpill-c               { background: var(--sim-cont); color: var(--sim-ink-var); border: 1px solid var(--sim-outline); }
+.fpill-nc              { background: var(--sim-low); color: var(--sim-outline); border: 1px dashed var(--sim-cont); font-style: italic; opacity: 0.75; }
+.not-considered-row    { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.not-considered-label  { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--sim-outline); }
+.signals-group         { display: flex; flex-direction: column; gap: 7px; }
+.signal-item           { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: var(--sim-ink-var); line-height: 1.5; }
+.signal-icon           { font-size: 14px; flex-shrink: 0; }
+.subsection-label      { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sim-outline); margin-bottom: 8px; }
+.class-profile-grid    { display: flex; gap: 12px; flex-wrap: wrap; }
+.cp-stat               { background: var(--sim-low); border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 72px; }
+.cp-value              { font-size: 20px; font-weight: 800; color: var(--sim-primary); }
+.cp-label              { font-size: 10px; color: var(--sim-outline); white-space: pre-line; margin-top: 3px; }
+.req-grid              { display: flex; flex-direction: column; gap: 5px; }
+.req-item              { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sim-ink-var); }
+.req-icon              { font-size: 13px; flex-shrink: 0; }
+.ethos-quote           { font-size: 12px; font-style: italic; color: var(--sim-outline); border-left: 3px solid var(--sim-cont); padding: 8px 12px; background: var(--sim-low); border-radius: 0 8px 8px 0; }
+
+/* ── Stats at a Glance ─────────────────────────────────────── */
+.stats-table     { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--sim-cont); border-radius: 10px; overflow: hidden; }
+.stats-row       { display: grid; grid-template-columns: 60px 64px 1fr auto; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--sim-cont); background: var(--sim-card); }
+.stats-row:last-of-type { border-bottom: none; }
+.stats-label     { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sim-outline); }
+.stats-value     { font-size: 18px; font-weight: 800; color: var(--sim-ink); }
+.stats-range     { font-size: 10px; color: var(--sim-outline); line-height: 1.4; }
+.stats-badge     { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
+.sb-great        { background: rgba(27,107,81,0.12); color: #1B6B51; }
+.sb-good         { background: rgba(0,107,95,0.08); color: #006B5F; }
+.sb-warn         { background: #FFF8E1; color: #B45309; }
+.sb-danger       { background: var(--sim-error-cont); color: var(--sim-error); }
+.school-context-row  { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 8px; }
+.school-chip         { font-size: 10px; background: var(--sim-cont); color: var(--sim-ink-var); border-radius: 8px; padding: 2px 7px; }
+.school-adjust       { font-size: 10px; font-style: italic; }
+.sa-up               { color: #1B6B51; }
+.sa-neutral          { color: var(--sim-outline); }
+
+/* ── Financial Aid ─────────────────────────────────────────── */
+.fin-aid-details { border: 1px solid var(--sim-cont); border-radius: 10px; overflow: hidden; }
+.fin-aid-details summary { font-size: 12px; font-weight: 700; color: var(--sim-ink-var); padding: 10px 14px; cursor: pointer; background: var(--sim-low); list-style: none; display: flex; align-items: center; gap: 6px; }
+.fin-aid-details summary::-webkit-details-marker { display: none; }
+.fin-aid-details summary::before { content: "▸"; font-size: 10px; transition: transform 0.2s; }
+.fin-aid-details[open] summary::before { transform: rotate(90deg); }
+.fin-aid-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--sim-cont); }
+.fa-item  { background: var(--sim-card); padding: 10px 12px; }
+.fa-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--sim-outline); margin-bottom: 3px; }
+.fa-value { font-size: 13px; font-weight: 700; color: var(--sim-ink); }
+.fa-yes   { color: #1B6B51; }
+.fa-no    { color: var(--sim-outline); }
+.fin-aid-notes { font-size: 11px; color: var(--sim-outline); padding: 8px 14px 10px; font-style: italic; background: var(--sim-card); border-top: 1px solid var(--sim-cont); }
