@@ -1,0 +1,81 @@
+{
+  "name": "Reed College",
+  "slug": "reed",
+  "unitid": "209922",
+  "location": {
+    "city": "Portland",
+    "state": "OR"
+  },
+  "type": "private_nonprofit",
+  "url": "https://www.reed.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.2461,
+    "enrollment": 1320,
+    "sat_math_25": 610,
+    "sat_math_75": 770,
+    "act_25": 30,
+    "act_75": 34
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.7383,
+    "avg_net_price": 33013,
+    "pell_grant_rate": 0.1459,
+    "median_earnings_6yr": 38607
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Not Considered",
+    "application_essay": "Very Important",
+    "recommendations": "Very Important",
+    "extracurricular_activities": "Considered",
+    "talent_ability": "Very Important",
+    "character_personal_qualities": "Very Important",
+    "interview": "Important",
+    "first_generation": "Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Considered",
+    "work_experience": "Considered",
+    "demonstrated_interest": "Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": true,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Recommended (alumni interviews)",
+    "recommendations_required": 2,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Test-blind \u2014 SAT/ACT scores are not accepted or reviewed under any circumstances, even if voluntarily submitted",
+    "All students complete a year-long senior thesis defended before a faculty committee \u2014 the thesis is the capstone of the Reed education",
+    "No varsity sports, no Greek life; campus culture is intensely academic with the Honor Principle as the foundation of community governance",
+    "One of the highest PhD-attainment rates per capita of any liberal arts college in the US"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.5,
+    "hs_rank_top_25_pct": 0.79,
+    "gpa_4_0_plus": 0.6,
+    "gpa_3_75_to_3_99": 0.22,
+    "gpa_3_5_to_3_74": 0.11,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": true,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 42600,
+    "merit_aid_available": false,
+    "notes": "Need-blind for domestic applicants; need-aware for international. Meets 100% of demonstrated need for domestic students. All aid is need-based \u2014 no merit scholarships.",
+    "source": "CDS"
+  }
+}

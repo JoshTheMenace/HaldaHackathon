@@ -1,0 +1,80 @@
+{
+  "name": "University of Miami",
+  "slug": "miami",
+  "unitid": "132842",
+  "location": {
+    "city": "Miami",
+    "state": "FL"
+  },
+  "type": "private_nonprofit",
+  "url": "https://www.albizu.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.7571,
+    "enrollment": 287
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.4839,
+    "avg_net_price": 19849,
+    "pell_grant_rate": 0.6637,
+    "first_gen_share": 0.2506,
+    "median_earnings_6yr": 32168
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Important",
+    "application_essay": "Very Important",
+    "recommendations": "Important",
+    "extracurricular_activities": "Important",
+    "talent_ability": "Important",
+    "character_personal_qualities": "Important",
+    "interview": "Considered",
+    "first_generation": "Considered",
+    "alumni_relation": "Considered",
+    "geographical_residence": "Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Important",
+    "work_experience": "Considered",
+    "demonstrated_interest": "Important"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": true,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Optional (alumni interviews available in select cities)",
+    "recommendations_required": 2,
+    "additional_materials": [
+      "Optional arts portfolio for music, architecture, and visual arts applicants"
+    ]
+  },
+  "special_considerations": [
+    "Demonstrated interest is actively tracked \u2014 campus visits, virtual events, portal engagement, and contact with admissions are all considered",
+    "Early Decision I and II both offer a notable acceptance rate advantage over Regular Decision",
+    "Top programs in marine science, music, business (Herbert Business School), and pre-health draw highly specialized applicant pools",
+    "International student diversity valued; South Florida location and Latin American connections are part of institutional identity"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.58,
+    "hs_rank_top_25_pct": 0.84,
+    "gpa_4_0_plus": 0.53,
+    "gpa_3_75_to_3_99": 0.26,
+    "gpa_3_5_to_3_74": 0.12,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 38400,
+    "merit_aid_available": true,
+    "notes": "Need-aware admissions. Meets ~70% of demonstrated need on average. Significant merit aid including Stamps Scholarship (full ride).",
+    "source": "CDS"
+  }
+}

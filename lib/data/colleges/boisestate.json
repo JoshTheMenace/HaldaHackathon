@@ -1,0 +1,78 @@
+{
+  "name": "Boise State University",
+  "slug": "boisestate",
+  "unitid": "142115",
+  "location": {
+    "city": "Boise",
+    "state": "ID"
+  },
+  "type": "public",
+  "url": "https://www.boisestate.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.8721,
+    "enrollment": 17674
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.6102,
+    "avg_net_price": 21610,
+    "pell_grant_rate": 0.1808,
+    "first_gen_share": 0.3347,
+    "median_earnings_6yr": 45251
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Considered",
+    "gpa": "Important",
+    "class_rank": "Not Considered",
+    "test_scores": "Not Considered",
+    "application_essay": "Not Considered",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Not Considered",
+    "talent_ability": "Not Considered",
+    "character_personal_qualities": "Not Considered",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": false,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Open-access public university; admission based on meeting Idaho high school graduation requirements or GED \u2014 no selective review",
+    "Strong programs in business, health sciences, public policy, and computer science with a growing research profile",
+    "Affordable tuition for Idaho residents; primary regional comprehensive university serving the Treasure Valley",
+    "Uses its own application portal \u2014 not Common App"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.15,
+    "hs_rank_top_25_pct": 0.33,
+    "gpa_4_0_plus": 0.18,
+    "gpa_3_75_to_3_99": 0.16,
+    "gpa_3_5_to_3_74": 0.17,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 8500,
+    "merit_aid_available": true,
+    "notes": "Open-access; aid primarily through federal Pell grants and Idaho state grants. Affordable in-state tuition (~$8,500/yr). Some merit scholarships for high-achieving students.",
+    "source": "CDS"
+  }
+}

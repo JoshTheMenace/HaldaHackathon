@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "rm -rf .next && next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
     "demo": "rm -rf .next && next build && next start -p 3000",
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
     "@google/genai": "^2.8.0",
     "@surgeapi/node": "^0.45.0",
     "framer-motion": "^11.18.2",

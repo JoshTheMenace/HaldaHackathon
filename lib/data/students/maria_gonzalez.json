@@ -1,0 +1,159 @@
+{
+  "name": "Maria Gonzalez",
+  "slug": "maria_gonzalez",
+  "archetype": "The First-Gen Overcomer",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "Texas",
+    "first_gen": true,
+    "financial_need": "high",
+    "ethnicity": "Hispanic / Latina",
+    "citizenship": "US Citizen (naturalized at age 15)",
+    "hometown": "El Paso, TX",
+    "languages": [
+      "English (fluent)",
+      "Spanish (native)"
+    ]
+  },
+  "academic": {
+    "gpa_unweighted": 3.72,
+    "gpa_weighted": 4.08,
+    "gpa_scale": 5.0,
+    "class_rank": null,
+    "class_rank_percentile": 82,
+    "class_size": 620,
+    "school_type": "public",
+    "school_name": "Bel Air High School",
+    "ap_courses": [
+      {
+        "course": "Spanish Language & Culture",
+        "score": 5,
+        "status": "completed",
+        "note": "Native speaker; took for AP credit"
+      },
+      {
+        "course": "US History",
+        "score": 3,
+        "status": "completed"
+      },
+      {
+        "course": "English Language & Composition",
+        "score": 3,
+        "status": "completed"
+      },
+      {
+        "course": "Biology",
+        "score": 3,
+        "status": "completed"
+      },
+      {
+        "course": "Environmental Science",
+        "score": null,
+        "status": "in_progress"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors Biology",
+      "Honors World History"
+    ],
+    "note": "School offers limited AP selection; Maria has taken every AP available to her at her school."
+  },
+  "test_scores": {
+    "sat": {
+      "total": 1280,
+      "ebrw": 650,
+      "math": 630,
+      "attempts": 3,
+      "note": "First attempt: 1170. Second: 1240. Third: 1280. Significant improvement with each attempt."
+    },
+    "act": null,
+    "ap_exams_completed": 4,
+    "ap_exams_with_5": 1
+  },
+  "activities": [
+    {
+      "name": "Homework Heroes Tutoring Program",
+      "role": "Founder & Director",
+      "years": 2,
+      "hours_per_week": 8,
+      "weeks_per_year": 40,
+      "description": "Founded free bilingual after-school tutoring program serving 45 elementary and middle school students from low-income families. Recruited and trained 11 high school volunteers. Secured $800 in local business donations for supplies. Program continues to run and has served 90+ students total.",
+      "awards": [
+        "El Paso Community Foundation Youth Leadership Award (2024)"
+      ]
+    },
+    {
+      "name": "Family Restaurant (Employment)",
+      "role": "Server, Cashier, and Cook",
+      "years": 3,
+      "hours_per_week": 22,
+      "weeks_per_year": 48,
+      "description": "Works evenings and weekends at family-owned taqueria. Responsibilities include cooking, cashiering, and managing social media. Contributes earnings to household expenses.",
+      "awards": []
+    },
+    {
+      "name": "Medical Interpreter (Volunteer)",
+      "role": "Volunteer Interpreter",
+      "years": 2,
+      "hours_per_week": 4,
+      "weeks_per_year": 40,
+      "description": "Volunteers as a Spanish-English interpreter at a community health clinic. Assists non-English-speaking patients in understanding diagnoses and treatment plans. This experience inspired her interest in healthcare access and social work.",
+      "awards": []
+    },
+    {
+      "name": "Catholic Youth Organization (CYO)",
+      "role": "Youth Group Member and Junior Leader",
+      "years": 4,
+      "hours_per_week": 3,
+      "weeks_per_year": 44,
+      "description": "Active in faith community. Helps lead youth service projects including annual school supply drive and Thanksgiving meal distribution.",
+      "awards": []
+    },
+    {
+      "name": "School Soccer Team (JV)",
+      "role": "Player",
+      "years": 2,
+      "hours_per_week": 6,
+      "weeks_per_year": 16,
+      "description": "Played JV soccer freshman and sophomore year. Left team junior year due to work obligations but remained connected to sport recreationally.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Social Work",
+  "intended_major_alt": "Public Health or Education",
+  "intended_career": "Healthcare social work or community health advocacy, specifically for underserved Spanish-speaking populations",
+  "essays": {
+    "main_essay_quality": "very_strong",
+    "main_essay_theme": "Describes the moment she had to interpret a cancer diagnosis for her mother's friend at the clinic \u2014 realizing the words she chose could determine whether this woman understood her own life. Explores language as power, and how being the bridge between two worlds has shaped her sense of purpose. Moving and specific.",
+    "supplemental_quality": "strong",
+    "supplemental_notes": "Activity essays on Homework Heroes are concrete and data-driven. Financial hardship is described with dignity \u2014 never seeking sympathy, just providing context. Why Major essays connect directly to her lived experience.",
+    "writing_style": "Emotionally intelligent, grounded, precise. Occasionally over-explains; best when she trusts the story to speak for itself."
+  },
+  "hooks": [
+    "First-generation college student",
+    "Hispanic / Latina \u2014 URM consideration at many schools",
+    "Low-income household \u2014 Pell Grant eligible",
+    "Significant demonstrated community impact"
+  ],
+  "additional_info": "Family income approximately $32,000/year (two parents, three siblings). Eligible for maximum federal financial aid. Needs a school with strong need-based aid or low net price to attend. Guidance counselor has written a strong letter describing her as the most community-minded student she has seen in 15 years.",
+  "special_circumstances": "Immigrated from Juarez, Mexico at age 12. Became US citizen at 15. Navigated language barriers and cultural transition while maintaining strong academic performance. Parents have no familiarity with US college application process \u2014 Maria has done all research independently.",
+  "high_school": {
+    "name": "Bel Air High School",
+    "type": "public",
+    "city": "El Paso",
+    "state": "TX",
+    "rigor_tier": 2,
+    "ap_courses_offered": 8,
+    "challenge_index": 0.42,
+    "avg_class_gpa_unweighted": 3.08,
+    "pct_free_reduced_lunch": 0.78,
+    "pct_attending_4yr_college": 0.41,
+    "niche_grade": "C+",
+    "committee_context": "High-poverty El Paso public school adjacent to the US-Mexico border, with 78% of students on free/reduced lunch. Only 8 AP courses offered; Maria took all available ones. Her 3.72 UW places her in approximately the top 18% of the graduating class. This GPA, in this socioeconomic context, with this course load, represents exceptional relative performance \u2014 one of the strongest academic profiles her school has produced.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.72 UW from a high-poverty border school with 8 AP offerings is a substantially different signal than a 3.72 from a resource-rich environment. Contextual read: equivalent to a ~3.9 at an average American high school."
+  }
+}

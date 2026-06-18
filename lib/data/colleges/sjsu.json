@@ -1,0 +1,80 @@
+{
+  "name": "San Jose State University",
+  "slug": "sjsu",
+  "unitid": "122755",
+  "location": {
+    "city": "San Jose",
+    "state": "CA"
+  },
+  "type": "public",
+  "url": "www.sjsu.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.8461,
+    "enrollment": 27601
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.6676,
+    "avg_net_price": 13760,
+    "pell_grant_rate": 0.3524,
+    "first_gen_share": 0.4905,
+    "median_earnings_6yr": 62448
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Not Considered",
+    "test_scores": "Not Considered",
+    "application_essay": "Not Considered",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Not Considered",
+    "talent_ability": "Not Considered",
+    "character_personal_qualities": "Not Considered",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Very Important",
+    "state_residency": "Very Important",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": false,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": [
+      "Supplemental criteria form required for impacted (oversubscribed) majors"
+    ]
+  },
+  "special_considerations": [
+    "CSU system campus \u2014 uses Cal State Apply, not Common App; test scores not used for any admission decision (system-wide policy since 2022)",
+    "Many programs are 'impacted' (engineering, CS, business, nursing) and require meeting supplemental criteria beyond the campus-wide GPA floor",
+    "Local area and service area preference given to applicants from surrounding high schools when a major is impacted",
+    "Silicon Valley location drives strong industry ties; co-op programs and proximity to tech employers are major draws"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.39,
+    "hs_rank_top_25_pct": 0.71,
+    "gpa_4_0_plus": 0.43,
+    "gpa_3_75_to_3_99": 0.28,
+    "gpa_3_5_to_3_74": 0.16,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 11600,
+    "merit_aid_available": false,
+    "notes": "Cal Grant covers most tuition for eligible CA residents (~$7,400/yr in-state tuition). Aid is primarily need-based through state and federal programs.",
+    "source": "CDS"
+  }
+}

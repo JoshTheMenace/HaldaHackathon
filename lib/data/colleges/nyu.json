@@ -1,0 +1,84 @@
+{
+  "name": "New York University",
+  "slug": "nyu",
+  "unitid": "196176",
+  "location": {
+    "city": "New Paltz",
+    "state": "NY"
+  },
+  "type": "public",
+  "url": "www.newpaltz.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.6161,
+    "enrollment": 6086,
+    "sat_math_25": 570,
+    "sat_math_75": 650,
+    "act_25": 25,
+    "act_75": 29
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.7027,
+    "avg_net_price": 18809,
+    "pell_grant_rate": 0.319,
+    "first_gen_share": 0.3169,
+    "median_earnings_6yr": 45555
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Important",
+    "application_essay": "Very Important",
+    "recommendations": "Important",
+    "extracurricular_activities": "Very Important",
+    "talent_ability": "Very Important",
+    "character_personal_qualities": "Important",
+    "interview": "Not Considered",
+    "first_generation": "Considered",
+    "alumni_relation": "Considered",
+    "geographical_residence": "Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Important",
+    "work_experience": "Important",
+    "demonstrated_interest": "Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": true,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Not offered",
+    "recommendations_required": 2,
+    "additional_materials": [
+      "Arts supplement required for Tisch School of the Arts applicants"
+    ]
+  },
+  "special_considerations": [
+    "Applicants apply to a specific school within NYU (Stern Business, Tisch Arts, CAS, Tandon Engineering, etc.) \u2014 acceptance rates vary dramatically by school",
+    "NYC location is central to the value proposition; industry proximity in finance, media, fashion, and tech is heavily leveraged in recruiting",
+    "One of the most internationally diverse undergraduate populations in the US (~25% international students)",
+    "Financial aid is less generous relative to peer institutions \u2014 high total cost of attendance (~$90K/yr) with moderate average aid packages"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.66,
+    "hs_rank_top_25_pct": 0.9,
+    "gpa_4_0_plus": 0.65,
+    "gpa_3_75_to_3_99": 0.21,
+    "gpa_3_5_to_3_74": 0.09,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 36200,
+    "merit_aid_available": true,
+    "notes": "Need-aware admissions. Meets ~60% of demonstrated need on average \u2014 less generous relative to peer institutions given high total cost (~$90K/yr). Some merit scholarships available.",
+    "source": "CDS"
+  }
+}

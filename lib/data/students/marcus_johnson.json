@@ -1,0 +1,176 @@
+{
+  "name": "Marcus Johnson",
+  "slug": "marcus_johnson",
+  "archetype": "The Well-Rounded Achiever",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "Ohio",
+    "first_gen": false,
+    "financial_need": "medium",
+    "ethnicity": "African American",
+    "citizenship": "US Citizen",
+    "hometown": "Columbus, OH"
+  },
+  "academic": {
+    "gpa_unweighted": 3.85,
+    "gpa_weighted": 4.2,
+    "gpa_scale": 5.0,
+    "class_rank": null,
+    "class_rank_percentile": 88,
+    "class_size": 540,
+    "school_type": "public",
+    "school_name": "Westland High School",
+    "ap_courses": [
+      {
+        "course": "US History",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "English Language & Composition",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Psychology",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Environmental Science",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Calculus AB",
+        "score": 3,
+        "status": "completed"
+      },
+      {
+        "course": "Government & Politics",
+        "score": null,
+        "status": "in_progress"
+      },
+      {
+        "course": "Macroeconomics",
+        "score": null,
+        "status": "in_progress"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors Algebra II",
+      "Honors Pre-Calculus"
+    ]
+  },
+  "test_scores": {
+    "sat": null,
+    "act": {
+      "composite": 32,
+      "english": 33,
+      "math": 31,
+      "reading": 34,
+      "science": 30,
+      "attempts": 2,
+      "note": "First attempt: 30. Best sitting composite: 32."
+    },
+    "ap_exams_completed": 5,
+    "ap_exams_with_5": 1
+  },
+  "activities": [
+    {
+      "name": "Varsity Soccer",
+      "role": "Team Captain (senior year), Starting Midfielder (all 4 years)",
+      "years": 4,
+      "hours_per_week": 15,
+      "weeks_per_year": 20,
+      "description": "4-year starter on varsity. Elected captain by teammates senior year. Team went 14-3 and reached district finals senior year. Off-season: plays in competitive club league (FC Columbus Academy).",
+      "awards": [
+        "All-District Second Team (junior year)",
+        "Team MVP (senior year)",
+        "District Finalist (team, senior year)"
+      ]
+    },
+    {
+      "name": "Student Government",
+      "role": "Student Body President (senior year), Class Representative (sophomore, junior)",
+      "years": 3,
+      "hours_per_week": 5,
+      "weeks_per_year": 36,
+      "description": "Led school-wide initiative to extend library hours and add mental health resources to student handbook. Organized first-ever school-community town hall with Columbus city council member.",
+      "awards": [
+        "Ohio Association of Student Councils Rising Leader Award (junior year)"
+      ]
+    },
+    {
+      "name": "National Honor Society",
+      "role": "Member, Community Service Chair (senior year)",
+      "years": 3,
+      "hours_per_week": 2,
+      "weeks_per_year": 36,
+      "description": "Coordinates chapter community service projects. Organized holiday drive that collected 800+ items for Columbus area shelters.",
+      "awards": []
+    },
+    {
+      "name": "Mid-Ohio Food Collective (Volunteer)",
+      "role": "Regular Volunteer",
+      "years": 3,
+      "hours_per_week": 3,
+      "weeks_per_year": 48,
+      "description": "Weekly shift sorting and distributing food. Has logged 400+ volunteer hours total. Recruited 12 teammates to join during off-season.",
+      "awards": []
+    },
+    {
+      "name": "Youth Ministry & Church Leadership",
+      "role": "Youth Group Leader",
+      "years": 4,
+      "hours_per_week": 3,
+      "weeks_per_year": 46,
+      "description": "Leads weekly youth group sessions (ages 12-15) at Shiloh Baptist Church. Planned and led two community service mission trips to Appalachian Ohio.",
+      "awards": []
+    },
+    {
+      "name": "Black Student Union",
+      "role": "Co-Founder, Vice President",
+      "years": 2,
+      "hours_per_week": 2,
+      "weeks_per_year": 32,
+      "description": "Co-founded chapter sophomore year after recognizing gap in cultural representation at school. Organized Black History Month speaker series and cultural showcase events.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Political Science",
+  "intended_major_alt": "Business Administration",
+  "intended_career": "Public policy, law, or community-oriented business leadership",
+  "essays": {
+    "main_essay_quality": "strong",
+    "main_essay_theme": "How building the Black Student Union required the same skills as captaining the soccer team \u2014 recruiting people who didn't initially believe in the project. Bridges athletic and civic identity naturally.",
+    "supplemental_quality": "average_to_strong",
+    "supplemental_notes": "Why Major essays are clear but somewhat general. Why School essays show genuine research on some schools, surface-level on others. Strong on schools where he visited campus.",
+    "writing_style": "Conversational, warm, confident. Authentic voice. Occasionally the structure could be tighter."
+  },
+  "hooks": [
+    "African American \u2014 URM consideration at many schools"
+  ],
+  "additional_info": "Father works in logistics management; mother is a middle school teacher. Family could contribute roughly $15,000/year toward college. Financially, public flagship or schools with strong merit aid are most realistic.",
+  "special_circumstances": null,
+  "high_school": {
+    "name": "Westland High School",
+    "type": "public",
+    "city": "Columbus",
+    "state": "OH",
+    "rigor_tier": 3,
+    "ap_courses_offered": 14,
+    "challenge_index": 1.05,
+    "avg_class_gpa_unweighted": 3.28,
+    "pct_free_reduced_lunch": 0.42,
+    "pct_attending_4yr_college": 0.58,
+    "niche_grade": "B+",
+    "committee_context": "Mid-tier Columbus suburb public school with solid AP access and honest grading. Grade distribution is not significantly inflated \u2014 a 3.85 UW represents genuine strong performance. ACT scores at this school correlate reliably with academic ability. Fourteen AP courses available; Marcus took 7.",
+    "gpa_adjustment": "neutral",
+    "gpa_adjustment_note": "3.85 UW is read at face value \u2014 strong performance at a school with moderate rigor and no significant grade inflation."
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "University of Washington",
+  "slug": "uw",
+  "unitid": "236948",
+  "location": {
+    "city": "Seattle",
+    "state": "WA"
+  },
+  "type": "public",
+  "url": "https://www.washington.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.3915,
+    "enrollment": 31942
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.8446,
+    "avg_net_price": 14091,
+    "pell_grant_rate": 0.1486,
+    "first_gen_share": 0.3273,
+    "median_earnings_6yr": 62979
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Considered",
+    "application_essay": "Very Important",
+    "recommendations": "Considered",
+    "extracurricular_activities": "Important",
+    "talent_ability": "Important",
+    "character_personal_qualities": "Important",
+    "interview": "Not Considered",
+    "first_generation": "Important",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Very Important",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Important",
+    "work_experience": "Important",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Not offered",
+    "recommendations_required": 1,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Applicants apply directly to a specific college or major \u2014 acceptance rates vary dramatically by program (Engineering and Foster Business are far more selective than overall rate)",
+    "Personal statement quality is heavily weighted; UW uses its own essay prompts supplementing the Common App",
+    "Washington state residents have significantly higher acceptance rates; UW is explicitly mission-driven to serve the state",
+    "Many students apply as 'undeclared' to improve acceptance odds, then pursue internal transfer to competitive majors"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.67,
+    "hs_rank_top_25_pct": 0.91,
+    "gpa_4_0_plus": 0.58,
+    "gpa_3_75_to_3_99": 0.24,
+    "gpa_3_5_to_3_74": 0.11,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 17800,
+    "merit_aid_available": true,
+    "notes": "Husky Promise covers tuition and fees for in-state students with family income under ~$75K. Need-aware for international applicants. Some departmental and Honors merit awards.",
+    "source": "CDS"
+  }
+}

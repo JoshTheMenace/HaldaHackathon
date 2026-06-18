@@ -1,0 +1,78 @@
+{
+  "name": "Minerva University",
+  "slug": "minerva",
+  "unitid": "484844",
+  "location": {
+    "city": "San Francisco",
+    "state": "CA"
+  },
+  "type": "private_nonprofit",
+  "url": "https://www.minerva.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.0304,
+    "enrollment": 637
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.8883,
+    "pell_grant_rate": 0
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Important",
+    "class_rank": "Not Considered",
+    "test_scores": "Not Considered",
+    "application_essay": "Very Important",
+    "recommendations": "Important",
+    "extracurricular_activities": "Important",
+    "talent_ability": "Very Important",
+    "character_personal_qualities": "Very Important",
+    "interview": "Very Important",
+    "first_generation": "Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Important",
+    "work_experience": "Important",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Required",
+    "recommendations_required": 2,
+    "additional_materials": [
+      "Proprietary cognitive assessments (critical thinking, analysis)",
+      "Video submission"
+    ]
+  },
+  "special_considerations": [
+    "No physical campus \u2014 students rotate through 7 global cities over 4 years (San Francisco, Seoul, Hyderabad, Berlin, Buenos Aires, London, Taipei)",
+    "SAT/ACT scores not accepted at all \u2014 admission is based on cognitive assessments and potential, not standardized tests",
+    "Among the most selective universities in the world by acceptance rate (~1-2%); interview is required and heavily weighted",
+    "All classes are capped at 20 students, conducted live via an active-learning online platform \u2014 no lectures"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.95,
+    "hs_rank_top_25_pct": 1.0,
+    "gpa_4_0_plus": 0.88,
+    "gpa_3_75_to_3_99": 0.08,
+    "gpa_3_5_to_3_74": 0.03,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 22000,
+    "merit_aid_available": false,
+    "notes": "Total cost of attendance (~$30K/yr) is below most private peers. Need-based aid available; no merit scholarships. Aid levels vary as institution is still maturing.",
+    "source": "CDS"
+  }
+}

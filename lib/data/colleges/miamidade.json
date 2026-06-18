@@ -1,0 +1,80 @@
+{
+  "name": "Miami Dade College",
+  "slug": "miamidade",
+  "unitid": "135717",
+  "location": {
+    "city": "Miami",
+    "state": "FL"
+  },
+  "type": "public",
+  "url": "www.mdc.edu/",
+  "selectivity": {
+    "enrollment": 46182
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.4528,
+    "avg_net_price": 5463,
+    "pell_grant_rate": 0.4974,
+    "first_gen_share": 0.4859,
+    "median_earnings_6yr": 33107
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Not Considered",
+    "gpa": "Not Considered",
+    "class_rank": "Not Considered",
+    "test_scores": "Not Considered",
+    "application_essay": "Not Considered",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Not Considered",
+    "talent_ability": "Not Considered",
+    "character_personal_qualities": "Not Considered",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": false,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": [
+      "High school diploma or GED",
+      "Placement testing for math and English (determines course level)"
+    ]
+  },
+  "special_considerations": [
+    "Open-access community college and one of the largest institutions of higher education in the US by enrollment (~165,000 students across 8 campuses)",
+    "Primarily offers associate degrees and certificates; select bachelor's degree programs available in high-demand fields",
+    "HSI: over 70% of students identify as Hispanic/Latino \u2014 one of the most diverse institutions in the country",
+    "Uses Florida's standard community college application; placement testing determines math and English course level, not admissions eligibility"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.1,
+    "hs_rank_top_25_pct": 0.22,
+    "gpa_4_0_plus": 0.1,
+    "gpa_3_75_to_3_99": 0.09,
+    "gpa_3_5_to_3_74": 0.1,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 5200,
+    "merit_aid_available": true,
+    "notes": "Open-access community college with very low tuition (~$3,300/yr for FL residents). Strong Pell/federal aid access. Florida Bright Futures scholarship covers tuition for eligible residents.",
+    "source": "CDS"
+  }
+}

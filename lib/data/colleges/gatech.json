@@ -1,0 +1,82 @@
+{
+  "name": "Georgia Institute of Technology",
+  "slug": "gatech",
+  "unitid": "139755",
+  "location": {
+    "city": "Atlanta",
+    "state": "GA"
+  },
+  "type": "public",
+  "url": "www.gatech.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.1407,
+    "enrollment": 18785,
+    "sat_math_25": 690,
+    "sat_math_75": 790,
+    "act_25": 30,
+    "act_75": 34
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.9319,
+    "avg_net_price": 12116,
+    "pell_grant_rate": 0.139,
+    "first_gen_share": 0.1492,
+    "median_earnings_6yr": 89432
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Important",
+    "test_scores": "Very Important",
+    "application_essay": "Important",
+    "recommendations": "Considered",
+    "extracurricular_activities": "Important",
+    "talent_ability": "Important",
+    "character_personal_qualities": "Important",
+    "interview": "Not Considered",
+    "first_generation": "Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Very Important",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Considered",
+    "work_experience": "Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": false,
+    "early_action": true,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Not offered",
+    "recommendations_required": 2,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Restrictive Early Action \u2014 applicants may not apply EA or ED to other private universities; other public EA is permitted",
+    "SAT/ACT required (not test-optional); among the few public universities still requiring standardized tests",
+    "In-state acceptance rate is significantly higher than out-of-state; Georgia residents receive strong preference as a public flagship",
+    "Engineering and CS are among the top-ranked programs in the US; acceptance rates into these programs are considerably lower than the overall rate"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.83,
+    "hs_rank_top_25_pct": 0.97,
+    "gpa_4_0_plus": 0.7,
+    "gpa_3_75_to_3_99": 0.19,
+    "gpa_3_5_to_3_74": 0.07,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 16200,
+    "merit_aid_available": true,
+    "notes": "Georgia HOPE Scholarship covers ~$10K/yr for in-state students with 3.0+ GPA. Need-aware; meets ~65% of demonstrated need on average. Strong merit aid for high achievers.",
+    "source": "CDS"
+  }
+}

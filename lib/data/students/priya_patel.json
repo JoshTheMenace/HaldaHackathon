@@ -1,0 +1,206 @@
+{
+  "name": "Priya Patel",
+  "slug": "priya_patel",
+  "archetype": "The Solid Private School Student",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "New Jersey",
+    "first_gen": false,
+    "financial_need": "low",
+    "ethnicity": "South Asian / Indian American",
+    "citizenship": "US Citizen",
+    "hometown": "Princeton, NJ"
+  },
+  "academic": {
+    "gpa_unweighted": 3.78,
+    "gpa_weighted": 4.41,
+    "gpa_scale": 5.0,
+    "class_rank": null,
+    "class_rank_percentile": 85,
+    "class_size": 148,
+    "school_type": "private_independent",
+    "school_name": "Princeton Day School",
+    "ap_courses": [
+      {
+        "course": "US History",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Computer Science A",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Statistics",
+        "score": 4,
+        "status": "completed"
+      }
+    ],
+    "ib_courses": [
+      {
+        "course": "English Literature HL",
+        "score": 7,
+        "status": "completed"
+      },
+      {
+        "course": "History HL",
+        "score": 6,
+        "status": "completed"
+      },
+      {
+        "course": "Psychology HL",
+        "score": 7,
+        "status": "completed"
+      },
+      {
+        "course": "Mathematics SL",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Chemistry SL",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Spanish B SL",
+        "score": 6,
+        "status": "completed"
+      },
+      {
+        "course": "Theory of Knowledge",
+        "grade": "A",
+        "status": "completed"
+      },
+      {
+        "course": "Extended Essay (Psychology \u2014 on social media and adolescent identity formation)",
+        "grade": "A",
+        "status": "completed"
+      }
+    ],
+    "honors_courses": [],
+    "note": "Priya completed the full IB Diploma Programme with a predicted score of 40/45 (IB scores range from 24-45; 40+ places her in the top ~3% globally). Her 3.78 UW GPA reflects a genuinely rigorous program \u2014 a 3.78 at a competitive private school on the full IB Diploma is not equivalent to a 3.78 at a less demanding school."
+  },
+  "test_scores": {
+    "sat": {
+      "total": 1490,
+      "ebrw": 750,
+      "math": 740,
+      "attempts": 3,
+      "note": "First attempt: 1410. Second: 1460. Third: 1490. Consistent incremental improvement. Not a standout test taker but well above most school medians."
+    },
+    "act": null,
+    "ib_predicted_score": "40/45",
+    "ap_exams_completed": 3,
+    "ap_exams_with_5": 1
+  },
+  "activities": [
+    {
+      "name": "Model United Nations",
+      "role": "Secretary-General (senior year), Head Chair (junior year), Delegate (prior years)",
+      "years": 4,
+      "hours_per_week": 6,
+      "weeks_per_year": 36,
+      "description": "Led Princeton Day School's MUN team. As Secretary-General, organized a 400-student conference hosted at her school. Represented PDS at Harvard HMUN, UPenn PMUNC, and Georgetown NAIMUN conferences. Placed Best Delegate at PMUNC junior year.",
+      "awards": [
+        "Best Delegate, PMUNC (UPenn, junior year)",
+        "Outstanding Delegate, NAIMUN (Georgetown, senior year)",
+        "Secretary-General \u2014 PDS Model UN Conference (organized for 400+ students)"
+      ]
+    },
+    {
+      "name": "Varsity Field Hockey",
+      "role": "Starting Midfielder",
+      "years": 4,
+      "hours_per_week": 14,
+      "weeks_per_year": 16,
+      "description": "4-year varsity player at a competitive private school program. Team reached state semifinals junior year. Not at a recruited athlete level but a committed and contributing player.",
+      "awards": [
+        "All-Prep Second Team (junior year)",
+        "State Semifinalist (team, junior year)"
+      ]
+    },
+    {
+      "name": "Psychology Research Independent Study",
+      "role": "Student Researcher",
+      "years": 1,
+      "hours_per_week": 5,
+      "weeks_per_year": 36,
+      "description": "Conducted independent research on adolescent social media use and identity formation under supervision of a Princeton University graduate student (family connection). Research became her IB Extended Essay. Submitted findings to the NJ Science Olympiad research competition; received honorable mention.",
+      "awards": [
+        "IB Extended Essay grade: A",
+        "NJ Science Olympiad Research: Honorable Mention"
+      ]
+    },
+    {
+      "name": "School Newspaper \u2014 'The Panther'",
+      "role": "Editor \u2014 Features Section",
+      "years": 3,
+      "hours_per_week": 4,
+      "weeks_per_year": 32,
+      "description": "Writes and edits the school's monthly feature pieces. Notable piece: investigative article on mental health counseling wait times at NJ public schools, cited by a local NJ newspaper.",
+      "awards": []
+    },
+    {
+      "name": "Habitat for Humanity",
+      "role": "Build Site Volunteer, Campus Chapter Co-Leader",
+      "years": 3,
+      "hours_per_week": 3,
+      "weeks_per_year": 30,
+      "description": "Participates in monthly build days. Co-leads school chapter logistics. Has completed 6 weekend builds total.",
+      "awards": []
+    },
+    {
+      "name": "Bharatanatyam (Classical Indian Dance)",
+      "role": "Dancer / Performer",
+      "years": 14,
+      "hours_per_week": 5,
+      "weeks_per_year": 44,
+      "description": "Trained since age 3. Completed arangetram (debut solo recital) at age 16. Performs at cultural events and festivals in the NJ/NY area. Has taught beginner students at her dance school for the past two years.",
+      "awards": [
+        "Arangetram (solo debut) \u2014 2022",
+        "NJ Indian Cultural Association: Featured Performer (2023, 2024)"
+      ]
+    }
+  ],
+  "intended_major": "Psychology",
+  "intended_major_alt": "Sociology or Political Science",
+  "intended_career": "Clinical psychology or public policy, with interest in adolescent mental health systems",
+  "essays": {
+    "main_essay_quality": "strong",
+    "main_essay_theme": "Explores the tension between her bharatanatyam training \u2014 where every gesture is codified by 2000 years of tradition \u2014 and her MUN work, where improvisation and persuasion are everything. Uses this to reflect on when rules serve us and when they constrain us. Sophisticated framing, well-executed.",
+    "supplemental_quality": "strong",
+    "supplemental_notes": "Why Major essays are substantive and connect to her IB Extended Essay research. Why School essays are well-researched and specific. One essay about a MUN moment is particularly compelling. School context letter from college counselor explains IB rigor clearly.",
+    "writing_style": "Polished, intellectually confident. Occasionally academic in tone \u2014 reads as someone who has had writing coaching. Competent but less distinctive voice compared to students with more unusual backgrounds."
+  },
+  "hooks": [
+    "South Asian / Indian American \u2014 group that is neither URM nor overrepresented uniformly (school-dependent)",
+    "Full IB Diploma with predicted 40/45 \u2014 strong signal of academic preparation",
+    "Private school \u2014 admission context is important for GPA interpretation",
+    "Geographic: New Jersey is a moderately competitive state"
+  ],
+  "additional_info": "Father is a physician, mother is a software engineer at a pharmaceutical company. Family can contribute $70,000+/year. Not eligible for need-based aid at most schools. Will apply to some schools without expecting aid. Parents have strong preferences for name-brand universities.",
+  "special_circumstances": "No significant hardships or unusual circumstances. Profile is defined by consistent achievement in a rigorous environment rather than a compelling personal narrative of overcoming difficulty. Admissions context: at highly selective schools, the absence of a standout spike or unusual story may be the limiting factor, not the academic profile.",
+  "high_school": {
+    "name": "Princeton Day School",
+    "type": "private_independent",
+    "city": "Princeton",
+    "state": "NJ",
+    "rigor_tier": 5,
+    "ap_courses_offered": 20,
+    "ib_programme": true,
+    "challenge_index": null,
+    "challenge_index_note": "IB-based program; Challenge Index (AP metric) not applicable",
+    "avg_class_gpa_unweighted": 3.51,
+    "tuition_annual": 47000,
+    "pct_free_reduced_lunch": 0.04,
+    "pct_attending_4yr_college": 0.99,
+    "pct_attending_highly_selective": 0.38,
+    "niche_grade": "A+",
+    "committee_context": "Elite NJ independent school with ~$47,000/year tuition and a full IB Diploma program. Grading is rigorous \u2014 a 3.78 UW on the IB Diploma is not equivalent to a 3.78 at a less demanding school. The school sends a detailed school profile and college counselor context letter that admissions officers at selective schools know and trust. 38% of graduates attend highly selective institutions annually.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.78 UW on a full IB Diploma at a rigorously graded elite private school reads as approximately a 4.0+ in a conventional context. The IB predicted score of 40/45 (global top 3%) is the more reliable signal of academic ceiling."
+  }
+}

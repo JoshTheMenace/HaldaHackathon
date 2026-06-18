@@ -1,0 +1,206 @@
+{
+  "name": "Sarah Chen",
+  "slug": "sarah_chen",
+  "archetype": "The High Achiever",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "California",
+    "first_gen": false,
+    "financial_need": "low",
+    "ethnicity": "Asian American",
+    "citizenship": "US Citizen",
+    "hometown": "San Jose, CA"
+  },
+  "academic": {
+    "gpa_unweighted": 4.0,
+    "gpa_weighted": 4.87,
+    "gpa_scale": 5.0,
+    "class_rank": "Valedictorian",
+    "class_rank_percentile": 99,
+    "class_size": 412,
+    "school_type": "public",
+    "school_name": "Lynbrook High School",
+    "ap_courses": [
+      {
+        "course": "Calculus BC",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Statistics",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Physics C: Mechanics",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Physics C: Electricity & Magnetism",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Chemistry",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Computer Science A",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Biology",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "English Language & Composition",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "US History",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Multivariable Calculus (college course)",
+        "score": null,
+        "status": "completed",
+        "grade": "A",
+        "note": "Taken at San Jose State, dual enrollment"
+      },
+      {
+        "course": "Linear Algebra (college course)",
+        "score": null,
+        "status": "in_progress",
+        "grade": "A so far",
+        "note": "Taken at San Jose State, dual enrollment"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors Chemistry",
+      "Honors Biology"
+    ]
+  },
+  "test_scores": {
+    "sat": {
+      "total": 1580,
+      "ebrw": 780,
+      "math": 800,
+      "attempts": 2,
+      "note": "First attempt: 1530. Superscore: 1580."
+    },
+    "act": null,
+    "ap_exams_completed": 9,
+    "ap_exams_with_5": 8
+  },
+  "activities": [
+    {
+      "name": "Math Olympiad / AMC-AIME",
+      "role": "Competitor",
+      "years": 4,
+      "hours_per_week": 6,
+      "weeks_per_year": 36,
+      "description": "Qualified for AIME three consecutive years. AMC 12 top 1% nationally. Led weekly math circle for underclassmen.",
+      "awards": [
+        "AIME qualifier 3x",
+        "AMC 12 top 1%",
+        "ARML team member"
+      ]
+    },
+    {
+      "name": "Machine Learning Research Internship",
+      "role": "Undergraduate Research Assistant",
+      "years": 2,
+      "hours_per_week": 10,
+      "weeks_per_year": 40,
+      "description": "Co-authored research paper on using NLP to identify learning gaps in K-8 math education. Paper accepted at a regional undergraduate research symposium. Worked under Dr. Emily Park, SJSU CS Department.",
+      "awards": [
+        "Co-author: 'Automated Gap Analysis in Elementary Math Instruction Using Transformer Models' (2024)"
+      ]
+    },
+    {
+      "name": "Science Olympiad",
+      "role": "Team Captain (senior year), member (prior years)",
+      "years": 4,
+      "hours_per_week": 5,
+      "weeks_per_year": 28,
+      "description": "Competed in Experimental Design, Circuit Lab, and Codebusters events. Led team to regional championship senior year.",
+      "awards": [
+        "Regional Championship 1st place (team, senior year)",
+        "Individual gold: Circuit Lab (junior year)"
+      ]
+    },
+    {
+      "name": "Piano",
+      "role": "Solo Performer",
+      "years": 12,
+      "hours_per_week": 7,
+      "weeks_per_year": 50,
+      "description": "Completed Royal Conservatory of Music Grade 10. Performed at Carnegie Hall in national youth recital program junior year. Teaches beginner piano to 3 neighborhood children on weekends.",
+      "awards": [
+        "Royal Conservatory Grade 10 (First Class Honors)",
+        "Carnegie Hall National Young Artists Recital"
+      ]
+    },
+    {
+      "name": "Math Tutoring Program (Volunteer)",
+      "role": "Founder & Lead Tutor",
+      "years": 2,
+      "hours_per_week": 4,
+      "weeks_per_year": 38,
+      "description": "Founded a free after-school tutoring program for students at a nearby Title I middle school. Recruited 8 student tutors from her high school. Currently serves 22 middle school students.",
+      "awards": []
+    },
+    {
+      "name": "Robotics Club",
+      "role": "Software Lead",
+      "years": 3,
+      "hours_per_week": 4,
+      "weeks_per_year": 30,
+      "description": "Wrote autonomous navigation code for FRC robot. Team placed in regional finals two years running.",
+      "awards": [
+        "FRC Regional Finalist (2023, 2024)"
+      ]
+    }
+  ],
+  "intended_major": "Computer Science",
+  "intended_major_alt": "Electrical Engineering and Computer Science (EECS)",
+  "intended_career": "AI research with applications in education or healthcare",
+  "essays": {
+    "main_essay_quality": "strong",
+    "main_essay_theme": "Reflects on how tutoring a struggling 7th grader exposed the limits of her own understanding of math \u2014 leading her to pursue ML research as a way to build adaptive learning systems. Technically sophisticated but warm; avoids jargon.",
+    "supplemental_quality": "strong",
+    "supplemental_notes": "Why Major essays are precise and specific. Why School essays are well-researched. One supplement on her piano performance is notably lyrical and shows range beyond STEM.",
+    "writing_style": "Clear, confident, occasionally dry. Strongest when discussing research. Personal voice emerges most in the piano essay."
+  },
+  "hooks": [
+    "None \u2014 no legacy, athletic, or development hook"
+  ],
+  "additional_info": "Youngest co-author in department history at SJSU for her research paper. Has not applied to any schools yet \u2014 regular decision only.",
+  "special_circumstances": null,
+  "high_school": {
+    "name": "Lynbrook High School",
+    "type": "public",
+    "city": "San Jose",
+    "state": "CA",
+    "rigor_tier": 5,
+    "ap_courses_offered": 27,
+    "challenge_index": 3.2,
+    "avg_class_gpa_unweighted": 3.52,
+    "pct_free_reduced_lunch": 0.13,
+    "pct_attending_4yr_college": 0.91,
+    "niche_grade": "A+",
+    "committee_context": "Hyper-competitive Silicon Valley public school where less than 8% of students finish with a 4.0 UW. Twenty-seven AP courses offered; average student takes 5+. A 4.0 UW here is genuine \u2014 grades are not inflated. Equivalent rigor to top private schools.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "4.0 UW from Lynbrook carries significantly more weight than a 4.0 from an average school. This is among the hardest 4.0s in the country to earn."
+  }
+}

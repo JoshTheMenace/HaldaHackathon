@@ -1,0 +1,138 @@
+{
+  "name": "Amara Diallo",
+  "slug": "amara_diallo",
+  "archetype": "The Solid Starter",
+  "year": "sophomore",
+  "profile_completeness": "incomplete",
+  "profile_completeness_notes": "10th grade. No SAT/ACT taken yet. No essays written. Only 2 years of transcript. AP exams not yet taken. Profile is strong in foundation but completely undifferentiated — evaluations should be heavily forward-looking with specific guidance on differentiation.",
+  "demographics": {
+    "state": "Illinois",
+    "first_gen": true,
+    "financial_need": "medium_high",
+    "ethnicity": "Black / West African (Guinean American)",
+    "citizenship": "US Citizen (born in US)",
+    "hometown": "Evanston, IL",
+    "languages": ["English (native)", "French (fluent)", "Susu (conversational, family language)"]
+  },
+  "academic": {
+    "gpa_unweighted": 3.88,
+    "gpa_weighted": 4.09,
+    "gpa_scale": 4.0,
+    "gpa_by_year": {
+      "freshman_unweighted": 3.82,
+      "sophomore_unweighted": 3.94
+    },
+    "class_rank": null,
+    "class_rank_percentile": 87,
+    "class_size": 640,
+    "school_type": "public",
+    "school_name": "Evanston Township High School",
+    "ap_courses": [
+      {"course": "World History: Modern", "score": null, "status": "in_progress", "note": "Sophomore year. On track for a 4."}
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors Algebra II",
+      "Honors Biology"
+    ],
+    "planned_junior_courses": [
+      "AP US History",
+      "AP Language & Composition",
+      "AP Computer Science Principles",
+      "Honors Pre-Calculus"
+    ],
+    "note": "ETHS offers a strong honors and AP track. Amara has taken every honors course available in her lane. Her grades are consistent and strong. She is on track to take 4-5 APs junior year and 5+ senior year."
+  },
+  "test_scores": {
+    "sat": null,
+    "act": null,
+    "psat": null,
+    "psat_planned": "October of junior year",
+    "ap_exams_completed": 0,
+    "ap_exams_with_5": 0,
+    "note": "No standardized tests taken. Plans to prepare seriously for the SAT starting summer before junior year. Family has identified Khan Academy and a community-funded test prep program at her school."
+  },
+  "activities": [
+    {
+      "name": "Student Government",
+      "role": "Sophomore Class Representative",
+      "years": 1,
+      "hours_per_week": 3,
+      "weeks_per_year": 32,
+      "description": "Elected by classmates to represent the sophomore class. Led initiative to add more diverse authors to the 10th-grade English curriculum. Organized a successful school supply drive for freshman orientation.",
+      "awards": []
+    },
+    {
+      "name": "Girls Who Code Club",
+      "role": "Co-Founder, Vice President",
+      "years": 1,
+      "hours_per_week": 3,
+      "weeks_per_year": 28,
+      "description": "Co-founded chapter sophomore year with a teacher sponsor. 22 members in first year. Organized two \"intro to coding\" workshops for 8th graders at a nearby middle school. Amara has no prior coding background — she started this to build the skill while creating community.",
+      "awards": []
+    },
+    {
+      "name": "JV Soccer",
+      "role": "Midfielder",
+      "years": 2,
+      "hours_per_week": 10,
+      "weeks_per_year": 14,
+      "description": "Two-year JV player. Solid contributor. Not at varsity level but committed team member. Played club soccer in middle school.",
+      "awards": []
+    },
+    {
+      "name": "French Club",
+      "role": "Member",
+      "years": 2,
+      "hours_per_week": 1,
+      "weeks_per_year": 24,
+      "description": "Participates in cultural events and conversation practice. Native-level French strengthens her involvement — often serves as a conversation partner for less advanced students.",
+      "awards": []
+    },
+    {
+      "name": "Evanston Public Library — Youth Volunteer",
+      "role": "Volunteer",
+      "years": 1,
+      "hours_per_week": 3,
+      "weeks_per_year": 36,
+      "description": "Assists in the children's section: reading programs, shelf organization, helping kids find books. Began volunteering to fulfill NHS service hours but continued because she enjoys it.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Business",
+  "intended_major_alt": "Computer Science or Political Science",
+  "intended_career": "Entrepreneurship or nonprofit leadership, with interest in economic development in West African communities",
+  "essays": {
+    "main_essay_quality": "not_yet_written",
+    "main_essay_theme": "Potential topic: growing up between two cultures — her parents' Guinean household and the predominantly white North Shore suburb — and what it means to translate between worlds. Strong raw material but topic is common; execution will determine quality.",
+    "supplemental_quality": "not_yet_written",
+    "supplemental_notes": "No essays written. Writing ability appears solid based on English grades but is untested in the personal essay format. She will need to develop a specific, distinctive voice rather than relying on general themes of identity or perseverance.",
+    "writing_style": "Unknown at this stage. Teachers describe her as a clear, organized writer with good instincts. Essay coaching recommended before applications."
+  },
+  "hooks": [
+    "First-generation college student",
+    "Black / West African — URM consideration at many schools",
+    "Geographic: Evanston is competitive but not overrepresented",
+    "Multilingual (English, French, Susu)"
+  ],
+  "additional_info": "Parents immigrated from Guinea in 2001. Father works in hotel management; mother is a registered nurse. Family income approximately $72,000/year with three children. Will need need-based financial aid but is not at maximum Pell Grant threshold. First person in immediate family to pursue a 4-year US college. Extended family in Guinea and France have university-educated members, so family broadly understands higher education value.",
+  "special_circumstances": "Profile at this stage is genuinely solid but generic. Strong GPA, decent activities, first-gen, URM — these are all positive signals, but the application tells no distinctive story yet. The most important work between now and applications is developing a spike or a narrative. Guidance counselor notes she has 'enormous potential but needs to find her thing.' The Girls Who Code co-founding is the most promising seed of differentiation.",
+  "high_school": {
+    "name": "Evanston Township High School",
+    "type": "public",
+    "city": "Evanston",
+    "state": "IL",
+    "rigor_tier": 4,
+    "ap_courses_offered": 25,
+    "challenge_index": 1.87,
+    "avg_class_gpa_unweighted": 3.41,
+    "pct_free_reduced_lunch": 0.31,
+    "pct_attending_4yr_college": 0.82,
+    "niche_grade": "A",
+    "committee_context": "Large, diverse, high-performing public school in one of the most educated suburbs of Chicago. ETHS is well known to admissions officers at selective colleges — it sends students to elite institutions regularly and is not considered a grade-inflating school. A 3.88 UW here is legitimately strong. The school has a 31% free/reduced lunch population and significant demographic diversity, which counselors note in school profile letters.",
+    "gpa_adjustment": "neutral",
+    "gpa_adjustment_note": "3.88 UW is read at face value — strong performance at a reputable, well-regarded public school with no significant grade inflation."
+  }
+}

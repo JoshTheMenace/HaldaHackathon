@@ -1,0 +1,150 @@
+{
+  "name": "Imani Robinson",
+  "slug": "imani_robinson",
+  "archetype": "The Rising Star",
+  "year": "junior",
+  "profile_completeness": "projected",
+  "profile_completeness_notes": "11th grade. PSAT taken; no SAT/ACT yet. No essays written. Junior year grades through spring semester. AP scores pending. Senior year not yet started. Profile is strong in trajectory and context; evaluations should weight future potential heavily and give specific guidance on what to lock in before applications.",
+  "demographics": {
+    "state": "Illinois",
+    "first_gen": true,
+    "financial_need": "high",
+    "ethnicity": "Black / African American",
+    "citizenship": "US Citizen",
+    "hometown": "Chicago, IL (South Side — Englewood neighborhood)"
+  },
+  "academic": {
+    "gpa_unweighted": 3.81,
+    "gpa_weighted": 4.17,
+    "gpa_scale": 4.0,
+    "gpa_by_year": {
+      "freshman_unweighted": 3.68,
+      "sophomore_unweighted": 3.85,
+      "junior_unweighted": 3.91
+    },
+    "class_rank": null,
+    "class_rank_percentile": 89,
+    "class_size": 385,
+    "school_type": "public_magnet",
+    "school_name": "Simeon Career Academy",
+    "ap_courses": [
+      {"course": "Biology", "score": 4, "status": "completed", "note": "Taken sophomore year. Strong performance."},
+      {"course": "US History", "score": null, "status": "in_progress", "note": "Junior year. Currently earning an A."},
+      {"course": "Chemistry", "score": null, "status": "in_progress", "note": "Junior year. Currently earning a B+."}
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors English 11",
+      "Honors Algebra II",
+      "Honors Pre-Calculus"
+    ],
+    "planned_senior_courses": [
+      "AP Calculus AB",
+      "AP English Literature",
+      "AP Environmental Science",
+      "AP Psychology",
+      "Dual Enrollment: Introduction to Biology Research (University of Illinois Chicago)"
+    ],
+    "note": "Simeon is a STEM-focused magnet school. Imani has taken the most rigorous available curriculum at every level. Her upward GPA trend across all three years reflects growing academic confidence."
+  },
+  "test_scores": {
+    "sat": null,
+    "act": null,
+    "psat": {
+      "total": 1310,
+      "ebrw": 680,
+      "math": 630,
+      "note": "Taken October junior year. Illinois National Merit threshold is approximately 1490; Imani did not qualify but the score demonstrates above-average ability. English and reading are stronger than math."
+    },
+    "sat_projected": "1360-1420 based on PSAT and current preparation",
+    "act_projected": "29-31 based on projected SAT range",
+    "test_prep": "Currently enrolled in a free SAT prep program through Chicago Scholars (nonprofit). Plans to take SAT in October of senior year and again in December if needed.",
+    "ap_exams_completed": 1,
+    "ap_exams_with_5": 0
+  },
+  "activities": [
+    {
+      "name": "Peer Tutoring Program",
+      "role": "Founder and Lead Coordinator",
+      "years": 2,
+      "hours_per_week": 6,
+      "weeks_per_year": 40,
+      "description": "Founded a peer tutoring program in 9th grade to address a gap she noticed — many students in her school struggled with biology and math but had no free support. Now has 14 volunteer tutors serving approximately 60 students per week in math and science. Secured $500 in school district microgrant funding for printing materials. Program has been adopted by the school administration as an official after-school resource.",
+      "awards": ["Chicago Scholars Program Recognition Award (2025)", "Simeon Career Academy Student Leadership Award (2025)"]
+    },
+    {
+      "name": "Varsity Basketball",
+      "role": "Starting Guard (junior year), JV (freshman and sophomore year)",
+      "years": 3,
+      "hours_per_week": 14,
+      "weeks_per_year": 20,
+      "description": "Earned varsity starting position junior year. Team went 18-6 and reached city quarterfinals. Imani is known for court awareness and leadership — coaches describe her as the player who makes everyone else better. Not at a D1 recruited athlete level but strong D3 potential.",
+      "awards": ["All-Chicago Public League Second Team (junior year)", "City Quarterfinals (team, junior year)"]
+    },
+    {
+      "name": "Part-Time Employment — Jewel-Osco",
+      "role": "Cashier",
+      "years": 2,
+      "hours_per_week": 12,
+      "weeks_per_year": 48,
+      "description": "Works evenings and weekends at a nearby grocery store. Contributes earnings to household expenses. Grandmother manages the household; mother has inconsistent presence due to circumstances Imani describes only as 'complicated.' Father not in the picture.",
+      "awards": []
+    },
+    {
+      "name": "Chicago Scholars Program",
+      "role": "Scholar",
+      "years": 2,
+      "hours_per_week": 3,
+      "weeks_per_year": 30,
+      "description": "Selective college access program for high-achieving, underrepresented Chicago students. Provides mentorship, college counseling, campus visits, and SAT prep. Imani was selected from a competitive applicant pool of 2,000+ students.",
+      "awards": ["Chicago Scholars Program Selectee (2024)"]
+    },
+    {
+      "name": "Church Youth Group — Greater Harvest Missionary Baptist",
+      "role": "Youth Leader",
+      "years": 4,
+      "hours_per_week": 3,
+      "weeks_per_year": 44,
+      "description": "Leads weekly youth group sessions and organizes community service events. The church and her grandmother have been primary sources of stability and support through an unstable home environment.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Biology",
+  "intended_major_alt": "Public Health or Pre-Medicine",
+  "intended_career": "Physician — specifically interested in serving under-resourced communities on Chicago's South Side. Wants to be the kind of doctor she never had growing up.",
+  "essays": {
+    "main_essay_quality": "not_yet_written",
+    "main_essay_theme": "Likely topic: her grandmother's kitchen as the one constant in her life — a place where homework was done, problems were talked through, and the expectation of college was never questioned. Could connect to her tutoring program as an extension of that kitchen table. Excellent raw material. Needs to avoid generic 'overcoming adversity' framing and stay specific.",
+    "supplemental_quality": "not_yet_written",
+    "supplemental_notes": "No essays written. English grades suggest solid writing ability. Chicago Scholars counselor is helping her develop her narrative. The challenge is that her real story is powerful but the specific circumstances (mother's absence) are sensitive — she will need to decide how much to share and how to frame it with dignity rather than sympathy-seeking.",
+    "writing_style": "Unknown formally. Verbally articulate and emotionally intelligent — teachers describe her as someone who 'says the thing that makes the room go quiet.' Translating that to paper is the task."
+  },
+  "hooks": [
+    "First-generation college student",
+    "Black / African American — URM consideration at many schools",
+    "Low-income household — Pell Grant eligible",
+    "Chicago Scholars program selectee (signal of external vetting)",
+    "Significant family hardship and unstable home environment",
+    "Demonstrated community impact through tutoring program"
+  ],
+  "additional_info": "Lives with grandmother (her primary guardian) in Englewood, one of Chicago's highest-poverty neighborhoods. Grandmother is a retired school aide with a deep belief in education. Family income approximately $24,000/year. Maximum Pell Grant eligible. Will need full need-based aid to attend any school outside of Illinois public system. Chicago Scholars is actively supporting college list development and financial aid applications. School counselor caseload is large (1:400 ratio) — Imani is fortunate to have Chicago Scholars as supplemental support.",
+  "special_circumstances": "Home environment has been genuinely difficult — Imani has maintained a nearly 4.0 GPA while working 12 hours/week, leading a tutoring program, playing varsity basketball, and effectively being a young adult in a household without consistent parental support. The upward GPA trend across all three years, despite these circumstances, is the most telling data point in the profile. Schools with robust QuestBridge, Posse, or need-based aid programs are the most appropriate targets.",
+  "high_school": {
+    "name": "Simeon Career Academy",
+    "type": "public_magnet",
+    "city": "Chicago",
+    "state": "IL",
+    "rigor_tier": 3,
+    "ap_courses_offered": 11,
+    "challenge_index": 0.88,
+    "avg_class_gpa_unweighted": 3.22,
+    "pct_free_reduced_lunch": 0.82,
+    "pct_attending_4yr_college": 0.52,
+    "niche_grade": "B",
+    "committee_context": "STEM-focused public magnet on Chicago's South Side. Despite magnet designation, the school serves a predominantly low-income student body — 82% free/reduced lunch. AP access is limited to 11 courses. Imani's 3.81 UW places her at the top of her class, and the school's grade distribution means this is a hard-earned number. The school's neighborhood context (Englewood) is directly relevant to evaluating the adversity and resilience signals in this profile.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.81 UW in an 82% free-lunch school with limited AP access represents exceptional relative performance. Contextual read: equivalent to approximately a 3.95 at an average American high school, with the added signal that this was achieved under significant personal hardship."
+  }
+}
