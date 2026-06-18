@@ -26,12 +26,44 @@ const GUIDELINES: [string, string, string][] = [
   ["flag", "Report anything", "Tap ⋮ on any post to report it — our safety system reviews every report right away."],
 ];
 
+// Normalized shape fed to the unified PeerCard.
+interface PeerCardData {
+  id: string;
+  name: string;
+  avatar: string;
+  accent: string;
+  badge: string;   // e.g. "Gr 10" or "UW"
+  sub: string;     // e.g. "Computer Science" or "Junior · Engineering"
+  status: string;  // activity blurb or quote
+  actionLabel: string;
+  actionDoneLabel: string;
+}
+
+function hsToPeerCard(p: HighSchoolPeer): PeerCardData {
+  return {
+    id: p.id, name: p.name, avatar: p.avatar, accent: p.accent,
+    badge: `Gr ${p.grade}`,
+    sub: p.pathway.split(/[& ]/)[0],
+    status: p.status,
+    actionLabel: "Wave 👋", actionDoneLabel: "Waved 👋",
+  };
+}
+
+function colToPeerCard(s: CollegeStudent): PeerCardData {
+  return {
+    id: s.id, name: s.name, avatar: s.avatar, accent: s.accent,
+    badge: s.schoolShort,
+    sub: `${s.year} · ${s.major}`,
+    status: s.blurb,
+    actionLabel: "Ask", actionDoneLabel: "Asked ✓",
+  };
+}
+
 export default function CohortTab() {
   const { profile } = useHalda();
   const pathway = pathwayFor(profile) || "Class of 2025";
   const hasPath = !!pathwayFor(profile);
 
-  // Schools the cohort is comparing = the student's own top matches.
   const compareSchools = useMemo(
     () => rankInterestMatches(profile, 3).map((m) => schoolById(m.schoolId)?.short).filter(Boolean) as string[],
     [profile]
@@ -39,19 +71,17 @@ export default function CohortTab() {
   const faces = useMemo(() => cohortFaces(pathway), [pathway]);
   const seeded = useMemo(() => postsFor(profile), [profile]);
 
-  // Community: same high school + college students at saved/matched schools.
-  const hsPeers = useMemo(() => hspeersFor(profile), [profile]);
+  const hsPeers = useMemo(() => hspeersFor(profile).map(hsToPeerCard), [profile]);
   const savedIds = useMemo(() => {
     const saved = profile.savedSchoolIds ?? [];
     const matched = rankInterestMatches(profile, 3).map((m) => m.schoolId);
     return [...new Set([...saved, ...matched])];
   }, [profile]);
-  const collegeStudents = useMemo(() => collegeStudentsFor(savedIds), [savedIds]);
+  const collegeStudents = useMemo(() => collegeStudentsFor(savedIds).map(colToPeerCard), [savedIds]);
 
   const firstName = (profile.name || "You").split(" ")[0];
   const myInitials = (profile.name || "Y").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
-  // The pinned Halda post adapts to the student's real next deadline + pathway.
   const nextTask = profile.tasks?.find((t) => t.status !== "done" && t.due);
   const pinned: CohortPost = {
     id: "post_halda", authorId: "halda", pathway, time: "Automated update", system: true, pinned: true,
@@ -77,7 +107,7 @@ export default function CohortTab() {
     if (filter === "Scholarships") return p.tags.some((t) => /scholar|grant|aid|fafsa/i.test(t));
     if (filter === "Questions") return p.tags.some((t) => /question/i.test(t)) || /\?/.test(p.body);
     if (filter.startsWith("Local")) return p.tags.some((t) => /local/i.test(t));
-    return p.pathway === pathway; // the pathway chip
+    return p.pathway === pathway;
   };
 
   const feed = [...composed, ...seeded].filter(matchesFilter);
@@ -122,62 +152,69 @@ export default function CohortTab() {
         <button className="sbtn" onClick={() => setSheet("guidelines")}>Guidelines</button>
       </div>
 
-      {/* From your school */}
+      {/* ── From your High School ── */}
       {hsPeers.length > 0 && (
-        <section className="hs-section">
-          <div className="hs-head">
-            <Icon name="school" />
-            <span>From your school</span>
+        <section className="peer-section">
+          <div className="peer-sec-head">
+            <Icon name="school" /><span>From your High School</span>
           </div>
-          <div className="hs-scroll">
-            {hsPeers.map((peer) => <HsPeerCard key={peer.id} peer={peer} />)}
+          <div className="peer-grid">
+            {hsPeers.map((p) => <PeerCard key={p.id} data={p} />)}
           </div>
         </section>
       )}
 
-      <div className="filters">
-        {FILTERS.map((f) => (
-          <button key={f} className={`fchip${filter === f ? " on" : ""}`} onClick={() => setFilter(f)}>{f}</button>
-        ))}
-      </div>
+      {/* ── From your top Universities ── */}
+      {collegeStudents.length > 0 && (
+        <section className="peer-section">
+          <div className="peer-sec-head">
+            <Icon name="account_balance" /><span>From your top Universities</span>
+          </div>
+          <div className="peer-grid">
+            {collegeStudents.map((p) => <PeerCard key={p.id} data={p} />)}
+          </div>
+        </section>
+      )}
 
-      {composeOpen ? (
-        <div className="composer-open">
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`Share a win or question with the ${pathwayShort(pathway)} cohort…`} autoFocus />
-          <div className="co-row">
-            <span className="co-note"><Icon name="verified_user" /> Screened for safety</span>
-            <div>
-              <button className="co-cancel" onClick={() => { setComposeOpen(false); setDraft(""); }}>Cancel</button>
-              <button className="co-post" onClick={post} disabled={!draft.trim()}>Post</button>
+      {/* ── Community Bulletin ── */}
+      <section className="peer-section">
+        <div className="peer-sec-head">
+          <Icon name="forum" /><span>Community Bulletin</span>
+        </div>
+
+        <div className="filters">
+          {FILTERS.map((f) => (
+            <button key={f} className={`fchip${filter === f ? " on" : ""}`} onClick={() => setFilter(f)}>{f}</button>
+          ))}
+        </div>
+
+        {composeOpen ? (
+          <div className="composer-open">
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`Share a win or question with the ${pathwayShort(pathway)} cohort…`} autoFocus />
+            <div className="co-row">
+              <span className="co-note"><Icon name="verified_user" /> Screened for safety</span>
+              <div>
+                <button className="co-cancel" onClick={() => { setComposeOpen(false); setDraft(""); }}>Cancel</button>
+                <button className="co-post" onClick={post} disabled={!draft.trim()}>Post</button>
+              </div>
             </div>
           </div>
+        ) : (
+          <button className="composer" onClick={() => setComposeOpen(true)}>
+            <span className="cmp-av">{myInitials}</span>
+            <span>Share something with your cohort…</span>
+            <Icon name="edit" />
+          </button>
+        )}
+
+        <div className="feed">
+          {filter === "All" && composed.length === 0 && <PostCard p={pinned} my={false} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />}
+          {feed.length === 0 && <p className="cohort-empty">No posts here yet — be the first to share something with your {pathwayShort(pathway)} cohort.</p>}
+          {feed.map((p) => (
+            <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />
+          ))}
         </div>
-      ) : (
-        <button className="composer" onClick={() => setComposeOpen(true)}>
-          <span className="cmp-av">{myInitials}</span>
-          <span>Share something with your cohort…</span>
-          <Icon name="edit" />
-        </button>
-      )}
-
-      <div className="feed">
-        {filter === "All" && composed.length === 0 && <PostCard p={pinned} my={false} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />}
-        {feed.length === 0 && <p className="cohort-empty">No posts here yet — be the first to share something with your {pathwayShort(pathway)} cohort.</p>}
-        {feed.map((p) => (
-          <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />
-        ))}
-      </div>
-
-      {/* Hear from students at your top schools */}
-      {collegeStudents.length > 0 && (
-        <section className="col-section">
-          <div className="hs-head">
-            <Icon name="account_balance" />
-            <span>Students at your top schools</span>
-          </div>
-          {collegeStudents.map((s) => <ColStudentCard key={s.id} s={s} />)}
-        </section>
-      )}
+      </section>
 
       {toast && <div className="cohort-toast">{toast}</div>}
 
@@ -217,47 +254,30 @@ export default function CohortTab() {
   );
 }
 
-function HsPeerCard({ peer }: { peer: HighSchoolPeer }) {
-  const [waved, setWaved] = useState(false);
+// ── Unified peer card used by both HS and university sections ────────────────
+
+function PeerCard({ data: p }: { data: PeerCardData }) {
+  const [done, setDone] = useState(false);
   return (
-    <div className="hs-card">
-      <img className="hs-av" src={peer.avatar} alt="" style={{ borderColor: peer.accent }} />
-      <div className="hs-name">{peer.name}</div>
-      <div className="hs-meta">{peer.pathway.split(/[& ]/)[0]} · Gr {peer.grade}</div>
-      <div className="hs-status">{peer.status}</div>
+    <div className="peer-card">
+      <img className="peer-av" src={p.avatar} alt="" style={{ borderColor: p.accent }} />
+      <div className="peer-name">{p.name}</div>
+      <span className="peer-badge" style={{ background: p.accent }}>{p.badge}</span>
+      <div className="peer-sub">{p.sub}</div>
+      <div className="peer-status">{p.status}</div>
       <button
-        className={`hs-wave${waved ? " waved" : ""}`}
-        onClick={() => setWaved(true)}
+        className={`peer-btn${done ? " done" : ""}`}
+        onClick={() => setDone(true)}
+        disabled={done}
+        style={done ? undefined : { borderColor: p.accent, color: p.accent }}
       >
-        {waved ? "Waved 👋" : "Wave 👋"}
+        {done ? p.actionDoneLabel : p.actionLabel}
       </button>
     </div>
   );
 }
 
-function ColStudentCard({ s }: { s: CollegeStudent }) {
-  const [asked, setAsked] = useState(false);
-  return (
-    <div className="col-card">
-      <img className="col-av" src={s.avatar} alt="" style={{ borderColor: s.accent }} />
-      <div className="col-info">
-        <div className="col-name">
-          {s.name}
-          <span className="col-school" style={{ background: s.accent }}>{s.schoolShort}</span>
-        </div>
-        <div className="col-meta">{s.year} · {s.major}</div>
-        <p className="col-blurb">{s.blurb}</p>
-      </div>
-      <button
-        className={`col-ask${asked ? " asked" : ""}`}
-        onClick={() => setAsked(true)}
-        disabled={asked}
-      >
-        {asked ? "Asked ✓" : "Ask"}
-      </button>
-    </div>
-  );
-}
+// ── Feed post card (unchanged) ───────────────────────────────────────────────
 
 function PostCard({ p, my, likeCount, liked, onLike, onAct, onReport, firstName, myInitials }: {
   p: CohortPost; my: boolean; likeCount: (p: CohortPost) => number; liked: Set<string>;
