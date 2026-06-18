@@ -96,7 +96,7 @@ const TOOLS = [
       {
         name: "search_universities",
         description:
-          "Search right-fit universities. Call this once you know the basics (name, grade, location, and at least one interest with its intent). The student will SEE the ranked matches appear.",
+          "Present the ranked list of right-fit schools — the student SEES them as interactive cards. This is a BIG reveal, so only call it once the student has agreed to see schools: either they explicitly asked ('what schools should I look at?', 'show me some schools'), or you offered and they said yes. Do NOT call it proactively, and do NOT re-run it every turn.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -148,13 +148,15 @@ COLD START: if KNOWN SO FAR is empty or nearly empty (you don't know their name 
 
 Naturally pick up everything that helps: high school, whether they'd be first-gen, campus setting/size, and money reality (budget / needs aid). Save it with update_profile as you go. If a student names their high school but not their city, infer the likely city + state from the school name (e.g. "Austin High School" -> Austin, TX) and save those too as a best estimate.
 
-LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"), then re-run search_universities so the matches actually show in-state schools first. A single named major (e.g. "biology") is enough to start searching — you don't need a separate interest.
+LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"). A single named major (e.g. "biology") is enough to base matches on — you don't need a separate interest.
+
+DON'T BE GREEDY WITH SCHOOLS: presenting the ranked list is a big moment — don't dump it unprompted. Once you have enough to find good matches (name, grade, location, an interest/major), OFFER first, e.g. "I think I've got enough to pull up a few schools that fit — want to see them?" Only call search_universities after they say yes, or if they directly ask to see schools. It's always fine to talk about a school by name or answer a question about ONE specific school (school_detail) — that's helpful info, not the big reveal. Once you've shown the list, don't keep re-running the search every turn; only refresh it if they ask or you offer again.
 
 COLLEGE CREDIT: AP / dual-enrollment / IB can save money and time — capture each as a credit item. But ONLY ask about credits if you don't already know them (check KNOWN SO FAR first).
 
 TOOLS — use the RIGHT one, and don't over-call:
 - update_profile: whenever you learn ANY new fact.
-- search_universities: ONLY to (re)surface the ranked list when they ask broadly ("what schools should I look at?") or after big new info. Don't call it for a single-school question or a general question.
+- search_universities: presents the ranked list as cards — only after the student asked to see schools or said yes to your offer (see DON'T BE GREEDY above). Never for a single-school or general question, and not every turn.
 - school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "my odds at Utah?"). This is how you answer with real numbers.
 - find_scholarships: when they ask about scholarships, aid, or paying for college.
 - add_task: real deadlines. If they need aid → key:"fafsa". Don't re-add a task that's already on their list.
@@ -228,7 +230,7 @@ export async function runAgent(opts: {
     {
       role: "user",
       parts: [{
-        text: `${profileSummary(working)}\nProfile completeness: ${completeness}%. enoughToSearch=${enoughToSearch}.${opts.speak === false ? " (Reading a spoken transcript — call tools but keep reply empty.)" : ""}\n\nStudent: ${opts.message}`,
+        text: `${profileSummary(working)}\nProfile completeness: ${completeness}%. readyToOfferSchools=${enoughToSearch} (if true and they haven't asked to see schools, OFFER — don't auto-present).${opts.speak === false ? " (Reading a spoken transcript — call tools but keep reply empty.)" : ""}\n\nStudent: ${opts.message}`,
       }],
     },
   ];
