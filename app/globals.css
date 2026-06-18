@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand — warm, grounded, anti-AI-slop. Cream-first, dark-never. */
+  --pine: #143a36; /* primary brand + ink */
+  --pine-deep: #0e2b28; /* constellation panel only */
+  --coral: #ff6b4a; /* action + the guide's voice */
+  --coral-ink: #7a2f1c;
+  --gold: #ffc247; /* REWARDS ONLY — sacred */
+  --gold-ink: #7a5200;
+  --cream: #fff7ed; /* default canvas */
+  --sage: #3a6b62; /* secondary text */
+  --mist: #fde3c4; /* surface tint, empty tracks */
+  --success: #2fa37a; /* done / aid matched */
+  --paper: #ffffff; /* elevated cards + B2B console */
+  --line: rgba(20, 58, 54, 0.12);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--pine);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.tnum {
+  font-family: var(--font-display), ui-sans-serif, system-ui;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(20, 58, 54, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 58, 54, 0.34);
+  background-clip: content-box;
+}
+
+/* Surfaces */
+.glass {
+  background: rgba(255, 247, 237, 0.72);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.night-glass {
+  background: rgba(14, 43, 40, 0.55);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20, 58, 54, 0.04),
+    0 12px 30px rgba(20, 58, 54, 0.07);
+}
+
+/* The starfield used behind the constellation panel */
+.starfield {
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(255, 247, 237, 0.7), transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(255, 247, 237, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(255, 194, 71, 0.55), transparent),
+    radial-gradient(1px 1px at 85% 60%, rgba(255, 247, 237, 0.5), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255, 247, 237, 0.4), transparent),
+    radial-gradient(1px 1px at 12% 80%, rgba(255, 194, 71, 0.4), transparent),
+    linear-gradient(160deg, var(--pine) 0%, var(--pine-deep) 100%);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* Reward shimmer for "thinking" */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  animation: shimmer 1.8s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-twinkle { animation: twinkle 3.4s ease-in-out infinite; }
+.animate-floaty { animation: floaty 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
