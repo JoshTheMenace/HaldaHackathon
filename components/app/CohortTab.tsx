@@ -34,8 +34,7 @@ interface PeerCardData {
   badge: string;
   sub: string;
   status: string;
-  // used to build the bulletin post
-  context: string; // "from your school" | "at UW" | etc.
+  context: string;
 }
 
 function hsToPeerCard(p: HighSchoolPeer): PeerCardData {
@@ -57,6 +56,8 @@ function colToPeerCard(s: CollegeStudent): PeerCardData {
     context: `at ${s.schoolShort}`,
   };
 }
+
+interface Comment { id: string; author: string; text: string; time: string; }
 
 export default function CohortTab() {
   const { profile } = useHalda();
@@ -99,14 +100,28 @@ export default function CohortTab() {
   const [toast, setToast] = useState("");
   const [sheet, setSheet] = useState<null | "report" | "guidelines">(null);
 
-  // Connect sheet state
+  // Per-post comments stored in a map
+  const [commentsByPost, setCommentsByPost] = useState<Map<string, Comment[]>>(new Map());
+  const addComment = (postId: string, text: string) => {
+    setCommentsByPost((prev) => {
+      const next = new Map(prev);
+      const existing = prev.get(postId) ?? [];
+      next.set(postId, [...existing, { id: `c_${Date.now()}`, author: firstName, text, time: "Just now" }]);
+      return next;
+    });
+  };
+
+  // Connect state — inline panel, no sheet overlay
   const [connectTarget, setConnectTarget] = useState<PeerCardData | null>(null);
   const [connectQ, setConnectQ] = useState("");
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2400); };
 
-  const openConnect = (peer: PeerCardData) => { setConnectTarget(peer); setConnectQ(""); };
+  const openConnect = (peer: PeerCardData) => {
+    setConnectTarget((prev) => (prev?.id === peer.id ? null : peer)); // toggle
+    setConnectQ("");
+  };
   const closeConnect = () => { setConnectTarget(null); setConnectQ(""); };
 
   const submitConnect = () => {
@@ -120,7 +135,7 @@ export default function CohortTab() {
     setComposed((c) => [{ id: `conn_${Date.now()}`, authorId: "me", pathway, time: "Just now", body, tags, likes: 0, comments: 0 }, ...c]);
     setConnectedIds((s) => new Set(s).add(id));
     closeConnect();
-    flash(q ? "Question posted to the bulletin — your classmates might have the same one ✓" : `Connected with ${name} — posted to the bulletin ✓`);
+    flash(q ? "Question posted to the Community Bulletin ✓" : `Connected with ${name} — posted to the bulletin ✓`);
   };
 
   const matchesFilter = (p: CohortPost) => {
@@ -143,8 +158,6 @@ export default function CohortTab() {
     setDraft(""); setComposeOpen(false);
     flash("Posted — screened for safety before classmates see it ✓");
   };
-
-  const anySheetOpen = sheet !== null || connectTarget !== null;
 
   return (
     <main className="scroll cohort">
@@ -175,32 +188,27 @@ export default function CohortTab() {
         <button className="sbtn" onClick={() => setSheet("guidelines")}>Guidelines</button>
       </div>
 
+      {/* ── From your High School ── */}
       {hsPeers.length > 0 && (
-        <section className="peer-section">
-          <div className="peer-sec-head">
-            <Icon name="school" /><span>From your High School</span>
-          </div>
-          <div className="peer-grid">
-            {hsPeers.map((p) => (
-              <PeerCard key={p.id} data={p} connected={connectedIds.has(p.id)} onConnect={() => openConnect(p)} />
-            ))}
-          </div>
-        </section>
+        <PeerSection
+          icon="school" title="From your High School"
+          peers={hsPeers} connectedIds={connectedIds} connectTarget={connectTarget}
+          connectQ={connectQ} setConnectQ={setConnectQ}
+          onConnect={openConnect} onCancel={closeConnect} onSubmit={submitConnect}
+        />
       )}
 
+      {/* ── From your top Universities ── */}
       {collegeStudents.length > 0 && (
-        <section className="peer-section">
-          <div className="peer-sec-head">
-            <Icon name="account_balance" /><span>From your top Universities</span>
-          </div>
-          <div className="peer-grid">
-            {collegeStudents.map((p) => (
-              <PeerCard key={p.id} data={p} connected={connectedIds.has(p.id)} onConnect={() => openConnect(p)} />
-            ))}
-          </div>
-        </section>
+        <PeerSection
+          icon="account_balance" title="From your top Universities"
+          peers={collegeStudents} connectedIds={connectedIds} connectTarget={connectTarget}
+          connectQ={connectQ} setConnectQ={setConnectQ}
+          onConnect={openConnect} onCancel={closeConnect} onSubmit={submitConnect}
+        />
       )}
 
+      {/* ── Community Bulletin ── */}
       <section className="peer-section">
         <div className="peer-sec-head">
           <Icon name="forum" /><span>Community Bulletin</span>
@@ -232,20 +240,26 @@ export default function CohortTab() {
         )}
 
         <div className="feed">
-          {filter === "All" && composed.length === 0 && <PostCard p={pinned} my={false} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />}
+          {filter === "All" && composed.length === 0 && (
+            <PostCard p={pinned} my={false} likeCount={likeCount} liked={liked} onLike={toggleLike}
+              onAct={flash} onReport={() => setSheet("report")}
+              firstName={firstName} myInitials={myInitials}
+              comments={commentsByPost.get(pinned.id) ?? []} onAddComment={addComment} />
+          )}
           {feed.length === 0 && <p className="cohort-empty">No posts here yet — be the first to share something with your {pathwayShort(pathway)} cohort.</p>}
           {feed.map((p) => (
-            <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />
+            <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked}
+              onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")}
+              firstName={firstName} myInitials={myInitials}
+              comments={commentsByPost.get(p.id) ?? []} onAddComment={addComment} />
           ))}
         </div>
       </section>
 
       {toast && <div className="cohort-toast">{toast}</div>}
 
-      {/* Shared scrim */}
-      <div className={`scrim${anySheetOpen ? " on" : ""}`} onClick={() => { setSheet(null); closeConnect(); }} />
-
-      {/* Guidelines / report sheet */}
+      {/* guidelines / report sheet — no z-index conflict since Connect is now inline */}
+      <div className={`scrim${sheet ? " on" : ""}`} onClick={() => setSheet(null)} />
       <section className={`sheet cohort-sheet${sheet ? " open" : ""}`} role="dialog" aria-modal="true">
         <span className="grab" />
         <div className="cs-head">
@@ -276,81 +290,120 @@ export default function CohortTab() {
           )}
         </div>
       </section>
-
-      {/* Connect sheet */}
-      <section className={`sheet cohort-sheet connect-sheet${connectTarget ? " open" : ""}`} role="dialog" aria-modal="true">
-        <span className="grab" />
-        {connectTarget && (
-          <>
-            <div className="cs-head">
-              <img className="connect-av" src={connectTarget.avatar} alt="" style={{ borderColor: connectTarget.accent }} />
-              <div className="connect-meta">
-                <div className="connect-name">{connectTarget.name}</div>
-                <div className="connect-sub">
-                  <span className="peer-badge" style={{ background: connectTarget.accent }}>{connectTarget.badge}</span>
-                  <span>{connectTarget.sub}</span>
-                </div>
-              </div>
-              <button className="sheet-close" onClick={closeConnect} aria-label="Close"><Icon name="close" /></button>
-            </div>
-            <div className="cs-body">
-              <p className="cs-intro connect-intro">
-                <Icon name="forum" /> Connections are public — your question posts to the Community Bulletin where classmates can learn from the answer too.
-              </p>
-              <label className="connect-label">Ask {connectTarget.name.split(" ")[0]} a public question <span>(optional)</span></label>
-              <textarea
-                className="connect-textarea"
-                placeholder={`e.g. "What's the ${connectTarget.badge} application process like?"`}
-                value={connectQ}
-                onChange={(e) => setConnectQ(e.target.value)}
-                autoFocus
-              />
-              <div className="connect-actions">
-                <button className="co-cancel" onClick={closeConnect}>Cancel</button>
-                <button className="co-post connect-go" onClick={submitConnect}>
-                  {connectQ.trim() ? "Post question" : "Connect"} <Icon name="arrow_forward" />
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </section>
     </main>
+  );
+}
+
+// ── Peer section: grid + inline connect panel ────────────────────────────────
+
+function PeerSection({ icon, title, peers, connectedIds, connectTarget, connectQ, setConnectQ, onConnect, onCancel, onSubmit }: {
+  icon: string; title: string; peers: PeerCardData[];
+  connectedIds: Set<string>; connectTarget: PeerCardData | null;
+  connectQ: string; setConnectQ: (v: string) => void;
+  onConnect: (p: PeerCardData) => void; onCancel: () => void; onSubmit: () => void;
+}) {
+  // Which card in this section is currently expanding?
+  const activeInSection = connectTarget && peers.some((p) => p.id === connectTarget.id) ? connectTarget : null;
+
+  return (
+    <section className="peer-section">
+      <div className="peer-sec-head">
+        <Icon name={icon} /><span>{title}</span>
+      </div>
+      <div className="peer-grid">
+        {peers.map((p) => (
+          <PeerCard key={p.id} data={p}
+            connected={connectedIds.has(p.id)}
+            expanding={activeInSection?.id === p.id}
+            onConnect={() => onConnect(p)} />
+        ))}
+      </div>
+
+      {/* Inline connect panel — renders in document flow, no z-index issues */}
+      {activeInSection && (
+        <div className="connect-panel">
+          <div className="cp-who">
+            <img className="cp-av" src={activeInSection.avatar} alt="" style={{ borderColor: activeInSection.accent }} />
+            <div>
+              <div className="cp-name">{activeInSection.name}</div>
+              <div className="cp-sub">
+                <span className="peer-badge" style={{ background: activeInSection.accent }}>{activeInSection.badge}</span>
+                <span className="cp-ctx">{activeInSection.sub}</span>
+              </div>
+            </div>
+          </div>
+          <p className="cp-note">
+            <Icon name="forum" /> Questions post publicly — your classmates might have the same one.
+          </p>
+          <label className="cp-label">
+            Ask {activeInSection.name.split(" ")[0]} a public question <span>(optional)</span>
+          </label>
+          <textarea
+            className="cp-textarea"
+            placeholder={`e.g. "What's the ${activeInSection.badge} process like?"`}
+            value={connectQ}
+            onChange={(e) => setConnectQ(e.target.value)}
+            autoFocus
+          />
+          <div className="cp-actions">
+            <button className="co-cancel" onClick={onCancel}>Cancel</button>
+            <button className="co-post" onClick={onSubmit}>
+              {connectQ.trim() ? "Post question" : "Connect"} <Icon name="arrow_forward" />
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
 // ── Unified peer card ────────────────────────────────────────────────────────
 
-function PeerCard({ data: p, connected, onConnect }: { data: PeerCardData; connected: boolean; onConnect: () => void }) {
+function PeerCard({ data: p, connected, expanding, onConnect }: {
+  data: PeerCardData; connected: boolean; expanding: boolean; onConnect: () => void;
+}) {
   return (
-    <div className="peer-card">
+    <div className={`peer-card${expanding ? " expanding" : ""}`}>
       <img className="peer-av" src={p.avatar} alt="" style={{ borderColor: p.accent }} />
       <div className="peer-name">{p.name}</div>
       <span className="peer-badge" style={{ background: p.accent }}>{p.badge}</span>
       <div className="peer-sub">{p.sub}</div>
       <div className="peer-status">{p.status}</div>
       <button
-        className={`peer-btn${connected ? " done" : ""}`}
+        className={`peer-btn${connected ? " done" : expanding ? " active" : ""}`}
         onClick={connected ? undefined : onConnect}
         disabled={connected}
-        style={connected ? undefined : { borderColor: p.accent, color: p.accent }}
+        style={connected || expanding ? undefined : { borderColor: p.accent, color: p.accent }}
       >
-        {connected ? "Connected ✓" : "Connect"}
+        {connected ? "Connected ✓" : expanding ? "Cancel ↑" : "Connect"}
       </button>
     </div>
   );
 }
 
-// ── Feed post card ───────────────────────────────────────────────────────────
+// ── Feed post card with inline comments ─────────────────────────────────────
 
-function PostCard({ p, my, likeCount, liked, onLike, onAct, onReport, firstName, myInitials }: {
+function PostCard({ p, my, likeCount, liked, onLike, onAct, onReport, firstName, myInitials, comments, onAddComment }: {
   p: CohortPost; my: boolean; likeCount: (p: CohortPost) => number; liked: Set<string>;
   onLike: (p: CohortPost) => void; onAct: (m: string) => void; onReport: () => void;
   firstName: string; myInitials: string;
+  comments: Comment[]; onAddComment: (postId: string, text: string) => void;
 }) {
   const peer = peerById(p.authorId);
   const name = p.system ? "Halda" : my ? `${firstName} (you)` : peer?.name || "Classmate";
   const meta = p.system ? `Automated update · Class of 2025` : `${p.pathway} pathway · ${p.time}`;
+  const [showComments, setShowComments] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+
+  const submitComment = () => {
+    const t = commentDraft.trim();
+    if (!t) return;
+    onAddComment(p.id, t);
+    setCommentDraft("");
+  };
+
+  const totalComments = p.comments + comments.length;
+
   return (
     <article className={`post${p.pinned ? " pinned" : ""}`}>
       <div className="phead">
@@ -370,11 +423,45 @@ function PostCard({ p, my, likeCount, liked, onLike, onAct, onReport, firstName,
         <button className={`pact${liked.has(p.id) ? " liked" : ""}`} onClick={() => onLike(p)}>
           <Icon name="favorite" /><span className="n">{likeCount(p)}</span>
         </button>
-        <button className="pact" onClick={() => onAct("Replies are coming soon — for now, react and share.")}>
-          <Icon name="chat_bubble" /><span className="n">{p.comments}</span>
+        <button className="pact" onClick={() => setShowComments((v) => !v)}>
+          <Icon name="chat_bubble" /><span className="n">{totalComments}</span>
         </button>
         <button className="pact spacer" onClick={() => onAct("Shared to your story")}><Icon name="share" /></button>
       </div>
+
+      {showComments && (
+        <div className="comment-section">
+          {comments.length === 0 && p.comments === 0 && (
+            <p className="comment-empty">No comments yet — be the first.</p>
+          )}
+          {p.comments > 0 && comments.length === 0 && (
+            <p className="comment-stub">{p.comments} comment{p.comments > 1 ? "s" : ""} from classmates — add yours below.</p>
+          )}
+          {comments.map((c) => (
+            <div key={c.id} className="comment-row">
+              <span className="comment-av">{c.author[0]}</span>
+              <div className="comment-body">
+                <span className="comment-author">{c.author}</span>
+                <span className="comment-time">{c.time}</span>
+                <p className="comment-text">{c.text}</p>
+              </div>
+            </div>
+          ))}
+          <div className="comment-compose">
+            <span className="comment-av">{myInitials}</span>
+            <input
+              className="comment-input"
+              placeholder="Add a comment…"
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
+            />
+            <button className="comment-send" onClick={submitComment} disabled={!commentDraft.trim()}>
+              <Icon name="send" />
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

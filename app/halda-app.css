@@ -219,22 +219,39 @@
 .phone .guide-item .gt { font-weight: 700; font-size: 14.5px; }
 .phone .guide-item .gs { font-size: 13px; color: var(--h-ink-var); margin-top: 2px; line-height: 1.45; }
 
-/* ── connect sheet ───────────────────────────────────────────────────────── */
-.phone .connect-sheet { z-index: 68; }
-.phone .connect-av { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2.5px solid; flex-shrink: 0; }
-.phone .connect-meta { flex: 1; min-width: 0; }
-.phone .connect-name { font-size: 15px; font-weight: 700; }
-.phone .connect-sub { display: flex; align-items: center; gap: 7px; margin-top: 4px; flex-wrap: wrap; }
-.phone .connect-sub span:not(.peer-badge) { font-size: 12px; color: var(--h-outline); }
-.phone .connect-intro { display: flex; align-items: flex-start; gap: 7px; }
-.phone .connect-intro .material-symbols-outlined { font-size: 17px; color: var(--h-primary); flex-shrink: 0; margin-top: 1px; }
-.phone .connect-label { display: block; font-size: 13.5px; font-weight: 700; color: var(--h-ink); margin: 18px 0 8px; }
-.phone .connect-label span { font-weight: 500; color: var(--h-outline); }
-.phone .connect-textarea { width: 100%; min-height: 80px; border: 1.5px solid var(--h-s-highest); border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--h-ink); background: var(--h-s-low); outline: none; resize: none; box-sizing: border-box; }
-.phone .connect-textarea:focus { border-color: var(--h-primary-c); background: var(--h-white); }
-.phone .connect-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 14px; }
-.phone .connect-go { display: flex; align-items: center; gap: 5px; }
-.phone .connect-go .material-symbols-outlined { font-size: 17px; }
+/* ── inline connect panel (no z-index overlay) ───────────────────────────── */
+.phone .peer-card.expanding { border-color: var(--h-primary-c); background: rgba(0,107,95,.03); }
+.phone .peer-btn.active { background: rgba(0,107,95,.1); border-color: var(--h-primary); color: var(--h-primary); }
+.phone .connect-panel { margin-top: 12px; background: var(--h-white); border: 1.5px solid var(--h-primary-c); border-radius: 20px; padding: 16px; box-shadow: 0 4px 20px -6px rgba(0,107,95,.18); }
+.phone .cp-who { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+.phone .cp-av { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid; flex-shrink: 0; }
+.phone .cp-name { font-size: 14px; font-weight: 700; }
+.phone .cp-sub { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.phone .cp-ctx { font-size: 11.5px; color: var(--h-outline); }
+.phone .cp-note { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: var(--h-ink-var); line-height: 1.4; background: rgba(0,107,95,.06); border-radius: 12px; padding: 9px 11px; margin-bottom: 13px; }
+.phone .cp-note .material-symbols-outlined { font-size: 15px; color: var(--h-primary); flex-shrink: 0; margin-top: 1px; }
+.phone .cp-label { display: block; font-size: 13px; font-weight: 700; color: var(--h-ink); margin-bottom: 7px; }
+.phone .cp-label span { font-weight: 500; color: var(--h-outline); }
+.phone .cp-textarea { width: 100%; min-height: 72px; border: 1.5px solid var(--h-s-highest); border-radius: 13px; padding: 10px 12px; font-family: inherit; font-size: 13.5px; line-height: 1.5; color: var(--h-ink); background: var(--h-s-low); outline: none; resize: none; box-sizing: border-box; }
+.phone .cp-textarea:focus { border-color: var(--h-primary-c); background: var(--h-white); }
+.phone .cp-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+
+/* ── inline comments ─────────────────────────────────────────────────────── */
+.phone .comment-section { border-top: 1px solid #eceef0; margin-top: 13px; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.phone .comment-empty { font-size: 12.5px; color: var(--h-outline); text-align: center; padding: 4px 0 2px; }
+.phone .comment-stub { font-size: 12.5px; color: var(--h-outline); font-style: italic; }
+.phone .comment-row { display: flex; gap: 9px; }
+.phone .comment-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(140deg,#16b89e,#064a40); color: #eafff7; font-size: 11px; font-weight: 800; display: grid; place-items: center; flex-shrink: 0; }
+.phone .comment-body { flex: 1; min-width: 0; }
+.phone .comment-author { font-size: 12px; font-weight: 700; color: var(--h-ink); }
+.phone .comment-time { font-size: 11px; color: var(--h-outline); margin-left: 6px; }
+.phone .comment-text { font-size: 13px; color: var(--h-ink); line-height: 1.45; margin-top: 2px; }
+.phone .comment-compose { display: flex; align-items: center; gap: 8px; }
+.phone .comment-input { flex: 1; border: 1.5px solid var(--h-s-highest); border-radius: 9999px; padding: 8px 14px; font-family: inherit; font-size: 13px; color: var(--h-ink); background: var(--h-s-low); outline: none; }
+.phone .comment-input:focus { border-color: var(--h-primary-c); background: var(--h-white); }
+.phone .comment-send { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--h-primary); color: #eafff7; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+.phone .comment-send:disabled { background: var(--h-outline-v); cursor: default; }
+.phone .comment-send .material-symbols-outlined { font-size: 16px; }
 
 /* ── unified peer sections (High School + Universities) ─────────────────── */
 .phone .peer-section { margin-top: 20px; }
