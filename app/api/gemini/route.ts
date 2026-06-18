@@ -10,11 +10,12 @@ export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "no GEMINI_API_KEY" }, { status: 500 });
 
-  const { history, message, profile, mode } = (await req.json()) as {
+  const { history, message, profile, mode, matchesRevealed } = (await req.json()) as {
     history?: { role: "user" | "model"; text: string }[];
     message: string;
     profile: StudentProfile;
     mode?: "chat" | "extract";
+    matchesRevealed?: boolean;
   };
 
   try {
@@ -24,13 +25,12 @@ export async function POST(req: Request) {
       message,
       history,
       speak: mode !== "extract",
+      matchesRevealed,
     });
     // Persist so the partner console + next channel see the enrichment.
     if (profile?.id) {
       const merged: StudentProfile = {
-        ...profile,
-        ...result.updates,
-        intendedMajors: result.updates.intendedMajors ?? profile.intendedMajors,
+        ...result.profile,
         updatedAt: Date.now(),
       } as StudentProfile;
       upsertStudent(merged);

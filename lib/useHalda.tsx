@@ -17,11 +17,19 @@ import { haldaOpener, respond, type AgentTurn } from "./agent";
 import { FIELD_XP, levelFor, reconcileQuests } from "./gamify";
 import { profileCompleteness, rankMatches } from "./match";
 import { rankInterestMatches } from "./interest-match";
-import { schoolById } from "./schools";
+import { SCHOOLS, schoolById } from "./schools";
 import type { ProfileUpdates } from "./halda-prompt";
 
 const LS_KEY = "halda.profile.v1";
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const schoolIdFor = (name: string) => {
+  const n = name.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+  return SCHOOLS.find((s) => {
+    const short = s.short.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    const full = s.name.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    return n === short || n === full || full.includes(n) || n.includes(short);
+  })?.id;
+};
 
 // ── Demo persona (Maya) — seeds every screen so the app renders like the design.
 // Conversational fields still update live as the student chats. "Start over"
@@ -428,7 +436,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
         const r = await fetch("/api/gemini", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "chat", message: text, history, profile: base }),
+          body: JSON.stringify({ mode: "chat", message: text, history, profile: base, matchesRevealed: revealedRef.current }),
         });
         const d = await r.json();
         if (!d.reply && !d.updates) throw new Error("empty");
@@ -648,6 +656,10 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
           else next.creditWallet.push(item);
         }
       }
+      if (u.chosenSchools?.length) {
+        const ids = u.chosenSchools.map(schoolIdFor).filter(Boolean) as string[];
+        if (ids.length) next.savedSchoolIds = Array.from(new Set([...(next.savedSchoolIds ?? []), ...ids]));
+      }
 
       // fold in any tasks the agent added (dedup by key/title)
       const newTasks: TaskItem[] = [];
@@ -803,7 +815,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     fetch("/api/gemini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "extract", message: clean, profile: base }),
+      body: JSON.stringify({ mode: "extract", message: clean, profile: base, matchesRevealed: revealedRef.current }),
     })
       .then((r) => r.json())
       .then((d) => applyUpdatesRef.current(d?.updates || {}, { tasks: d?.tasks, reveal: d?.revealMatches }))

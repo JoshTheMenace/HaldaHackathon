@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { GoogleGenAI, Modality, type Session } from "@google/genai";
+import { GoogleGenAI, Modality, Type, type Session } from "@google/genai";
+import type { StudentProfile } from "./types";
 
 // ── PCM helpers ───────────────────────────────────────────────────────────────
 function floatToPcm16Base64(float32: Float32Array): string {
@@ -33,14 +34,33 @@ function base64ToFloat32(b64: string): Float32Array {
 // Lean, spoken-conversation prompt (NOT the big JSON-extraction system prompt).
 // `facts` is what we already know, so Halda never re-asks.
 function voiceSystem(facts: string): string {
-  return `You are Halda, a warm, encouraging AI college guide for high-school students (mostly sophomores). This is a SPOKEN phone call: talk naturally, 1-2 short sentences, ONE question at a time. Never output JSON or read formatting aloud.
+  return `You are Halda, a warm, encouraging AI college guide for high-school students (mostly sophomores). This is live voice chat inside the app, not a phone call: talk naturally, 1-2 short sentences, ONE question at a time. Never say "thanks for calling" or imply the student called you. Never output JSON or read formatting aloud.
+
+It is currently 2026; use 2026 whenever you need the current year.
 
 Your job: learn what they care about (their interests and WHY), their location and budget, and help them find colleges that fit.
 
 - NEVER re-ask something you already know. ${facts}
+- If the facts include chosenSchools or trackedSchools, switch from discovery into application-coach mode: help them meet requirements, improve odds, finish tasks, essays, transcripts, recommendations, aid, and deadlines for those school(s). Do not keep suggesting a fresh broad list unless they ask for alternatives.
+- When they ask for facts about one school, whether it is good for a program, or how they can improve odds there, call research_school first. Use hard facts from catalog/College Scorecard and program/culture context from web research.
 - Infer city/state from their high school or ZIP (e.g. "Timpview High" or "84604" → Provo, UT) — don't ask where a local school they named is.
 - Be specific and honest; never invent numbers or admit rates.`;
 }
+
+const LIVE_TOOLS = [{
+  functionDeclarations: [{
+    name: "research_school",
+    description: "Fetch hard facts and web-grounded context for one school, including College Scorecard/catalog data and program/culture evidence.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        school: { type: Type.STRING, description: "School name, e.g. BYU or Utah Valley University" },
+        question: { type: Type.STRING, description: "What the student wants to know, e.g. whether BYU is good for animation" },
+      },
+      required: ["school"],
+    },
+  }],
+}];
 
 export type VoiceStatus = "idle" | "connecting" | "live" | "speaking" | "error";
 export interface VoiceTurn { role: "you" | "halda"; text: string }
@@ -64,6 +84,7 @@ export function useGeminiLive(opts: {
   onUserTurn?: (text: string) => void; // final user transcript → extraction
   onHaldaTurn?: (text: string) => void;
   knownFacts?: string; // "KNOWN SO FAR: …" injected so Halda doesn't re-ask
+  profile?: StudentProfile;
 }): UseGeminiLive {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -163,10 +184,37 @@ export function useGeminiLive(opts: {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           systemInstruction: voiceSystem(opts.knownFacts || "KNOWN SO FAR: nothing yet"),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tools: LIVE_TOOLS as any,
         },
         callbacks: {
           onopen: () => setStatus("live"),
           onmessage: (msg: any) => {
+            if (msg.toolCall?.functionCalls?.length) {
+              Promise.all(msg.toolCall.functionCalls.map(async (call: { id?: string; name?: string; args?: Record<string, unknown> }) => {
+                let response: Record<string, unknown>;
+                if (call.name === "research_school") {
+                  const r = await fetch("/api/school-research", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      school: String(call.args?.school ?? ""),
+                      question: String(call.args?.question ?? ""),
+                      profile: opts.profile,
+                    }),
+                  });
+                  response = r.ok ? await r.json() : { error: await r.text() };
+                } else {
+                  response = { error: `Unknown tool ${call.name}` };
+                }
+                return { id: call.id, name: call.name, response };
+              }))
+                .then((functionResponses) => sessionRef.current?.sendToolResponse({ functionResponses }))
+                .catch((e) => sessionRef.current?.sendToolResponse({
+                  functionResponses: { name: "research_school", response: { error: (e as Error).message } },
+                }));
+              return;
+            }
             const sc = msg.serverContent;
             if (sc?.inputTranscription?.text) {
               uBufRef.current += sc.inputTranscription.text;
@@ -218,8 +266,8 @@ export function useGeminiLive(opts: {
       const knowName = /name=/.test(opts.knownFacts || "");
       session.sendClientContent({
         turns: [{ role: "user", parts: [{ text: knowName
-          ? "Greet me warmly by name in one sentence and pick up where we left off with one question."
-          : "Greet me warmly in one sentence and ask my name." }] }],
+          ? "Greet me warmly by name in one sentence and pick up where we left off with one question. Do not mention calls or phones."
+          : "Greet me warmly in one sentence and ask my name. Do not mention calls or phones." }] }],
         turnComplete: true,
       });
     } catch (e) {

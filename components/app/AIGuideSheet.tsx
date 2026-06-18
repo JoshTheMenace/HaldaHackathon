@@ -9,6 +9,23 @@ import MatchDetailSheet from "./MatchDetailSheet";
 
 const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language" };
 
+// Web sources come back as opaque Google grounding-redirect URLs with duplicate
+// titles. Show a clean publisher domain instead, deduped and capped — never the
+// raw vertexaisearch redirect.
+const hostname = (s: string) => { try { return new URL(s).hostname.replace(/^www\./, ""); } catch { return s.replace(/^www\./, ""); } };
+function webSources(items: { title?: string; sub?: string }[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const it of items) {
+    const t = (it.title || "").trim();
+    let label = t && !/^https?:\/\//i.test(t) ? t : hostname(t || it.sub || "");
+    if (!label || /vertexaisearch|googleusercontent|google\.com/i.test(label)) label = "web source";
+    const key = label.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(label); }
+  }
+  return out.slice(0, 3);
+}
+
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { messages, typing, send } = useHalda();
   const [mode, setMode] = useState<"chat" | "voice">("chat");
@@ -84,14 +101,22 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                       {m.tool.detail && <span className="d">{m.tool.detail}</span>}
                     </div>
                     {m.tool.items && m.tool.items.length > 0 && (
-                      <div className="tool-cards">
-                        {m.tool.items.map((it, i) => (
-                          <div key={i} className="tool-card">
-                            <span className="tc-ico"><Icon name={m.tool!.kind === "web" ? "link" : "savings"} /></span>
-                            <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
-                          </div>
-                        ))}
-                      </div>
+                      m.tool.kind === "web" ? (
+                        <div className="tool-sources">
+                          {webSources(m.tool.items).map((src, i) => (
+                            <span key={i} className="tool-source"><Icon name="link" /> {src}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="tool-cards">
+                          {m.tool.items.map((it, i) => (
+                            <div key={i} className="tool-card">
+                              <span className="tc-ico"><Icon name="savings" /></span>
+                              <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )
                     )}
                     {m.tool.schools && m.tool.schools.length > 0 && (
                       <div className="chat-schools">

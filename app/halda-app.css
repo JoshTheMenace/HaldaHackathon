@@ -297,13 +297,18 @@
 .phone .kpool .chev { color: var(--h-outline); transition: transform .25s; }
 .phone .kpool.open .chev { transform: rotate(180deg); }
 .phone .kbody { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
-.phone .kbody.open { max-height: 600px; }
-.phone .kbody-inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
-.phone .kintro { padding: 0 20px 12px; font-size: 13px; line-height: 1.5; color: var(--h-ink-var); }
+.phone .kbody.open { max-height: min(420px,48dvh); overflow-y: auto; overscroll-behavior: contain; }
+.phone .kbody-inner { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
+.phone .kintro { padding: 0 16px 8px; font-size: 12px; line-height: 1.35; color: var(--h-ink-var); }
 .phone .field { display: flex; align-items: center; gap: 12px; background: var(--h-s-low); padding: 12px 14px; border-radius: 12px; border: 1px solid #e7ecea; transition: border-color .15s, background .15s; }
 .phone .field:focus-within { background: var(--h-white); border-color: var(--h-primary); }
 .phone .field .lab { display: block; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--h-outline); margin-bottom: 2px; }
 .phone .field .val { font-size: 15px; font-weight: 700; color: var(--h-ink); border: none; background: transparent; outline: none; width: 100%; font-family: inherit; padding: 0; }
+.phone .kbody .field { min-height: 42px; padding: 8px 10px; border-radius: 10px; }
+.phone .kbody .field > span { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.phone .kbody .field .lab { flex: 0 0 108px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone .kbody .field .val { min-width: 0; font-size: 13px; line-height: 1.25; }
+.phone .kbody .field .ed { width: 26px; height: 26px; border-radius: 7px; }
 .phone .field .ed { flex-shrink: 0; color: var(--h-primary); cursor: pointer; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; border: none; background: none; }
 .phone .field .ed:hover { background: rgba(0,107,95,.1); }
 .phone .field .ed .material-symbols-outlined { font-size: 18px; }
@@ -466,6 +471,11 @@
 .phone .tool-card .tc-b { min-width: 0; }
 .phone .tool-card .tc-b b { display: block; font-size: 13.5px; font-weight: 700; color: var(--h-ink); }
 .phone .tool-card .tc-b span { display: block; font-size: 12px; color: var(--h-ink-var); margin-top: 2px; line-height: 1.4; }
+
+/* web sources — compact deduped domain pills, never the raw redirect URL */
+.phone .tool-sources { margin-left: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.phone .tool-source { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 11.5px; font-weight: 600; color: var(--h-ink-var); background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 9999px; padding: 4px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone .tool-source .material-symbols-outlined { font-size: 13px; color: var(--h-primary); flex-shrink: 0; }
 
 /* interactive school cards in the chat */
 .phone .chat-schools { margin-left: 12px; display: flex; flex-direction: column; gap: 8px; }

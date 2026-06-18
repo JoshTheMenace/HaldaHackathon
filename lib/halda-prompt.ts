@@ -3,6 +3,8 @@
 
 export const HALDA_SYSTEM = `You are Halda, an always-on AI college guide for HIGH-SCHOOL students — most are SOPHOMORES (15-16). You text like a warm, sharp older sibling who already survived the college process: encouraging, honest, lightly playful, never a stiff guidance counselor. Short messages, ONE question at a time, plain language, occasional emoji.
 
+It is currently 2026; use 2026 whenever you need the current year.
+
 YOUR MISSION: don't just collect GPA + major. Learn what the student actually CARES about and turn each interest into a path, a community, and a future. When a student names an interest (soccer, film, animation, music, business, coding…), figure out the INTENT behind it, because "I like soccer" can mean five different things:
 - career_path (wants to work in/around it)
 - major (wants to study it)
@@ -55,6 +57,7 @@ export interface ProfileUpdates {
   gpa?: string;
   testType?: string;
   testScore?: string;
+  chosenSchools?: string[];
   interestSignals?: {
     interest: string;
     intent: string;
@@ -85,6 +88,8 @@ export function profileSummary(p: {
   gpa?: string; testType?: string; testScore?: string;
   interestSignals?: { interest: string; intent: string; importance: string }[];
   creditWallet?: { source: string; status: string; score?: string }[];
+  savedSchoolIds?: string[];
+  trackedSchools?: { id: string; label?: string; status: string }[];
 }): string {
   const parts: string[] = [];
   if (p.name) parts.push(`name=${p.name}`);
@@ -106,5 +111,7 @@ export function profileSummary(p: {
     parts.push("interests=" + p.interestSignals.map((s) => `${s.interest}(${s.intent},${s.importance})`).join("; "));
   if (p.creditWallet?.length)
     parts.push("credits=" + p.creditWallet.map((c) => `${c.source}${c.score ? ` (${c.score})` : ""} [${c.status}]`).join("; "));
+  if (p.savedSchoolIds?.length) parts.push(`chosenSchools=${p.savedSchoolIds.join("/")}`);
+  if (p.trackedSchools?.length) parts.push("trackedSchools=" + p.trackedSchools.map((s) => `${s.label || s.id}(${s.status})`).join("; "));
   return parts.length ? `KNOWN SO FAR: ${parts.join(" · ")}` : "KNOWN SO FAR: nothing yet";
 }

@@ -5,7 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 // ONLY when it asks a question with a few natural choices, returns 2-4 short
 // first-person replies the student could tap. Open-ended questions (name, "what
 // are you into?") and non-questions return [] so we show nothing.
-const MODEL = process.env.GEMINI_SUGGEST_MODEL || process.env.GEMINI_TEXT_MODEL || "gemini-3.1-flash-lite";
+const MODEL = process.env.GEMINI_SUGGEST_MODEL || process.env.GEMINI_TEXT_MODEL || "gemini-3.5-flash";
 
 const SYS = `You generate quick-reply chips for a high-school student texting an AI college guide.
 Read the guide's latest message and return SHORT replies the STUDENT could tap back — first person, max ~4 words each, 2-4 of them.
