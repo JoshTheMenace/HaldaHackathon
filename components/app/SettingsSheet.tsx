@@ -26,14 +26,37 @@ export default function SettingsSheet({ open, onClose }: { open: boolean; onClos
   const [parentOn, setParentOn] = useState(false);
   const [relationship, setRelationship] = useState("Parent");
   const [sendVia, setSendVia] = useState<"sms" | "email">("sms");
+  const [parentPhone, setParentPhone] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [showPhoneCode, setShowPhoneCode] = useState(false);
-  const [showEmailCode, setShowEmailCode] = useState(false);
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [days, setDays] = useState<Set<string>>(new Set(["Sun"]));
   const [includes, setIncludes] = useState<Set<string>>(new Set(["Deadlines", "Scholarships"]));
   const toggle = (set: Set<string>, v: string, fn: (s: Set<string>) => void) => {
     const n = new Set(set); n.has(v) ? n.delete(v) : n.add(v); fn(n);
+  };
+
+  const sendParentSummary = async (channel: "sms" | "email", contact: string) => {
+    if (!contact.trim()) { flash("Enter a contact first"); return; }
+    const setLoading = channel === "sms" ? setPhoneLoading : setEmailLoading;
+    const setVerified = channel === "sms" ? setPhoneVerified : setEmailVerified;
+    setLoading(true);
+    try {
+      const r = await fetch("/api/parent/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel, contact: contact.trim(), profile }),
+      });
+      const d = await r.json();
+      if (!r.ok) { flash(d.error || "Couldn't send — check the contact info"); }
+      else { setVerified(true); flash(channel === "sms" ? "Summary texted to parent!" : "Summary emailed to parent!"); }
+    } catch {
+      flash("Network error — try again");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // notifications
@@ -120,37 +143,27 @@ export default function SettingsSheet({ open, onClose }: { open: boolean; onClos
                   <div>
                     <span className="fl">Mobile number</span>
                     {phoneVerified ? (
-                      <div className="verified-chip"><Icon name="verified" /> Verified · summaries can be sent</div>
-                    ) : showPhoneCode ? (
-                      <div className="code-row">
-                        <input placeholder="6-digit code" inputMode="numeric" />
-                        <button onClick={() => { setPhoneVerified(true); setShowPhoneCode(false); }}>Confirm</button>
-                      </div>
+                      <div className="verified-chip"><Icon name="verified" /> Sent! Summary delivered to parent</div>
                     ) : (
                       <div className="verify-wrap">
-                        <div className="pfield"><input placeholder="(801) 555-1234" inputMode="tel" /></div>
-                        <button className="btn-verify" onClick={() => setShowPhoneCode(true)}>Verify</button>
+                        <div className="pfield"><input placeholder="(801) 555-1234" inputMode="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></div>
+                        <button className="btn-verify" disabled={phoneLoading} onClick={() => sendParentSummary("sms", parentPhone)}>{phoneLoading ? "Sending…" : "Send"}</button>
                       </div>
                     )}
-                    <div className="hint">We text a 6-digit code to confirm this is really their phone before any records are sent.</div>
+                    <div className="hint">We&apos;ll text a full progress summary — deadlines, scholarships, and school matches — to this number.</div>
                   </div>
                 ) : (
                   <div>
                     <span className="fl">Email address</span>
                     {emailVerified ? (
-                      <div className="verified-chip"><Icon name="verified" /> Verified · summaries can be sent</div>
-                    ) : showEmailCode ? (
-                      <div className="code-row">
-                        <input placeholder="6-digit code" inputMode="numeric" />
-                        <button onClick={() => { setEmailVerified(true); setShowEmailCode(false); }}>Confirm</button>
-                      </div>
+                      <div className="verified-chip"><Icon name="verified" /> Sent! Summary delivered to parent</div>
                     ) : (
                       <div className="verify-wrap">
-                        <div className="pfield"><input placeholder="parent@email.com" inputMode="email" /></div>
-                        <button className="btn-verify" onClick={() => setShowEmailCode(true)}>Verify</button>
+                        <div className="pfield"><input placeholder="parent@email.com" inputMode="email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></div>
+                        <button className="btn-verify" disabled={emailLoading} onClick={() => sendParentSummary("email", parentEmail)}>{emailLoading ? "Sending…" : "Send"}</button>
                       </div>
                     )}
-                    <div className="hint">We email a 6-digit code to confirm this address before any records are sent.</div>
+                    <div className="hint">We&apos;ll email a full progress summary — deadlines, scholarships, and school matches — to this address.</div>
                   </div>
                 )}
                 <div>

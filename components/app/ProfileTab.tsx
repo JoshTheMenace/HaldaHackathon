@@ -5,8 +5,7 @@ import { useHalda } from "@/lib/useHalda";
 import { schoolById } from "@/lib/schools";
 import { Icon } from "./Icon";
 import { SchoolLogo } from "./SchoolImage";
-import SettingsSheet from "./SettingsSheet";
-import { initials, gradeLabel, dueLabel } from "./helpers";
+import { gradeLabel, dueLabel } from "./helpers";
 
 const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
 const CREDIT_TYPE: Record<string, string> = { ap: "AP", dual_enrollment: "Dual enrollment", ib: "IB", honors: "Honors", clep: "CLEP" };
@@ -20,26 +19,15 @@ const poolInterests = (p: { interestSignals: { interest: string; intent: string 
     ? p.interestSignals.map((s) => `${cap(s.interest)} (${INTENT_LABEL[s.intent] || s.intent})`).join(", ")
     : p.interests.map(cap).join(", ");
 
-export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
+export default function ProfileTab() {
   const { profile, toggleTask, editField } = useHalda();
   const [poolOpen, setPoolOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const sch = profile.scholarships ?? { applied: 0, won: 0, rejected: 0, pending: 0 };
   const tracked = profile.trackedSchools ?? [];
   const extras = profile.extracurriculars?.length ? profile.extracurriculars : profile.interestSignals.map((s) => s.interest);
 
   return (
-    <>
     <main className="scroll" style={{ padding: 0 }}>
-      <header className="phead">
-        <button className="pa" onClick={onAvatar} aria-label="Profile menu">{initials(profile.name)}</button>
-        <div>
-          <span className="eyebrow">Student Profile</span>
-          <h1>{profile.name || "Your Profile"}</h1>
-        </div>
-        <button className="phead-menu" onClick={() => setSettingsOpen(true)} aria-label="Settings"><Icon name="settings" /></button>
-        <button className="phead-menu" onClick={onAvatar} aria-label="Menu"><Icon name="more_vert" /></button>
-      </header>
 
       <div className="wrap">
         {/* deadlines */}
@@ -234,8 +222,6 @@ export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
         </div>
       </div>
     </main>
-    <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-    </>
   );
 }
 

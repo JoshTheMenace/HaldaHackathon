@@ -7,6 +7,7 @@ import AppBar from "@/components/app/AppBar";
 import Dock from "@/components/app/Dock";
 import AIGuideSheet from "@/components/app/AIGuideSheet";
 import ProfileMenu from "@/components/app/ProfileMenu";
+import SettingsSheet from "@/components/app/SettingsSheet";
 import HomeTab from "@/components/app/HomeTab";
 import ExploreTab from "@/components/app/ExploreTab";
 import ProfileTab from "@/components/app/ProfileTab";
@@ -20,6 +21,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("home");
   const [guideOpen, setGuideOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState(false);
 
   // Open the AI guide, optionally sending a starter prompt straight to the agent.
@@ -44,11 +46,12 @@ export default function App() {
   return (
     <div className="appwrap">
       <div className="phone">
-        {tab !== "profile" && <AppBar onAvatar={() => setMenuOpen(true)} />}
+        <AppBar onAvatar={() => setMenuOpen(true)} />
 
         {tab === "home" && <HomeTab onAsk={onAsk} onGoExplore={() => setTab("explore")} />}
         {tab === "explore" && <ExploreTab onAsk={onAsk} />}
-        {tab === "profile" && <ProfileTab onAvatar={() => setMenuOpen(true)} />}
+        {tab === "profile" && <ProfileTab />}
+
         {tab === "connect" && <ConnectTab onAsk={onAsk} />}
         {tab === "cohort" && <CohortTab />}
 
@@ -56,7 +59,8 @@ export default function App() {
 
         <Dock active={tab} onTab={setTab} onFab={() => setGuideOpen(true)} />
         <AIGuideSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
-        <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} onConnect={() => setTab("connect")} />
+        <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} onConnect={() => setTab("connect")} onSettings={() => setSettingsOpen(true)} />
+        <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </div>
     </div>
   );

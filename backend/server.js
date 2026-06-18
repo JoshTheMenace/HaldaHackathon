@@ -154,11 +154,11 @@ app.get('/api/messages/:id', async (req, res) => {
 });
 
 // POST /api/send-email
-// Body: { to: "user@example.com", subject: "...", body: "..." }
+// Body: { to: "user@example.com", subject: "...", body: "...", html?: "..." }
 app.post('/api/send-email', async (req, res) => {
-  const { to, subject, body } = req.body;
+  const { to, subject, body, html } = req.body;
 
-  if (!to || !body) {
+  if (!to || (!body && !html)) {
     return res.status(400).json({ error: 'Missing required fields: to, body' });
   }
 
@@ -167,7 +167,7 @@ app.post('/api/send-email', async (req, res) => {
       from: process.env.EMAIL_FROM || 'Halda <onboarding@resend.dev>',
       to,
       subject: subject || 'A message from Halda',
-      text: body,
+      ...(html ? { html, text: body || '' } : { text: body }),
     });
 
     if (error) return res.status(502).json({ error: error.message });

@@ -4,7 +4,7 @@ import { useHalda } from "@/lib/useHalda";
 import { Icon } from "./Icon";
 import { initials, gradeLabel } from "./helpers";
 
-export default function ProfileMenu({ open, onClose, onViewProfile, onConnect }: { open: boolean; onClose: () => void; onViewProfile: () => void; onConnect: () => void }) {
+export default function ProfileMenu({ open, onClose, onViewProfile, onConnect, onSettings }: { open: boolean; onClose: () => void; onViewProfile: () => void; onConnect: () => void; onSettings: () => void }) {
   const { profile, reset, startFresh } = useHalda();
   if (!open) return null;
 
@@ -20,6 +20,7 @@ export default function ProfileMenu({ open, onClose, onViewProfile, onConnect }:
         </div>
         <button className="pm-item" onClick={() => act(onViewProfile)}><Icon name="person" />View profile</button>
         <button className="pm-item" onClick={() => act(onConnect)}><Icon name="sync_alt" />Connect &amp; text<small>share, link your phone</small></button>
+        <button className="pm-item" onClick={() => act(onSettings)}><Icon name="settings" />Settings<small>privacy, notifications</small></button>
         <button className="pm-item" onClick={() => act(startFresh)}><Icon name="restart_alt" />Start fresh<small>onboard from scratch</small></button>
         <button className="pm-item" onClick={() => act(reset)}><Icon name="auto_awesome" />Reload demo<small>Maya&apos;s profile</small></button>
       </div>
