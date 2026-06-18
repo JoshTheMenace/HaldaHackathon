@@ -125,6 +125,28 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                         ))}
                       </div>
                     )}
+                    {m.tool.media && m.tool.media.length > 0 && (
+                      <div className="tool-media">
+                        {m.tool.media.map((it) => (
+                          <div key={it.title} className="tool-media-card">
+                            <span className="tm-photo">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={it.imageUrl} alt={`${it.title} campus`} />
+                            </span>
+                            <span className="tm-b">
+                              <b>{it.title}</b>
+                              {it.sub && <span>{it.sub}</span>}
+                            </span>
+                            {it.logoUrl && (
+                              <span className="tm-logo">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={it.logoUrl} alt={`${it.title} logo`} />
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               }

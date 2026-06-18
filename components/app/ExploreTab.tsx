@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
 import { ratingStrengths } from "@/lib/ratings";
@@ -49,7 +49,7 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
           <div className="stack">
             <div className="behind b2" />
             <div className="behind" />
-            <SwipeCard m={current} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} />
+            <SwipeCard m={current} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} onSwipe={swipe} />
           </div>
 
           <div className="ctrl">
@@ -92,10 +92,25 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
   );
 }
 
-function SwipeCard({ m, gone, tags, onView }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void }) {
+function SwipeCard({ m, gone, tags, onView, onSwipe }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void; onSwipe: (dir: "left" | "right") => void }) {
   const s = schoolById(m.schoolId)!;
+  const startX = useRef<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const endDrag = (x: number) => {
+    const dx = startX.current == null ? 0 : x - startX.current;
+    startX.current = null;
+    setDragX(0);
+    if (Math.abs(dx) > 80) onSwipe(dx > 0 ? "right" : "left");
+  };
   return (
-    <article className={`swcard photo${gone ? " gone-" + gone : ""}`}>
+    <article
+      className={`swcard photo${gone ? " gone-" + gone : ""}`}
+      style={gone || !dragX ? undefined : { transform: `translateX(${dragX}px) rotate(${dragX / 18}deg)`, transition: "none" }}
+      onPointerDown={(e) => { startX.current = e.clientX; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); }}
+      onPointerMove={(e) => { if (startX.current != null) setDragX(e.clientX - startX.current); }}
+      onPointerUp={(e) => endDrag(e.clientX)}
+      onPointerCancel={() => { startX.current = null; setDragX(0); }}
+    >
       <div className="sw-photo">
         <CampusPhoto id={s.id} />
         <span className="logo-badge"><SchoolLogo id={s.id} /></span>
@@ -119,4 +134,3 @@ function SwipeCard({ m, gone, tags, onView }: { m: InterestAlignedSchoolScore; g
     </article>
   );
 }
-

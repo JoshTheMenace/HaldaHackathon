@@ -52,11 +52,17 @@ export async function POST(req: Request) {
 
   const catalog = resolveSchool(school);
   const official = await scorecardLookup(catalog?.name ?? school);
-  const web = await webResearch(catalog?.name ?? school, question ?? "", profile);
+  const schoolName = official?.name ?? catalog?.name ?? school;
+  const web = await webResearch(schoolName, question ?? "", profile);
   const fit = catalog && profile ? scoreInterestFit(profile, catalog) : null;
 
   return NextResponse.json({
-    school: official?.name ?? catalog?.name ?? school,
+    school: schoolName,
+    media: {
+      campusImage: `/api/school-media?school=${encodeURIComponent(schoolName)}&kind=campus`,
+      logoImage: `/api/school-media?school=${encodeURIComponent(schoolName)}&kind=logo`,
+      source: "live Wikipedia/Wikimedia lookup",
+    },
     catalog: catalog ? {
       id: catalog.id,
       short: catalog.short,

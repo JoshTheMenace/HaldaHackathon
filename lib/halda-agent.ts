@@ -67,6 +67,11 @@ function searchConstraints(p: StudentProfile): string {
   if (p.stayInState && p.state) bits.push(`wants to stay in ${p.state} (in-state tuition)`);
   if (p.maxBudget) bits.push(`budget ~$${p.maxBudget.toLocaleString()}/yr after aid`);
   if (p.grade) bits.push(`high-school grade ${p.grade}`);
+  if (p.isTransfer) bits.push("transfer applicant; preserve credits");
+  if (p.worksFullTime) bits.push("works full time; needs practical/flexible options");
+  if (p.country) bits.push(`applying from ${p.country}`);
+  if (p.visaNeed) bits.push("needs visa/I-20 support");
+  if (p.internationalAidNeed) bits.push("needs aid available to international students");
   return bits.length ? `Filter to fit this student: ${bits.join("; ")}.` : "";
 }
 
@@ -126,7 +131,7 @@ async function backstopExtract(ai: GoogleGenAI, message: string, working: Studen
     const tool = [{ functionDeclarations: [TOOLS[0].functionDeclarations[0]] }]; // update_profile only
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts the student explicitly states about themselves — name, grade, city/state/ZIP, budget, first-gen status, citizenship/international status, transfer status, intended major, chosen/saved target schools, and any genuine interests. Put each in its proper field. Include nothing not present in the message; do not guess or infer.\n\nStudent: ${message}` }] }],
+      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts the student explicitly states about themselves — name, grade, city/state/ZIP, budget, first-gen status, transfer status, work schedule, current college, associate degree, transfer-credit concern, country, visa need, international aid need, intended major, chosen/saved/compared target schools, and any genuine interests. Put each in its proper field. Include nothing not present in the message; do not guess or infer.\n\nStudent: ${message}` }] }],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       config: { tools: tool as any, toolConfig: { functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["update_profile"] } } as any, temperature: 0 },
     });
@@ -162,6 +167,43 @@ function chosenSchoolLine(p: StudentProfile): string {
 
 function explicitlyRequestsSchoolCards(message: string): boolean {
   return /\b(show|pull up|find|refresh|update|see|give me|compare|list|recommend|recommendations|matches|options|schools|colleges|alternatives)\b/i.test(message);
+}
+
+function mediaForSchool(name: string) {
+  return {
+    imageUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=campus`,
+    logoUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=logo`,
+  };
+}
+
+function mergeTargetSchools(p: StudentProfile, names: string[]) {
+  const clean = names.map((n) => n.trim()).filter(Boolean);
+  if (clean.length) p.targetSchools = Array.from(new Set([...(p.targetSchools ?? []), ...clean]));
+}
+
+async function compareSchools(ai: GoogleGenAI, names: string[], focus: string | undefined, p: StudentProfile) {
+  const schools = names.map((n) => n.trim()).filter(Boolean).slice(0, 8);
+  const rows = [];
+  for (const name of schools) {
+    const catalog = resolveSchool(name);
+    const card = await scorecardLookup(catalog?.name ?? name);
+    const label = card?.name ?? catalog?.name ?? name;
+    rows.push({
+      school: label,
+      location: card ? [card.city, card.state].filter(Boolean).join(", ") : catalog ? `${catalog.city}, ${catalog.state}` : undefined,
+      acceptanceRatePct: card?.acceptanceRate != null ? Math.round(card.acceptanceRate * 100) : catalog ? Math.round(catalog.acceptanceRate * 100) : undefined,
+      netPricePerYearAfterAid: card?.netPrice ?? catalog?.netPrice,
+      medianEarnings10yr: card?.medianEarnings,
+      gradRatePct: card?.completionRate != null ? Math.round(card.completionRate * 100) : undefined,
+      undergradSize: card?.size,
+      programContext: catalog
+        ? `${catalog.short}: strong in ${catalog.strongMajors.join(", ")}. ${catalog.vibe}`
+        : `Scorecard-backed school; use the web context for current ${focus || "program"} details.`,
+      source: card ? "College Scorecard" : catalog ? "Halda catalog fallback" : "web context",
+    });
+  }
+  const web = await webLookup(ai, `${schools.join(", ")} ${focus || "computer science"} program context outcomes ROI internships comparison`, p);
+  return { schools: rows, webContext: web };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,7 +246,17 @@ const TOOLS = [
             maxBudget: { type: Type.NUMBER },
             needsAid: { type: Type.BOOLEAN },
             stayInState: { type: Type.BOOLEAN, description: "wants to stay close to home (also set state)" },
+            isTransfer: { type: Type.BOOLEAN },
+            worksFullTime: { type: Type.BOOLEAN },
+            currentCollege: { type: Type.STRING },
+            completedCollegeYears: { type: Type.NUMBER },
+            associateDegree: { type: Type.STRING },
+            transferCreditsConcern: { type: Type.BOOLEAN },
+            country: { type: Type.STRING, description: "home/applicant country if outside the U.S." },
+            visaNeed: { type: Type.BOOLEAN },
+            internationalAidNeed: { type: Type.BOOLEAN },
             chosenSchools: { type: Type.ARRAY, description: "School names the student explicitly chose, saved, is applying to, or wants to focus on", items: { type: Type.STRING } },
+            targetSchools: { type: Type.ARRAY, description: "Free-text school names the student wants to compare or track, including non-catalog schools", items: { type: Type.STRING } },
             interestSignals: {
               type: Type.ARRAY,
               description: "Things the student is genuinely drawn to (a subject, hobby, sport, cause). NOT school names, NOT logistical needs (cost, visa, credit transfer), NOT topics they merely asked about.",
@@ -256,6 +308,18 @@ const TOOLS = [
         },
       },
       {
+        name: "compare_schools",
+        description: "Build a data-first comparison table for multiple named schools; use for ROI/outcomes/no-pep-talk comparison requests.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            schools: { type: Type.ARRAY, items: { type: Type.STRING } },
+            focus: { type: Type.STRING, description: "program or decision lens, e.g. computer science ROI" },
+          },
+          required: ["schools"],
+        },
+      },
+      {
         name: "web_lookup",
         description: "Search the live web for an answer or campus color (no cards).",
         parameters: {
@@ -293,9 +357,9 @@ It is currently 2026; use 2026 whenever you need the current year.
 
 Help each student figure out where they belong. Lead with what they actually came for — a career question, a transfer question, a school comparison — before pivoting to anything else. Learn what they care about and the intent behind it (a passing interest, a possible major, a real career), then connect it to schools, scholarships, and concrete next steps that fit them.
 
-Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, citizenship/international, transfer status — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
+Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, transfer status, full-time work, current college, associate degree, country, visa need, international aid need, or schools they want to compare — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid, comparison lists in targetSchools), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
 
-You have tools to save what you learn, show ranked school matches, look up any single school or the live web, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, look something up, or add a task, do it in the SAME turn. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
+You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, or add a task, do it in the SAME turn. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
 
 Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure you weren't given. Before you claim a school fits a budget, an aid need, or an eligibility rule (transfer credits, international/visa, in-state cost), confirm it with a tool rather than guessing — and if money is tight, surface real aid and add the FAFSA step.`;
 }
@@ -312,9 +376,10 @@ export interface AgentResult {
 
 // Apply update_profile args onto a working copy so later tools see latest data.
 function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
-  const scalar = ["name", "email", "phone", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
+  const scalar = ["name", "email", "phone", "grade", "highSchool", "city", "state", "zip", "firstGen", "isTransfer", "worksFullTime", "currentCollege", "completedCollegeYears", "associateDegree", "transferCreditsConcern", "country", "visaNeed", "internationalAidNeed", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
   const wr = w as unknown as Record<string, unknown>;
   for (const k of scalar) if (a[k] !== undefined) wr[k] = a[k];
+  if (Array.isArray(a.targetSchools)) mergeTargetSchools(w, a.targetSchools as string[]);
   if (Array.isArray(a.intendedMajors)) w.intendedMajors = Array.from(new Set([...w.intendedMajors, ...(a.intendedMajors as string[])]));
   if (Array.isArray(a.interestSignals)) {
     for (const s of a.interestSignals as StudentProfile["interestSignals"]) {
@@ -331,8 +396,9 @@ function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
     }
   }
   if (Array.isArray(a.chosenSchools)) {
-    const ids = (a.chosenSchools as string[])
-      .map((name) => resolveSchool(name)?.id)
+    const names = a.chosenSchools as string[];
+    mergeTargetSchools(w, names);
+    const ids = names.map((name) => resolveSchool(name)?.id)
       .filter(Boolean) as string[];
     if (ids.length) w.savedSchoolIds = Array.from(new Set([...(w.savedSchoolIds ?? []), ...ids]));
   }
@@ -442,19 +508,22 @@ export async function runAgent(opts: {
           // school shows the SAME real numbers as a Scorecard one — no "N/A"
           // sitting next to live data. Undefined keys drop out on serialization.
           const official = await scorecardLookup(sc.name);
+          const wl = await webLookup(ai, `${sc.name} ${opts.message}: program quality, admissions requirements, student life`, working);
           result = {
             school: sc.name,
             // What a student actually cares about, in order:
             fitForYourInterests: { matchPct: m.overallFit, why: m.reasons.slice(0, 3), evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title), strongPrograms: sc.strongMajors },
             wouldYouBelong: m.rating ? { studentsLoveItFor: belongingSignals(m.rating), studentRating: `${m.rating.overall}/5 from ${m.rating.reviewCount} students`, tip: "For real culture/vibe & whether they'd fit in, call web_lookup." } : { tip: "Call web_lookup for student-life/culture color." },
-            yourChances: { odds: admissionsOdds(sc.acceptanceRate), acceptanceRatePct: Math.round(sc.acceptanceRate * 100) },
-            cost: { netPricePerYearAfterAid: sc.netPrice, creditFit: m.creditFit.level },
+            yourChances: { odds: admissionsOdds(official?.acceptanceRate ?? sc.acceptanceRate), acceptanceRatePct: Math.round((official?.acceptanceRate ?? sc.acceptanceRate) * 100), source: official ? "College Scorecard" : "Halda catalog fallback" },
+            cost: { netPricePerYearAfterAid: official?.netPrice ?? sc.netPrice, creditFit: m.creditFit.level, source: official?.netPrice != null ? "College Scorecard" : "Halda catalog fallback" },
             outcomes: official && (official.medianEarnings != null || official.completionRate != null)
               ? { gradRatePct: official.completionRate != null ? Math.round(official.completionRate * 100) : undefined, medianEarnings10yr: official.medianEarnings ?? undefined, note: "official U.S. Dept of Education figures" }
               : undefined,
+            webContext: { answer: wl.answer, sources: wl.sources },
             cautions: m.concerns.slice(0, 1),
           };
           toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match`, schools: [{ schoolId: sc.id, matchPct: m.overallFit }] });
+          toolEvents.push({ kind: "web", label: `Searched ${sc.short}`, detail: "program context", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
         } else {
           // Not in our catalog (e.g. MIT, Stanford) — never fake a card. Pull REAL
           // figures from College Scorecard first; fall back to the live web.
@@ -471,13 +540,48 @@ export async function runAgent(opts: {
               medianEarnings10yr: card.medianEarnings,
               note: "Official U.S. Dept of Education figures (College Scorecard). Not in our match catalog, so no personalized fit % — but these numbers are real.",
             };
-            toolEvents.push({ kind: "school", label: `Looked up ${card.name}`.slice(0, 42), detail: "official data" });
+            toolEvents.push({
+              kind: "school",
+              label: `Looked up ${card.name}`.slice(0, 42),
+              detail: "official data",
+              media: [{ title: card.name, sub: "Live campus image", ...mediaForSchool(card.name) }],
+            });
           } else {
             const wl = await webLookup(ai, `${school}: acceptance rate, net price after aid, and what it's known for`, working);
             result = { school, source: "web", info: wl.answer, sources: wl.sources, note: "From the live web — confirm on the school's site." };
-            toolEvents.push({ kind: "web", label: `Looked up ${school}`.slice(0, 42), detail: "from the web", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+            toolEvents.push({
+              kind: "web",
+              label: `Looked up ${school}`.slice(0, 42),
+              detail: "from the web",
+              items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })),
+              media: [{ title: school, sub: "Live campus image", ...mediaForSchool(school) }],
+            });
           }
         }
+      } else if (name === "compare_schools") {
+        const names = (Array.isArray(args.schools) ? args.schools : [])
+          .map(String)
+          .filter(Boolean);
+        mergeTargetSchools(working, names);
+        Object.assign(updates, { targetSchools: working.targetSchools });
+        const comparison = await compareSchools(ai, names, String(args.focus || working.intendedMajors[0] || "computer science"), working);
+        result = comparison;
+        toolEvents.push({
+          kind: "compare",
+          label: "Comparison table",
+          detail: `${comparison.schools.length} schools`,
+          items: comparison.schools.map((s) => ({
+            title: s.school,
+            sub: [
+              s.acceptanceRatePct != null ? `${s.acceptanceRatePct}% admit` : null,
+              s.netPricePerYearAfterAid != null ? `$${s.netPricePerYearAfterAid.toLocaleString()}/yr net` : null,
+              s.medianEarnings10yr != null ? `$${s.medianEarnings10yr.toLocaleString()} earnings` : null,
+              s.gradRatePct != null ? `${s.gradRatePct}% grad` : null,
+            ].filter(Boolean).join(" · "),
+          })),
+        });
+        if (comparison.webContext.sources.length)
+          toolEvents.push({ kind: "web", label: "Program context", detail: String(args.focus || "outcomes").slice(0, 40), items: comparison.webContext.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
       } else if (name === "web_lookup") {
         const q = cleanWebQuery(String(args.query ?? ""));
         const { answer, sources } = await webLookup(ai, q, working);

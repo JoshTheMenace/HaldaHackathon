@@ -5,7 +5,7 @@ import { Icon } from "./Icon";
 import { initials, gradeLabel } from "./helpers";
 
 export default function ProfileMenu({ open, onClose, onViewProfile, onConnect, onSettings }: { open: boolean; onClose: () => void; onViewProfile: () => void; onConnect: () => void; onSettings: () => void }) {
-  const { profile, reset, startFresh } = useHalda();
+  const { profile, logout } = useHalda();
   if (!open) return null;
 
   const act = (fn: () => void) => { onClose(); fn(); };
@@ -21,8 +21,7 @@ export default function ProfileMenu({ open, onClose, onViewProfile, onConnect, o
         <button className="pm-item" onClick={() => act(onViewProfile)}><Icon name="person" />View profile</button>
         <button className="pm-item" onClick={() => act(onConnect)}><Icon name="sync_alt" />Connect &amp; text<small>share, link your phone</small></button>
         <button className="pm-item" onClick={() => act(onSettings)}><Icon name="settings" />Settings<small>privacy, notifications</small></button>
-        <button className="pm-item" onClick={() => act(startFresh)}><Icon name="restart_alt" />Start fresh<small>onboard from scratch</small></button>
-        <button className="pm-item" onClick={() => act(reset)}><Icon name="auto_awesome" />Reload demo<small>Maya&apos;s profile</small></button>
+        <button className="pm-item" onClick={() => act(logout)}><Icon name="logout" />Sign out<small>clear this browser</small></button>
       </div>
     </>
   );

@@ -71,6 +71,7 @@ export interface StudentProfile {
   name?: string;
   email?: string;
   phone?: string;
+  age?: number;
   zip?: string;
   city?: string;
   state?: string;
@@ -87,6 +88,16 @@ export interface StudentProfile {
   needsAid?: boolean;
   stayInState?: boolean; // wants to stay in-state / close to home
   firstGen?: boolean;
+  isTransfer?: boolean;
+  worksFullTime?: boolean;
+  currentCollege?: string;
+  completedCollegeYears?: number;
+  associateDegree?: string;
+  transferCreditsConcern?: boolean;
+  country?: string;
+  visaNeed?: boolean;
+  internationalAidNeed?: boolean;
+  targetSchools?: string[]; // free-text comparison/focus set; may include non-catalog schools
   // Academic / activity enrichment surfaced on the Profile screen
   gpa?: string; // "3.85"
   testType?: string; // "ACT" | "SAT"
@@ -193,13 +204,14 @@ export interface Lead {
 export type Role = "halda" | "student" | "system";
 
 // A visible "the agent is doing something" line in the chat (function calls).
-export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school" | "web";
+export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school" | "web" | "compare";
 export interface ToolEvent {
   kind: ToolKind;
   label: string; // "Searching right-fit schools"
   detail?: string; // "4 matches" / "FAFSA added"
   items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships, web sources)
   schools?: { schoolId: string; matchPct: number }[]; // search results → interactive cards
+  media?: { title: string; sub?: string; imageUrl: string; logoUrl?: string }[]; // arbitrary live school media cards
 }
 
 export interface ChatMessage {

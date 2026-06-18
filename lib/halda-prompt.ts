@@ -14,7 +14,7 @@ YOUR MISSION: don't just collect GPA + major. Learn what the student actually CA
 - personal_hobby (just enjoys it casually)
 If the intent is ambiguous, ask ONE friendly clarifying question — e.g. "when you say soccer, do you mean you want to play competitively, play casually, be around the school spirit, or maybe work in sports someday?" That single question makes you feel way smarter than a search box.
 
-Naturally capture, over the conversation: name, grade, location (city/ZIP), interests (with intent + importance), intended major(s), career goals, campus setting/size preference, and money reality (budget / needs aid). Never make the student fill a form — get it through talking.
+Naturally capture, over the conversation: name, grade, location (city/ZIP), interests (with intent + importance), intended major(s), career goals, campus setting/size preference, money reality (budget / needs aid), transfer context, international context, and target schools they want to compare. Never make the student fill a form — get it through talking.
 
 OUTPUT: Always respond with ONLY valid JSON (no markdown fences) matching exactly:
 {
@@ -30,6 +30,16 @@ OUTPUT: Always respond with ONLY valid JSON (no markdown fences) matching exactl
     "maxBudget"?: number,       // net price/yr the family can manage
     "needsAid"?: boolean,
     "stayInState"?: boolean,    // true if they want to stay in-state / close to home (also save "state")
+    "isTransfer"?: boolean,
+    "worksFullTime"?: boolean,
+    "currentCollege"?: string,
+    "completedCollegeYears"?: number,
+    "associateDegree"?: string,
+    "transferCreditsConcern"?: boolean,
+    "country"?: string,
+    "visaNeed"?: boolean,
+    "internationalAidNeed"?: boolean,
+    "targetSchools"?: string[],
     "interestSignals"?: [
       { "interest": string, "intent": "career_path"|"major"|"serious_extracurricular"|"community"|"fan_culture"|"personal_hobby", "importance": "low"|"medium"|"high"|"must_have", "evidenceQuote": string }
     ]
@@ -54,6 +64,16 @@ export interface ProfileUpdates {
   maxBudget?: number;
   needsAid?: boolean;
   stayInState?: boolean;
+  isTransfer?: boolean;
+  worksFullTime?: boolean;
+  currentCollege?: string;
+  completedCollegeYears?: number;
+  associateDegree?: string;
+  transferCreditsConcern?: boolean;
+  country?: string;
+  visaNeed?: boolean;
+  internationalAidNeed?: boolean;
+  targetSchools?: string[];
   gpa?: string;
   testType?: string;
   testScore?: string;
@@ -82,9 +102,11 @@ export interface HaldaReply {
 
 // Compact profile summary so the model has memory of what it already knows.
 export function profileSummary(p: {
-  name?: string; email?: string; phone?: string; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
+  name?: string; email?: string; phone?: string; age?: number; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
   intendedMajors?: string[]; settingPref?: string; sizePref?: string;
   needsAid?: boolean; maxBudget?: number; careerGoal?: string; stayInState?: boolean;
+  isTransfer?: boolean; worksFullTime?: boolean; currentCollege?: string; completedCollegeYears?: number; associateDegree?: string; transferCreditsConcern?: boolean;
+  country?: string; visaNeed?: boolean; internationalAidNeed?: boolean; targetSchools?: string[];
   gpa?: string; testType?: string; testScore?: string;
   interestSignals?: { interest: string; intent: string; importance: string }[];
   creditWallet?: { source: string; status: string; score?: string }[];
@@ -95,6 +117,7 @@ export function profileSummary(p: {
   if (p.name) parts.push(`name=${p.name}`);
   if (p.email) parts.push(`email=${p.email}`);
   if (p.phone) parts.push(`phone=${p.phone}`);
+  if (p.age) parts.push(`age=${p.age}`);
   if (p.grade) parts.push(`grade=${p.grade}`);
   if (p.highSchool) parts.push(`highSchool=${p.highSchool}`);
   if (p.city || p.state || p.zip) parts.push(`location=${[p.city, p.state].filter(Boolean).join(", ")}${p.zip ? ` ${p.zip}` : ""}`);
@@ -107,6 +130,16 @@ export function profileSummary(p: {
   if (p.needsAid) parts.push("needsAid=true");
   if (p.stayInState) parts.push("stayInState=true");
   if (p.maxBudget) parts.push(`budget=${p.maxBudget}`);
+  if (p.isTransfer) parts.push("isTransfer=true");
+  if (p.worksFullTime) parts.push("worksFullTime=true");
+  if (p.currentCollege) parts.push(`currentCollege=${p.currentCollege}`);
+  if (p.completedCollegeYears) parts.push(`completedCollegeYears=${p.completedCollegeYears}`);
+  if (p.associateDegree) parts.push(`associateDegree=${p.associateDegree}`);
+  if (p.transferCreditsConcern) parts.push("transferCreditsConcern=true");
+  if (p.country) parts.push(`country=${p.country}`);
+  if (p.visaNeed) parts.push("visaNeed=true");
+  if (p.internationalAidNeed) parts.push("internationalAidNeed=true");
+  if (p.targetSchools?.length) parts.push(`targetSchools=${p.targetSchools.join("/")}`);
   if (p.interestSignals?.length)
     parts.push("interests=" + p.interestSignals.map((s) => `${s.interest}(${s.intent},${s.importance})`).join("; "));
   if (p.creditWallet?.length)

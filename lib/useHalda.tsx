@@ -13,7 +13,7 @@ import type {
   Channel, ChatMessage, CreditItem, CreditSourceType, CreditStatus, Importance,
   InterestIntent, InterestSignal, ProfileField, StudentProfile, TaskItem,
 } from "./types";
-import { haldaOpener, respond, type AgentTurn } from "./agent";
+import { respond, type AgentTurn } from "./agent";
 import { FIELD_XP, levelFor, reconcileQuests } from "./gamify";
 import { profileCompleteness, rankMatches } from "./match";
 import { rankInterestMatches } from "./interest-match";
@@ -22,6 +22,17 @@ import type { ProfileUpdates } from "./halda-prompt";
 
 const LS_KEY = "halda.profile.v1";
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export interface SignInProfile {
+  name: string;
+  age?: number;
+  grade?: number;
+  highSchool?: string;
+  location?: string;
+  email?: string;
+  phone?: string;
+  intendedMajor?: string;
+  interests?: string;
+}
 const schoolIdFor = (name: string) => {
   const n = name.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
   return SCHOOLS.find((s) => {
@@ -31,76 +42,11 @@ const schoolIdFor = (name: string) => {
   })?.id;
 };
 
-// ── Demo persona (Maya) — seeds every screen so the app renders like the design.
-// Conversational fields still update live as the student chats. "Start over"
-// reloads this persona; chat overwrites name/interests/tasks/etc. in place.
-function freshMaya(): StudentProfile {
+function freshEmpty(id = "stu_local"): StudentProfile {
   return {
-    id: "stu_maya",
-    name: "Maya Reynolds",
-    grade: 12,
-    city: "Provo",
-    state: "UT",
-    highSchool: "Timpview High School",
-    interests: ["nursing", "healthcare", "tennis"],
-    interestSignals: [
-      { interest: "nursing", intent: "career_path", importance: "must_have" },
-      { interest: "biology", intent: "major", importance: "high" },
-      { interest: "tennis", intent: "serious_extracurricular", importance: "medium" },
-    ],
-    intendedMajors: ["Nursing"],
-    careerGoal: "Nurse Practitioner",
-    needsAid: true,
-    firstGen: true,
-    stayInState: true,
-    gpa: "3.85",
-    testType: "ACT",
-    testScore: "29",
-    serviceHours: 42,
-    serviceFocus: "Healthcare",
-    lettersConfirmed: 2,
-    lettersTotal: 3,
-    transcriptStatus: "Pending UVU Request",
-    scholarships: { applied: 12, won: 3, rejected: 4, pending: 8 },
-    extracurriculars: ["HOSA President", "Varsity Tennis", "Science Club"],
-    checklistDone: 13,
-    checklistTotal: 20,
-    savedSchoolIds: ["byu"],
-    trackedSchools: [
-      { id: "utah", status: "review" },
-      { id: "byu", label: "BYU (Nursing)", status: "draft" },
-      { id: "uvu", status: "action" },
-    ],
-    tasks: [
-      { id: "t_fafsa", title: "FAFSA Verification", detail: "Completed on Oct 25", due: "2026-11-01", kind: "deadline", status: "done", source: "halda", key: "fafsa" },
-      { id: "t_hosa", title: "HOSA Volunteering Plan", detail: "Required for nursing clinical eligibility.", due: "2026-11-15", kind: "todo", status: "open", source: "halda" },
-      { id: "t_rec", title: "Letters of Rec", detail: "Contact Bio teacher and Coach.", due: "2026-12-01", kind: "todo", status: "open", source: "halda" },
-    ],
-    creditWallet: [
-      { id: "cr1", source: "AP Biology", type: "ap", subject: "science", status: "completed", score: "4" },
-      { id: "cr2", source: "AP English Language", type: "ap", subject: "writing", status: "completed", score: "4" },
-      { id: "cr3", source: "Concurrent Enrollment Math 1050", type: "dual_enrollment", subject: "math", status: "completed", score: "A" },
-    ],
-    xp: 320,
-    streak: 4,
-    completedQuests: ["q_spark", "q_direction"],
-    badges: ["Career Explorer"],
-    channelsLinked: ["web"],
-    consent: {
-      fields: ["name", "grade", "location", "interests", "major", "goal"],
-      shareWithPartners: true,
-    },
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-}
-
-// A blank profile — used by "Start fresh" so the user can onboard from zero.
-function freshEmpty(): StudentProfile {
-  return {
-    id: "stu_maya",
+    id,
     interests: [], interestSignals: [], intendedMajors: [], tasks: [], creditWallet: [],
-    savedSchoolIds: [], xp: 0, streak: 1, completedQuests: [], badges: [], channelsLinked: ["web"],
+    savedSchoolIds: [], targetSchools: [], xp: 0, streak: 1, completedQuests: [], badges: [], channelsLinked: ["web"],
     consent: { fields: ["name", "grade", "location", "interests", "major", "goal"], shareWithPartners: true },
     createdAt: Date.now(), updatedAt: Date.now(),
   };
@@ -110,6 +56,41 @@ function freshEmpty(): StudentProfile {
 // re-injecting demo defaults (so a blank saved profile stays blank).
 function hydrate(p: StudentProfile): StudentProfile {
   return { ...freshEmpty(), ...p };
+}
+
+function parseLocation(input = "") {
+  const parts = input.split(",").map((x) => x.trim()).filter(Boolean);
+  const tail = parts.at(-1) || "";
+  const zip = input.match(/\b\d{5}(?:-\d{4})?\b/)?.[0];
+  const state = tail.match(/\b[A-Z]{2}\b/i)?.[0]?.toUpperCase();
+  return { city: parts.length > 1 ? parts.slice(0, -1).join(", ") : parts[0] || undefined, state, zip };
+}
+
+function profileFromSignIn(d: SignInProfile): StudentProfile {
+  const now = Date.now();
+  const interests = (d.interests || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const major = d.intendedMajor?.trim();
+  return {
+    ...freshEmpty(`stu_${now.toString(36)}`),
+    ...parseLocation(d.location),
+    name: d.name.trim(),
+    age: d.age,
+    grade: d.grade,
+    highSchool: d.highSchool?.trim() || undefined,
+    email: d.email?.trim() || undefined,
+    phone: d.phone?.trim() || undefined,
+    interests,
+    interestSignals: interests.map((interest) => ({ interest, intent: "personal_hobby", importance: "medium", source: "manual" })),
+    intendedMajors: major ? [major] : [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function openingFor(p: StudentProfile): ChatMessage {
+  const first = p.name?.split(/\s+/)[0] || "there";
+  const facts = [p.highSchool, p.city && p.state ? `${p.city}, ${p.state}` : p.city || p.state, p.grade ? `grade ${p.grade}` : p.age ? `age ${p.age}` : ""].filter(Boolean);
+  return { id: "m0", role: "halda", channel: "web", text: `You're in, ${first}. I saved ${facts.length ? facts.join(" · ") : "your basics"} so we can skip the intake questions. What do you want help with first?`, ts: Date.now(), chips: ["Find schools", "Build my plan"] };
 }
 
 export type RewardKind = "xp" | "level" | "badge" | "quest" | "match";
@@ -122,6 +103,8 @@ export interface RewardEvent {
 
 interface HaldaCtx {
   profile: StudentProfile;
+  ready: boolean;
+  signedIn: boolean;
   messages: ChatMessage[];
   smsMessages: ChatMessage[];
   typing: boolean;
@@ -129,6 +112,8 @@ interface HaldaCtx {
   matchesRevealed: boolean;
   events: RewardEvent[];
   clearEvent: (id: number) => void;
+  signIn: (d: SignInProfile) => void;
+  logout: () => void;
   send: (text: string, channel?: Channel) => void;
   reset: () => void;
   startFresh: () => void;
@@ -188,11 +173,10 @@ const BADGE_NAME: Record<string, string> = {
 };
 
 export function HaldaProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<StudentProfile>(freshMaya);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: "m0", role: "halda", channel: "web", text: haldaOpener(), ts: Date.now(),
-      chips: ["Hey Halda 👋", "Let's go"] },
-  ]);
+  const [profile, setProfile] = useState<StudentProfile>(() => freshEmpty());
+  const [ready, setReady] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [smsMessages, setSmsMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
   const [smsTyping, setSmsTyping] = useState(false);
@@ -222,7 +206,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     setEvents((cur) => cur.filter((e) => e.id !== id));
   }, []);
 
-  // fire-and-forget server sync so the partner console reflects the live Maya
+  // fire-and-forget server sync so the partner console reflects the live profile
   const sync = useCallback((p: StudentProfile) => {
     fetch("/api/students", {
       method: "POST",
@@ -490,27 +474,29 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     [applyTurn, geminiTurn, runAction, handleEssaySeed]
   );
 
-  const resetTo = useCallback((profile: StudentProfile) => {
+  const resetTo = useCallback((profile: StudentProfile, active: boolean) => {
     setProfile(profile);
-    setMessages([
-      { id: "m0", role: "halda", channel: "web", text: haldaOpener(), ts: Date.now(),
-        chips: ["Hey Halda 👋", "Let's go"] },
-    ]);
+    setSignedIn(active);
+    setMessages(active ? [openingFor(profile)] : []);
     setSmsMessages([]);
     setMatchesRevealed(false);
     setEvents([]);
     setSmsOpen(false);
     setEmailOpen(false);
     setPendingAction(null);
-    setHasSaved(false);
+    setHasSaved(active);
     turnRef.current = 0;
-    try { localStorage.setItem(LS_KEY, JSON.stringify(profile)); } catch {}
-  }, []);
+    try {
+      if (active) localStorage.setItem(LS_KEY, JSON.stringify(profile));
+      else localStorage.removeItem(LS_KEY);
+    } catch {}
+    if (active) sync(profile);
+  }, [sync]);
 
-  // Reload the seeded demo persona (Maya).
-  const reset = useCallback(() => { resetTo(freshMaya()); }, [resetTo]);
-  // Wipe to a blank profile to onboard from scratch.
-  const startFresh = useCallback(() => { resetTo(freshEmpty()); }, [resetTo]);
+  const signIn = useCallback((d: SignInProfile) => resetTo(profileFromSignIn(d), true), [resetTo]);
+  const logout = useCallback(() => resetTo(freshEmpty(), false), [resetTo]);
+  const reset = logout;
+  const startFresh = logout;
 
   const linkSMS = useCallback(() => {
     const base = profileRef.current;
@@ -605,6 +591,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
         intendedMajors: [...base.intendedMajors],
         interestSignals: [...base.interestSignals],
         channelsLinked: [...base.channelsLinked],
+        targetSchools: [...(base.targetSchools ?? [])],
       };
       const learned = new Set<ProfileField>();
       const setIf = <K extends keyof StudentProfile>(k: K, val: StudentProfile[K] | undefined, f: ProfileField) => {
@@ -622,6 +609,16 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       setIf("sizePref", u.sizePref as StudentProfile["sizePref"], "size");
       if (u.maxBudget) setIf("maxBudget", u.maxBudget, "budget");
       if (u.needsAid !== undefined) setIf("needsAid", u.needsAid, "budget");
+      if (u.isTransfer !== undefined) next.isTransfer = u.isTransfer;
+      if (u.worksFullTime !== undefined) next.worksFullTime = u.worksFullTime;
+      if (u.currentCollege) next.currentCollege = u.currentCollege;
+      if (u.completedCollegeYears !== undefined) next.completedCollegeYears = u.completedCollegeYears;
+      if (u.associateDegree) next.associateDegree = u.associateDegree;
+      if (u.transferCreditsConcern !== undefined) next.transferCreditsConcern = u.transferCreditsConcern;
+      if (u.country) next.country = u.country;
+      if (u.visaNeed !== undefined) next.visaNeed = u.visaNeed;
+      if (u.internationalAidNeed !== undefined) next.internationalAidNeed = u.internationalAidNeed;
+      if (u.targetSchools?.length) next.targetSchools = Array.from(new Set([...(next.targetSchools ?? []), ...u.targetSchools]));
       if (u.intendedMajors?.length) {
         const merged = Array.from(new Set([...next.intendedMajors, ...u.intendedMajors]));
         if (merged.length !== next.intendedMajors.length) { next.intendedMajors = merged; learned.add("major"); }
@@ -659,6 +656,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       if (u.chosenSchools?.length) {
         const ids = u.chosenSchools.map(schoolIdFor).filter(Boolean) as string[];
         if (ids.length) next.savedSchoolIds = Array.from(new Set([...(next.savedSchoolIds ?? []), ...ids]));
+        next.targetSchools = Array.from(new Set([...(next.targetSchools ?? []), ...u.chosenSchools]));
       }
 
       // fold in any tasks the agent added (dedup by key/title)
@@ -674,7 +672,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       next.xp += xpGain;
 
       const { newlyDone } = reconcileQuests(next);
-      const willReveal = revealedRef.current || opts?.reveal === true || profileCompleteness(next) >= 55;
+      const willReveal = revealedRef.current || opts?.reveal === true;
       const beforeBadges = new Set(next.badges);
       next.badges = computeBadges(next, willReveal);
       next.updatedAt = Date.now();
@@ -827,29 +825,34 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
-        // Use the saved profile AS-IS (hydrated) so a "Start fresh" blank slate
-        // persists across refreshes instead of re-seeding the demo persona.
         const saved = JSON.parse(raw) as StudentProfile;
         if (saved && saved.id) {
-          const h = hydrate(saved);
-          setProfile(h);
+          const next = hydrate(saved);
+          setProfile(next);
+          setMessages([openingFor(next)]);
+          setSignedIn(true);
           setHasSaved(true);
           if (profileCompleteness(saved) >= 55) setMatchesRevealed(true);
           // Re-push to server store so email/SMS lookups work after a restart.
-          sync(h);
+          sync(next);
         }
       }
-    } catch {}
+    } catch {} finally {
+      setReady(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    if (!ready || !signedIn) return;
     try { localStorage.setItem(LS_KEY, JSON.stringify(profile)); } catch {}
-  }, [profile]);
+  }, [profile, ready, signedIn]);
 
   const value = useMemo<HaldaCtx>(
     () => ({
       profile,
+      ready,
+      signedIn,
       messages,
       smsMessages,
       typing,
@@ -857,6 +860,8 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       matchesRevealed,
       events,
       clearEvent,
+      signIn,
+      logout,
       send,
       reset,
       startFresh,
@@ -886,8 +891,8 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       revealMatchesNow,
       hasSaved,
     }),
-    [profile, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
-      clearEvent, send, reset, startFresh, linkSMS, completeQuest,
+    [profile, ready, signedIn, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
+      clearEvent, signIn, logout, send, reset, startFresh, linkSMS, completeQuest,
       smsOpen, openSMS, closeSMS, emailOpen, openEmail, closeEmail,
       applyUpdates, editField, toggleSavedSchool, upsertInterestSignal, removeInterestSignal,
       pushHaldaMessage, ingestVoiceUser, addTasks, toggleTask, removeTask,

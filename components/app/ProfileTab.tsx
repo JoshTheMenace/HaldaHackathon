@@ -151,6 +151,7 @@ export default function ProfileTab() {
             <p className="kintro">Everything Halda has learned to personalize your matches. Blanks are what she&apos;ll ask about next.</p>
             <div className="kbody-inner">
               <ReadField label="Current Grade" value={gradeLabel(profile.grade)} />
+              <ReadField label="Age" value={profile.age ? String(profile.age) : ""} />
               <ReadField label="Location" value={poolLocation(profile)} />
               <ReadField label="High School" value={profile.highSchool ?? ""} />
               <EditField label="Email" value={profile.email ?? ""} onSave={(v) => editField("email", v)} />

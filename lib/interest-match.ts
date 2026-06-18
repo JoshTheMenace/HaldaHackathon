@@ -133,6 +133,7 @@ export function scoreInterestFit(
   const atAllCosts = signals.some((x) => x.importance === "must_have" && (x.intent === "major" || x.intent === "career_path"));
   if (costSensitive) w = { academic: 0.175, interest: 0.175, afford: 0.2, scholarship: 0.2, credit: 0.2, family: 0.05 };
   if (atAllCosts) w = { ...w, interest: w.interest + 0.1, credit: Math.max(0.05, w.credit - 0.05), scholarship: Math.max(0.05, w.scholarship - 0.05) };
+  if (p.isTransfer) w = { ...w, credit: w.credit + 0.1, scholarship: Math.max(0.05, w.scholarship - 0.05), family: Math.max(0.05, w.family - 0.05) };
   const wSum = w.academic + w.interest + w.afford + w.scholarship + w.credit + w.family;
   const blended =
     (academicFit * w.academic + interestFit * w.interest + affordabilityFit * w.afford +
@@ -151,6 +152,16 @@ export function scoreInterestFit(
     const home = school.state === p.state;
     overallFit = clamp(overallFit + (home ? 6 : -26));
     if (home) reasons.unshift(`Stays close to home in ${p.state} — and in-state tuition keeps the price down.`);
+  }
+  if (p.isTransfer) {
+    if (creditFit.score >= 70) reasons.unshift("Transfer-credit fit matters here — your prior college work should be checked early.");
+    else concerns.push("Before applying, confirm how your existing credits transfer into this degree.");
+  }
+  if (p.worksFullTime) concerns.push("Because you work full time, verify evening/online course availability and part-time pacing.");
+  if (p.visaNeed) concerns.push("Confirm I-20/F-1 support and international student advising before committing.");
+  if (p.internationalAidNeed) {
+    if (school.netPrice > 25000) overallFit = clamp(overallFit - 8);
+    concerns.push("International aid rules vary by school — confirm non-citizen scholarship eligibility.");
   }
 
   // Fold a couple of baseline reasons in for color.

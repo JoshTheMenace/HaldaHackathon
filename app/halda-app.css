@@ -26,6 +26,23 @@
 .phone *, .phone *::before, .phone *::after { box-sizing: border-box; margin: 0; padding: 0; }
 .phone .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500; line-height: 1; }
 
+/* auth */
+.phone .auth { flex: 1; overflow-y: auto; padding: 48px 24px 32px; background: radial-gradient(circle at 50% 0,rgba(22,184,158,.18),transparent 34%),var(--h-surface); }
+.phone .auth.loading { display: grid; place-items: center; overflow: hidden; }
+.phone .auth-mark { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(140deg,#0a6b5e,#064a40); color: #eafff7; box-shadow: 0 14px 30px -14px rgba(10,74,62,.7); }
+.phone .auth-mark .material-symbols-outlined { font-size: 28px; font-variation-settings: 'FILL' 1; }
+.phone .auth h1 { margin-top: 22px; font-size: 28px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; color: var(--h-primary-deep); }
+.phone .auth p { margin-top: 10px; color: var(--h-ink-var); font-size: 14px; line-height: 1.45; }
+.phone .auth-form { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.phone .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.phone .auth-field { display: block; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 14px; padding: 10px 12px; box-shadow: var(--h-soft); }
+.phone .auth-field:focus-within { border-color: var(--h-primary); }
+.phone .auth-field span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--h-outline); }
+.phone .auth-field input { width: 100%; margin-top: 4px; border: 0; outline: 0; background: transparent; color: var(--h-ink); font: inherit; font-size: 15px; font-weight: 700; }
+.phone .auth-field input::placeholder { color: var(--h-outline-v); font-weight: 600; }
+.phone .auth-submit { margin-top: 8px; height: 52px; border: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--h-primary); color: #fff; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+.phone .auth-submit .material-symbols-outlined { font-size: 20px; }
+
 /* app bar */
 .phone .appbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between;
   padding: 14px 20px 12px; background: rgba(245,248,247,.82); backdrop-filter: blur(20px) saturate(1.3);
@@ -336,7 +353,8 @@
 .phone .stack { position: relative; margin-bottom: 6px; }
 .phone .behind { position: absolute; left: 16px; right: 16px; bottom: -12px; height: 97%; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 28px; box-shadow: var(--h-soft); opacity: .55; transform: scale(.96); }
 .phone .behind.b2 { left: 30px; right: 30px; bottom: -22px; opacity: .3; transform: scale(.92); }
-.phone .swcard { position: relative; z-index: 3; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 28px; box-shadow: 0 18px 50px -16px rgba(10,74,62,.3); padding: 26px 24px 24px; overflow: hidden; transition: transform .35s cubic-bezier(.32,.72,0,1), opacity .35s; }
+.phone .swcard { position: relative; z-index: 3; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 28px; box-shadow: 0 18px 50px -16px rgba(10,74,62,.3); padding: 26px 24px 24px; overflow: hidden; transition: transform .35s cubic-bezier(.32,.72,0,1), opacity .35s; touch-action: pan-y; cursor: grab; }
+.phone .swcard:active { cursor: grabbing; }
 .phone .swcard.gone-left { transform: translateX(-130%) rotate(-12deg); opacity: 0; }
 .phone .swcard.gone-right { transform: translateX(130%) rotate(12deg); opacity: 0; }
 .phone .card-glow { position: absolute; inset: 0 0 auto 0; height: 300px; background: radial-gradient(120% 80% at 50% -10%,rgba(0,107,95,.06),transparent 70%); pointer-events: none; }
@@ -494,6 +512,15 @@
 .phone .csc-save { width: 40px; height: 40px; flex-shrink: 0; border: none; background: var(--h-s-low); border-radius: 11px; display: grid; place-items: center; cursor: pointer; color: var(--h-outline); }
 .phone .csc-save.on { background: rgba(0,107,95,.1); color: var(--h-primary); }
 .phone .csc-save .material-symbols-outlined { font-size: 21px; font-variation-settings: 'FILL' 1; }
+.phone .tool-media { margin-left: 12px; display: flex; flex-direction: column; gap: 8px; }
+.phone .tool-media-card { display: flex; align-items: center; gap: 11px; background: #fff; border: 1px solid var(--h-s-highest); border-radius: 16px; padding: 9px; box-shadow: var(--h-soft); }
+.phone .tm-photo { width: 70px; height: 52px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: var(--h-s-low); }
+.phone .tm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phone .tm-b { min-width: 0; flex: 1; }
+.phone .tm-b b { display: block; font-size: 13px; font-weight: 800; color: var(--h-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone .tm-b span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--h-ink-var); line-height: 1.25; }
+.phone .tm-logo { width: 30px; height: 30px; border-radius: 9px; overflow: hidden; border: 1px solid var(--h-s-highest); background: #fff; flex-shrink: 0; display: grid; place-items: center; }
+.phone .tm-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* detail sheet sits ABOVE the chat sheet when opened from chat */
 .phone .scrim.detail-scrim { z-index: 64; }
