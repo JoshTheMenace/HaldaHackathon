@@ -85,6 +85,21 @@ export interface StudentProfile {
   needsAid?: boolean;
   stayInState?: boolean; // wants to stay in-state / close to home
   firstGen?: boolean;
+  // Academic / activity enrichment surfaced on the Profile screen
+  gpa?: string; // "3.85"
+  testType?: string; // "ACT" | "SAT"
+  testScore?: string; // "29"
+  serviceHours?: number;
+  serviceFocus?: string;
+  lettersConfirmed?: number;
+  lettersTotal?: number;
+  transcriptStatus?: string;
+  scholarships?: { applied: number; won: number; rejected: number; pending: number };
+  extracurriculars?: string[];
+  checklistDone?: number;
+  checklistTotal?: number;
+  savedSchoolIds?: string[]; // schools the student swiped right / saved
+  trackedSchools?: { id: string; label?: string; status: "review" | "draft" | "action" | "saved" }[];
   // Engagement / gamification
   tasks: TaskItem[];
   creditWallet: CreditItem[];

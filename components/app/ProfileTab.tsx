@@ -1,0 +1,178 @@
+"use client";
+
+import { useState } from "react";
+import { useHalda } from "@/lib/useHalda";
+import { schoolById } from "@/lib/schools";
+import { Icon } from "./Icon";
+import { initials, gradeLabel, dueLabel } from "./helpers";
+
+const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
+
+export default function ProfileTab() {
+  const { profile, toggleTask, editField } = useHalda();
+  const [poolOpen, setPoolOpen] = useState(false);
+  const sch = profile.scholarships ?? { applied: 0, won: 0, rejected: 0, pending: 0 };
+  const tracked = profile.trackedSchools ?? [];
+  const extras = profile.extracurriculars?.length ? profile.extracurriculars : profile.interestSignals.map((s) => s.interest);
+
+  return (
+    <main className="scroll" style={{ padding: 0 }}>
+      <header className="phead">
+        <span className="pa">{initials(profile.name)}</span>
+        <div>
+          <span className="eyebrow">Student Profile</span>
+          <h1>{profile.name || "Your Profile"}</h1>
+        </div>
+      </header>
+
+      <div className="wrap">
+        {/* deadlines */}
+        <div className="sec-head"><h2>Upcoming Deadlines</h2></div>
+        <section className="card">
+          <div className="tasks">
+            {profile.tasks.length === 0 && <p style={{ padding: "12px 0", fontSize: 13, color: "var(--h-ink-var)" }}>No deadlines yet — your guide will add them as you go.</p>}
+            {profile.tasks.map((t) => {
+              const done = t.status === "done";
+              const overdue = !done && t.due ? new Date(t.due) < new Date() : false;
+              return (
+                <div key={t.id} className={`task${done ? " done" : ""}`}>
+                  <button className={`box${done ? " done" : ""}`} onClick={() => toggleTask(t.id)} aria-label="Toggle">
+                    {done && <Icon name="check" />}
+                  </button>
+                  <div className="b">
+                    <div className="t"><span>{t.title}</span>{t.due && <span className={`due${overdue ? " red" : done ? " soft" : ""}`}>{dueLabel(t.due)}</span>}</div>
+                    {t.detail && <div className="s">{t.detail}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* university tracking */}
+        <div className="sec-head"><h2>University Tracking</h2></div>
+        <section className="card">
+          <div className="track-list">
+            {tracked.length === 0 && <p style={{ padding: "10px 0", fontSize: 13, color: "var(--h-ink-var)" }}>Save schools on Explore to track them here.</p>}
+            {tracked.map((ts) => {
+              const s = schoolById(ts.id);
+              return (
+                <div key={ts.id} className="trow">
+                  <span className="tinst"><Icon name="account_balance" /></span>
+                  <span className="nm">{ts.label || s?.name || ts.id}</span>
+                  <span className={`status ${ts.status}`}>{STATUS_LABEL[ts.status]}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <h2 className="section-title">Academic Profile</h2>
+
+        {/* academic */}
+        <section className="card cardpad">
+          <div className="ch"><span className="l"><span className="i"><Icon name="school" /></span>Academic</span></div>
+          <div className="grid2">
+            <div className="metric"><div className="k">Cumulative GPA</div><div className="v">{profile.gpa || "—"}</div></div>
+            <div className="metric"><div className="k">{profile.testType || "Test"} Score</div><div className="v">{profile.testScore || "—"}</div></div>
+          </div>
+          {(profile.lettersTotal || profile.transcriptStatus) && (
+            <>
+              {profile.lettersTotal && <div className="mini"><b>Letters of Recommendation</b><span className="badge ok">{profile.lettersConfirmed ?? 0} of {profile.lettersTotal} Confirmed</span></div>}
+              {profile.transcriptStatus && <div className="mini"><b>Transcript Status</b><span className="badge warn">{profile.transcriptStatus}</span></div>}
+            </>
+          )}
+        </section>
+
+        {/* scholarships */}
+        <section className="card cardpad stack-gap">
+          <div className="ch"><span className="l"><span className="i"><Icon name="savings" /></span>Scholarship Progress</span></div>
+          <div className="grid3">
+            <div className="metric center"><div className="k">Applied</div><div className="v">{sch.applied}</div></div>
+            <div className="metric center won"><div className="k">Won</div><div className="v">{sch.won}</div></div>
+            <div className="metric center rej"><div className="k">Rejected</div><div className="v">{sch.rejected}</div></div>
+          </div>
+          <div className="schol-foot">
+            <div className="icons"><Icon name="emoji_events" /><Icon name="account_balance" /><Icon name="receipt_long" /></div>
+            <span className="pend">{sch.pending} pending response</span>
+          </div>
+        </section>
+
+        {/* service */}
+        {(profile.serviceHours != null || profile.serviceFocus) && (
+          <section className="card cardpad stack-gap">
+            <div className="ch"><span className="l"><span className="i"><Icon name="volunteer_activism" /></span>Service</span></div>
+            <div className="grid2">
+              <div className="metric"><div className="k">Service Hours</div><div className="v">{profile.serviceHours ?? 0}<span style={{ fontSize: 15 }}> Hours</span></div></div>
+              <div className="metric"><div className="k">Focus Area</div><div className="v txt">{profile.serviceFocus || "—"}</div></div>
+            </div>
+          </section>
+        )}
+
+        {/* extracurricular */}
+        {extras.length > 0 && (
+          <section className="card cardpad stack-gap">
+            <div className="ch"><span className="l"><span className="i"><Icon name="groups" /></span>Extracurricular</span></div>
+            <div className="chips">{extras.map((e) => <span key={e} className="chip">{e}</span>)}</div>
+          </section>
+        )}
+
+        {/* AI knowledge pool */}
+        <section className="card stack-gap" style={{ overflow: "hidden" }}>
+          <div className={`kpool${poolOpen ? " open" : ""}`} onClick={() => setPoolOpen((o) => !o)}>
+            <span className="ki"><Icon name="hub" /></span>
+            <span className="kt">AI Knowledge Pool</span>
+            <Icon name="expand_more" className="chev" />
+          </div>
+          <div className={`kbody${poolOpen ? " open" : ""}`}>
+            <p className="kintro">Verified data we use to personalize your matches.</p>
+            <div className="kbody-inner">
+              <ReadField label="Current Grade" value={gradeLabel(profile.grade)} />
+              <EditField label="Intended Major" value={profile.intendedMajors[0] ?? ""} onSave={(v) => editField("intendedMajors", v ? [v] : [])} />
+              <EditField label="Career Goal" value={profile.careerGoal ?? ""} onSave={(v) => editField("careerGoal", v)} />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* achievements */}
+      <div className="wrap"><div className="sec-head"><h2>Achievements</h2></div></div>
+      <div className="ach-row">
+        <div className="achv hero2">
+          <span className="glow" />
+          <span className="medal"><Icon name="workspace_premium" /></span>
+          <div className="at"><div className="nm2">{profile.badges[0] || "Explorer"}</div><div className="desc">{profile.intendedMajors[0] || "Your"} pathway</div></div>
+        </div>
+        <div className="achv flat">
+          <span className="medal"><Icon name="savings" /></span>
+          <div className="at"><div className="nm2">Scholarship Hunter</div><div className="desc">{sch.won} of {sch.applied} won</div></div>
+        </div>
+        <div className="achv flat">
+          <span className="medal"><Icon name="local_fire_department" /></span>
+          <div className="at"><div className="nm2">On a Streak</div><div className="desc">{profile.streak}-day streak</div></div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ReadField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="field">
+      <span style={{ flex: 1 }}><span className="lab">{label}</span><span className="val">{value || "—"}</span></span>
+    </div>
+  );
+}
+
+function EditField({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => void }) {
+  const [v, setV] = useState(value);
+  return (
+    <label className="field">
+      <span style={{ flex: 1 }}>
+        <span className="lab">{label}</span>
+        <input className="val" value={v} onChange={(e) => setV(e.target.value)} onBlur={() => onSave(v.trim())} aria-label={label} />
+      </span>
+      <span className="ed" aria-hidden><Icon name="edit" /></span>
+    </label>
+  );
+}

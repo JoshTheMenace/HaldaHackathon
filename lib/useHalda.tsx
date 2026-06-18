@@ -23,19 +23,56 @@ import type { ProfileUpdates } from "./halda-prompt";
 const LS_KEY = "halda.profile.v1";
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-// ── Fresh-start Maya (the live onboarding demo builds her from zero) ──────────
+// ── Demo persona (Maya) — seeds every screen so the app renders like the design.
+// Conversational fields still update live as the student chats. "Start over"
+// reloads this persona; chat overwrites name/interests/tasks/etc. in place.
 function freshMaya(): StudentProfile {
   return {
     id: "stu_maya",
-    interests: [],
-    interestSignals: [],
-    intendedMajors: [],
-    tasks: [],
+    name: "Maya Reynolds",
+    grade: 12,
+    city: "Provo",
+    state: "UT",
+    highSchool: "Timpview High School",
+    interests: ["nursing", "healthcare", "tennis"],
+    interestSignals: [
+      { interest: "nursing", intent: "career_path", importance: "must_have" },
+      { interest: "biology", intent: "major", importance: "high" },
+      { interest: "tennis", intent: "serious_extracurricular", importance: "medium" },
+    ],
+    intendedMajors: ["Nursing"],
+    careerGoal: "Nurse Practitioner",
+    needsAid: true,
+    firstGen: true,
+    stayInState: true,
+    gpa: "3.85",
+    testType: "ACT",
+    testScore: "29",
+    serviceHours: 42,
+    serviceFocus: "Healthcare",
+    lettersConfirmed: 2,
+    lettersTotal: 3,
+    transcriptStatus: "Pending UVU Request",
+    scholarships: { applied: 12, won: 3, rejected: 4, pending: 8 },
+    extracurriculars: ["HOSA President", "Varsity Tennis", "Science Club"],
+    checklistDone: 13,
+    checklistTotal: 20,
+    savedSchoolIds: ["byu"],
+    trackedSchools: [
+      { id: "utah", status: "review" },
+      { id: "byu", label: "BYU (Nursing)", status: "draft" },
+      { id: "uvu", status: "action" },
+    ],
+    tasks: [
+      { id: "t_fafsa", title: "FAFSA Verification", detail: "Completed on Oct 25", due: "2026-11-01", kind: "deadline", status: "done", source: "halda", key: "fafsa" },
+      { id: "t_hosa", title: "HOSA Volunteering Plan", detail: "Required for nursing clinical eligibility.", due: "2026-11-15", kind: "todo", status: "open", source: "halda" },
+      { id: "t_rec", title: "Letters of Rec", detail: "Contact Bio teacher and Coach.", due: "2026-12-01", kind: "todo", status: "open", source: "halda" },
+    ],
     creditWallet: [],
-    xp: 0,
-    streak: 1,
-    completedQuests: [],
-    badges: [],
+    xp: 320,
+    streak: 4,
+    completedQuests: ["q_spark", "q_direction"],
+    badges: ["Career Explorer"],
     channelsLinked: ["web"],
     consent: {
       fields: ["name", "grade", "location", "interests", "major", "goal"],
@@ -78,6 +115,7 @@ interface HaldaCtx {
   // Gemini-powered + manual profile editing + persistence
   applyUpdates: (u: ProfileUpdates) => void;
   editField: <K extends keyof StudentProfile>(k: K, v: StudentProfile[K]) => void;
+  toggleSavedSchool: (id: string, save?: boolean) => void;
   upsertInterestSignal: (s: InterestSignal, index?: number) => void;
   removeInterestSignal: (index: number) => void;
   pushHaldaMessage: (text: string, channel?: Channel) => void;
@@ -628,6 +666,21 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     [sync]
   );
 
+  // Swipe-right / swipe-left a school on the Explore tab.
+  const toggleSavedSchool = useCallback(
+    (id: string, save?: boolean) => {
+      const base = profileRef.current;
+      const cur = base.savedSchoolIds ?? [];
+      const has = cur.includes(id);
+      const want = save ?? !has;
+      const savedSchoolIds = want ? (has ? cur : [...cur, id]) : cur.filter((x) => x !== id);
+      const next = { ...base, savedSchoolIds, updatedAt: Date.now() };
+      setProfile(next);
+      sync(next);
+    },
+    [sync]
+  );
+
   const upsertInterestSignal = useCallback(
     (s: InterestSignal, index?: number) => {
       const base = profileRef.current;
@@ -775,6 +828,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       closeEmail,
       applyUpdates,
       editField,
+      toggleSavedSchool,
       upsertInterestSignal,
       removeInterestSignal,
       pushHaldaMessage,
@@ -791,7 +845,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     [profile, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
       clearEvent, send, reset, linkSMS, completeQuest,
       smsOpen, openSMS, closeSMS, emailOpen, openEmail, closeEmail,
-      applyUpdates, editField, upsertInterestSignal, removeInterestSignal,
+      applyUpdates, editField, toggleSavedSchool, upsertInterestSignal, removeInterestSignal,
       pushHaldaMessage, ingestVoiceUser, addTasks, toggleTask, removeTask,
       addTask, upsertCredit, removeCredit, revealMatchesNow, hasSaved]
   );
