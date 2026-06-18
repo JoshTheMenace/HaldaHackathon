@@ -26,17 +26,16 @@ const GUIDELINES: [string, string, string][] = [
   ["flag", "Report anything", "Tap ⋮ on any post to report it — our safety system reviews every report right away."],
 ];
 
-// Normalized shape fed to the unified PeerCard.
 interface PeerCardData {
   id: string;
   name: string;
   avatar: string;
   accent: string;
-  badge: string;   // e.g. "Gr 10" or "UW"
-  sub: string;     // e.g. "Computer Science" or "Junior · Engineering"
-  status: string;  // activity blurb or quote
-  actionLabel: string;
-  actionDoneLabel: string;
+  badge: string;
+  sub: string;
+  status: string;
+  // used to build the bulletin post
+  context: string; // "from your school" | "at UW" | etc.
 }
 
 function hsToPeerCard(p: HighSchoolPeer): PeerCardData {
@@ -45,7 +44,7 @@ function hsToPeerCard(p: HighSchoolPeer): PeerCardData {
     badge: `Gr ${p.grade}`,
     sub: p.pathway.split(/[& ]/)[0],
     status: p.status,
-    actionLabel: "Wave 👋", actionDoneLabel: "Waved 👋",
+    context: "from your school",
   };
 }
 
@@ -55,7 +54,7 @@ function colToPeerCard(s: CollegeStudent): PeerCardData {
     badge: s.schoolShort,
     sub: `${s.year} · ${s.major}`,
     status: s.blurb,
-    actionLabel: "Ask", actionDoneLabel: "Asked ✓",
+    context: `at ${s.schoolShort}`,
   };
 }
 
@@ -100,7 +99,29 @@ export default function CohortTab() {
   const [toast, setToast] = useState("");
   const [sheet, setSheet] = useState<null | "report" | "guidelines">(null);
 
-  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2200); };
+  // Connect sheet state
+  const [connectTarget, setConnectTarget] = useState<PeerCardData | null>(null);
+  const [connectQ, setConnectQ] = useState("");
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2400); };
+
+  const openConnect = (peer: PeerCardData) => { setConnectTarget(peer); setConnectQ(""); };
+  const closeConnect = () => { setConnectTarget(null); setConnectQ(""); };
+
+  const submitConnect = () => {
+    if (!connectTarget) return;
+    const { name, badge, context, id } = connectTarget;
+    const q = connectQ.trim();
+    const body = q
+      ? `${firstName} asked ${name} (${badge}, ${context}): "${q}" — dropping this in the bulletin so everyone can learn from the answer.`
+      : `${firstName} just connected with ${name} ${context} 👋 Say hi!`;
+    const tags = q ? ["PublicQuestion", badge.replace(/\s/g, "")] : ["Connect", badge.replace(/\s/g, "")];
+    setComposed((c) => [{ id: `conn_${Date.now()}`, authorId: "me", pathway, time: "Just now", body, tags, likes: 0, comments: 0 }, ...c]);
+    setConnectedIds((s) => new Set(s).add(id));
+    closeConnect();
+    flash(q ? "Question posted to the bulletin — your classmates might have the same one ✓" : `Connected with ${name} — posted to the bulletin ✓`);
+  };
 
   const matchesFilter = (p: CohortPost) => {
     if (filter === "All") return true;
@@ -122,6 +143,8 @@ export default function CohortTab() {
     setDraft(""); setComposeOpen(false);
     flash("Posted — screened for safety before classmates see it ✓");
   };
+
+  const anySheetOpen = sheet !== null || connectTarget !== null;
 
   return (
     <main className="scroll cohort">
@@ -152,31 +175,32 @@ export default function CohortTab() {
         <button className="sbtn" onClick={() => setSheet("guidelines")}>Guidelines</button>
       </div>
 
-      {/* ── From your High School ── */}
       {hsPeers.length > 0 && (
         <section className="peer-section">
           <div className="peer-sec-head">
             <Icon name="school" /><span>From your High School</span>
           </div>
           <div className="peer-grid">
-            {hsPeers.map((p) => <PeerCard key={p.id} data={p} />)}
+            {hsPeers.map((p) => (
+              <PeerCard key={p.id} data={p} connected={connectedIds.has(p.id)} onConnect={() => openConnect(p)} />
+            ))}
           </div>
         </section>
       )}
 
-      {/* ── From your top Universities ── */}
       {collegeStudents.length > 0 && (
         <section className="peer-section">
           <div className="peer-sec-head">
             <Icon name="account_balance" /><span>From your top Universities</span>
           </div>
           <div className="peer-grid">
-            {collegeStudents.map((p) => <PeerCard key={p.id} data={p} />)}
+            {collegeStudents.map((p) => (
+              <PeerCard key={p.id} data={p} connected={connectedIds.has(p.id)} onConnect={() => openConnect(p)} />
+            ))}
           </div>
         </section>
       )}
 
-      {/* ── Community Bulletin ── */}
       <section className="peer-section">
         <div className="peer-sec-head">
           <Icon name="forum" /><span>Community Bulletin</span>
@@ -218,8 +242,10 @@ export default function CohortTab() {
 
       {toast && <div className="cohort-toast">{toast}</div>}
 
-      {/* safety / report bottom sheet */}
-      <div className={`scrim${sheet ? " on" : ""}`} onClick={() => setSheet(null)} />
+      {/* Shared scrim */}
+      <div className={`scrim${anySheetOpen ? " on" : ""}`} onClick={() => { setSheet(null); closeConnect(); }} />
+
+      {/* Guidelines / report sheet */}
       <section className={`sheet cohort-sheet${sheet ? " open" : ""}`} role="dialog" aria-modal="true">
         <span className="grab" />
         <div className="cs-head">
@@ -250,14 +276,52 @@ export default function CohortTab() {
           )}
         </div>
       </section>
+
+      {/* Connect sheet */}
+      <section className={`sheet cohort-sheet connect-sheet${connectTarget ? " open" : ""}`} role="dialog" aria-modal="true">
+        <span className="grab" />
+        {connectTarget && (
+          <>
+            <div className="cs-head">
+              <img className="connect-av" src={connectTarget.avatar} alt="" style={{ borderColor: connectTarget.accent }} />
+              <div className="connect-meta">
+                <div className="connect-name">{connectTarget.name}</div>
+                <div className="connect-sub">
+                  <span className="peer-badge" style={{ background: connectTarget.accent }}>{connectTarget.badge}</span>
+                  <span>{connectTarget.sub}</span>
+                </div>
+              </div>
+              <button className="sheet-close" onClick={closeConnect} aria-label="Close"><Icon name="close" /></button>
+            </div>
+            <div className="cs-body">
+              <p className="cs-intro connect-intro">
+                <Icon name="forum" /> Connections are public — your question posts to the Community Bulletin where classmates can learn from the answer too.
+              </p>
+              <label className="connect-label">Ask {connectTarget.name.split(" ")[0]} a public question <span>(optional)</span></label>
+              <textarea
+                className="connect-textarea"
+                placeholder={`e.g. "What's the ${connectTarget.badge} application process like?"`}
+                value={connectQ}
+                onChange={(e) => setConnectQ(e.target.value)}
+                autoFocus
+              />
+              <div className="connect-actions">
+                <button className="co-cancel" onClick={closeConnect}>Cancel</button>
+                <button className="co-post connect-go" onClick={submitConnect}>
+                  {connectQ.trim() ? "Post question" : "Connect"} <Icon name="arrow_forward" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
     </main>
   );
 }
 
-// ── Unified peer card used by both HS and university sections ────────────────
+// ── Unified peer card ────────────────────────────────────────────────────────
 
-function PeerCard({ data: p }: { data: PeerCardData }) {
-  const [done, setDone] = useState(false);
+function PeerCard({ data: p, connected, onConnect }: { data: PeerCardData; connected: boolean; onConnect: () => void }) {
   return (
     <div className="peer-card">
       <img className="peer-av" src={p.avatar} alt="" style={{ borderColor: p.accent }} />
@@ -266,18 +330,18 @@ function PeerCard({ data: p }: { data: PeerCardData }) {
       <div className="peer-sub">{p.sub}</div>
       <div className="peer-status">{p.status}</div>
       <button
-        className={`peer-btn${done ? " done" : ""}`}
-        onClick={() => setDone(true)}
-        disabled={done}
-        style={done ? undefined : { borderColor: p.accent, color: p.accent }}
+        className={`peer-btn${connected ? " done" : ""}`}
+        onClick={connected ? undefined : onConnect}
+        disabled={connected}
+        style={connected ? undefined : { borderColor: p.accent, color: p.accent }}
       >
-        {done ? p.actionDoneLabel : p.actionLabel}
+        {connected ? "Connected ✓" : "Connect"}
       </button>
     </div>
   );
 }
 
-// ── Feed post card (unchanged) ───────────────────────────────────────────────
+// ── Feed post card ───────────────────────────────────────────────────────────
 
 function PostCard({ p, my, likeCount, liked, onLike, onAct, onReport, firstName, myInitials }: {
   p: CohortPost; my: boolean; likeCount: (p: CohortPost) => number; liked: Set<string>;
