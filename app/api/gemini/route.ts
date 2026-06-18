@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { runAgent } from "@/lib/halda-agent";
-import { upsertStudent } from "@/lib/store";
+import { upsertStudent, appendHistory } from "@/lib/store";
 import type { StudentProfile } from "@/lib/types";
 
 // Halda's agentic brain (Gemini function-calling). Converses, extracts a
@@ -34,6 +34,11 @@ export async function POST(req: Request) {
         updatedAt: Date.now(),
       } as StudentProfile;
       upsertStudent(merged);
+      // Record the turn in the shared transcript so an SMS handoff continues it.
+      appendHistory(profile.id, [
+        { role: "user", text: message, channel: "web" },
+        ...(result.reply ? [{ role: "model" as const, text: result.reply, channel: "web" as const }] : []),
+      ]);
     }
     return NextResponse.json({ engine: "gemini-agent", ...result });
   } catch (e) {

@@ -23,11 +23,23 @@ export interface Tenant {
   region: string;
 }
 
+// One conversation turn, shared across channels so web and SMS see one thread.
+export interface ConvoTurn {
+  role: "user" | "model";
+  text: string;
+  channel?: "web" | "sms" | "voice";
+  ts?: number;
+}
+
 interface StoreShape {
   students: Map<string, StudentProfile>;
   tenants: Tenant[];
   // tenantId -> (leadId -> Lead). The ONLY place school-visible data lives.
   leadsByTenant: Map<string, Map<string, Lead>>;
+  // Cross-channel handoff: a phone number maps to ONE studentId, and each student
+  // has ONE shared transcript — so texting picks up exactly where web left off.
+  phoneToStudent: Map<string, string>;
+  historyByStudent: Map<string, ConvoTurn[]>;
 }
 
 const g = globalThis as unknown as { __halda?: StoreShape };
@@ -239,6 +251,8 @@ function init(): StoreShape {
     students: seedStudents(),
     tenants: seedTenants(),
     leadsByTenant: new Map(),
+    phoneToStudent: new Map(),
+    historyByStudent: new Map(),
   };
   rebuildLeads(store);
   return store;
@@ -267,6 +281,45 @@ export function upsertStudent(p: StudentProfile) {
 
 export function resetStore() {
   g.__halda = init();
+}
+
+// ── Cross-channel handoff (web ↔ SMS share one profile + one transcript) ──────
+
+// Normalize any typed number to E.164 (assume US +1 for 10-digit inputs).
+export function normalizePhone(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  if (raw.trim().startsWith("+")) return "+" + d;
+  if (d.length === 10) return "+1" + d;
+  if (d.length === 11 && d.startsWith("1")) return "+" + d;
+  return "+" + d;
+}
+
+// Link a phone to a student so an inbound text resolves to the right profile.
+export function linkPhone(phone: string, studentId: string) {
+  const e164 = normalizePhone(phone);
+  if (!e164 || !studentId) return;
+  store().phoneToStudent.set(e164, studentId);
+  const s = getStudent(studentId);
+  if (s && !s.channelsLinked.includes("sms")) {
+    upsertStudent({ ...s, channelsLinked: [...s.channelsLinked, "sms"] });
+  }
+}
+
+export function studentForPhone(phone: string): string | undefined {
+  return store().phoneToStudent.get(normalizePhone(phone));
+}
+
+export function getHistory(studentId: string): ConvoTurn[] {
+  return store().historyByStudent.get(studentId) ?? [];
+}
+
+// Append turns to the shared transcript (most recent kept; capped for safety).
+export function appendHistory(studentId: string, turns: ConvoTurn[]) {
+  if (!studentId || !turns.length) return;
+  const h = store().historyByStudent.get(studentId) ?? [];
+  h.push(...turns.map((t) => ({ ...t, ts: t.ts ?? Date.now() })));
+  store().historyByStudent.set(studentId, h.slice(-40));
 }
 
 // ── Tenant-SCOPED access. The ONLY door to school-visible data. ──────────────
