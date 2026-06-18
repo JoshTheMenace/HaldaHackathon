@@ -1,6 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { StudentProfile, TaskItem, ToolEvent, School } from "./types";
-import { profileCompleteness } from "./match";
 import { rankInterestMatches, scoreInterestFit } from "./interest-match";
 import { schoolById, SCHOOLS } from "./schools";
 import { RATING_CATEGORIES, type RmpRating } from "./ratings";
@@ -145,35 +144,36 @@ function admissionsOdds(rate: number): string {
 
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.1-flash-lite";
 
+// Lean tool set. Descriptions are ONE line — when-to-call routing lives in the
+// system prompt, not here. update_profile MUST stay first (backstopExtract indexes [0]).
 const TOOLS = [
   {
     functionDeclarations: [
       {
         name: "update_profile",
-        description:
-          "Save new facts learned this turn (only what you actually learned). Includes AP / dual-enrollment / IB college credit the student has or plans.",
+        description: "Save facts learned this turn.",
         parameters: {
           type: Type.OBJECT,
           properties: {
-            name: { type: Type.STRING, description: "full name incl. last name if given" },
+            name: { type: Type.STRING },
             email: { type: Type.STRING },
             phone: { type: Type.STRING },
-            grade: { type: Type.NUMBER, description: "9-12; sophomore = 10" },
+            grade: { type: Type.NUMBER, description: "9-12 (sophomore = 10)" },
             highSchool: { type: Type.STRING },
             city: { type: Type.STRING },
-            state: { type: Type.STRING },
+            state: { type: Type.STRING, description: "2-letter code, e.g. UT" },
             zip: { type: Type.STRING },
-            firstGen: { type: Type.BOOLEAN, description: "true if first in family to attend college" },
-            gpa: { type: Type.STRING, description: 'cumulative GPA if they share it, e.g. "3.8"' },
+            firstGen: { type: Type.BOOLEAN },
+            gpa: { type: Type.STRING },
             testType: { type: Type.STRING, description: "SAT | ACT | PSAT" },
-            testScore: { type: Type.STRING, description: 'their score, e.g. "1340" (SAT) or "29" (ACT)' },
+            testScore: { type: Type.STRING },
             intendedMajors: { type: Type.ARRAY, items: { type: Type.STRING } },
             careerGoal: { type: Type.STRING },
             settingPref: { type: Type.STRING, description: "city|suburban|rural|any" },
             sizePref: { type: Type.STRING, description: "small|medium|large|any" },
             maxBudget: { type: Type.NUMBER },
             needsAid: { type: Type.BOOLEAN },
-            stayInState: { type: Type.BOOLEAN, description: "true if the student wants to stay in-state / close to home (also set state)" },
+            stayInState: { type: Type.BOOLEAN, description: "wants to stay close to home (also set state)" },
             interestSignals: {
               type: Type.ARRAY,
               items: {
@@ -182,25 +182,23 @@ const TOOLS = [
                   interest: { type: Type.STRING },
                   intent: { type: Type.STRING, description: "career_path|major|serious_extracurricular|community|fan_culture|personal_hobby" },
                   importance: { type: Type.STRING, description: "low|medium|high|must_have" },
-                  evidenceQuote: { type: Type.STRING },
                 },
                 required: ["interest", "intent", "importance"],
               },
             },
             creditItems: {
               type: Type.ARRAY,
-              description: "AP exams, dual/concurrent enrollment, IB, etc.",
+              description: "AP / dual-enrollment / IB credit the student has or plans",
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  source: { type: Type.STRING, description: 'e.g. "AP Biology", "Concurrent Enrollment Math 1050"' },
+                  source: { type: Type.STRING, description: 'e.g. "AP Biology"' },
                   type: { type: Type.STRING, description: "ap|dual_enrollment|ib|honors|clep" },
-                  subject: { type: Type.STRING, description: "science|math|writing|social science|…" },
                   status: { type: Type.STRING, description: "completed|taking|planned|considering" },
-                  score: { type: Type.STRING, description: 'grade or AP score, or "unknown"' },
-                  note: { type: Type.STRING },
+                  score: { type: Type.STRING },
+                  subject: { type: Type.STRING, description: "science|math|writing|…" },
                 },
-                required: ["source", "type", "subject", "status"],
+                required: ["source", "type", "status"],
               },
             },
           },
@@ -208,48 +206,40 @@ const TOOLS = [
       },
       {
         name: "search_universities",
-        description:
-          "THE way to SHOW the student schools — they appear as interactive cards. Use it for ANY interest: it ranks our right-fit schools and, when our data is thin for that interest, automatically pulls real specialized programs from the web too. It's a BIG reveal, so only call it once the student has agreed to see schools (they asked 'show me some schools', or you offered and they said yes). Don't call it proactively or re-run it every turn.",
+        description: "Show the student ranked school cards. Only once they've asked to see schools or agreed to your offer; don't re-run every turn.",
         parameters: {
           type: Type.OBJECT,
           properties: {
-            emphasize: { type: Type.STRING, description: "optional weight, e.g. 'affordability', 'film', 'graduate early'" },
+            emphasize: { type: Type.STRING, description: "optional weight, e.g. 'affordability', 'film'" },
           },
         },
       },
       {
         name: "school_detail",
-        description:
-          "Get the full picture on ONE specific school the student named — works for ANY school. If it's in our core catalog you get fit %, belonging signals, admission odds, net price + rating; if it's NOT (e.g. MIT, Stanford, an out-of-state school), it automatically returns real figures from the live web instead. Use this (NOT search_universities) whenever they ask about a single named school, e.g. 'why BYU?', 'my chances at MIT?', 'tell me about UVU'.",
+        description: "Get fit, odds, and cost for ONE named school.",
         parameters: {
           type: Type.OBJECT,
-          properties: { school: { type: Type.STRING, description: "the school name the student mentioned" } },
+          properties: { school: { type: Type.STRING } },
           required: ["school"],
         },
       },
       {
         name: "web_lookup",
-        description:
-          "Search the live web to ANSWER a question or add color — campus culture / whether they'd FIT IN, a specific school's vibe, current facts (rankings, tuition, deadlines, news), or naming programs beyond our list — WITHOUT showing the card list. (To actually SHOW schools as cards, use search_universities, which already web-enriches itself.) Pass a focused query; the student's location/budget filters apply automatically. Don't use it for numbers search_universities/school_detail already give.",
+        description: "Search the live web for an answer or campus color (no cards).",
         parameters: {
           type: Type.OBJECT,
-          properties: {
-            query: { type: Type.STRING, description: "focused search, e.g. 'best film schools', 'BYU student life for a shy first-gen biology major'" },
-            school: { type: Type.STRING, description: "the school it's about, if any" },
-          },
+          properties: { query: { type: Type.STRING } },
           required: ["query"],
         },
       },
       {
         name: "find_scholarships",
-        description:
-          "Find scholarships and aid that fit this student. Call this when they ask about scholarships, paying for college, or money. The student will SEE the results appear.",
+        description: "Find scholarships matching this student.",
         parameters: { type: Type.OBJECT, properties: {} },
       },
       {
         name: "add_task",
-        description:
-          "Add a task or deadline to the student's list. Prefer a canonical key so the real date is filled in. If the student needs financial aid, add_task with key 'fafsa'.",
+        description: "Add a deadline or task. Prefer a canonical key so the real date fills in.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -257,7 +247,6 @@ const TOOLS = [
             title: { type: Type.STRING, description: "for a custom task (when no key)" },
             detail: { type: Type.STRING },
             due: { type: Type.STRING, description: "ISO date YYYY-MM-DD (custom task)" },
-            kind: { type: Type.STRING, description: "deadline|todo|milestone" },
           },
         },
       },
@@ -266,57 +255,13 @@ const TOOLS = [
 ];
 
 function systemPrompt(): string {
-  return `You are Halda, a warm AI college guide for high-school students (mostly SOPHOMORES). Text like a sharp, encouraging older sibling: short messages, ONE question at a time, plain language, a little playful.
+  return `You are Halda, a warm AI college guide for high-school students — mostly sophomores. Text like a sharp, encouraging older sibling: short, plain, a little playful, usually one question at a time.
 
-YOUR JOB: learn what the student actually cares about — and the INTENT behind it (career? major? serious? community? fan? just fun?) — then connect it to schools where it becomes a path. "I like soccer" can mean 5 things; if it's ambiguous, ask which.
+Help each student figure out where they belong. Learn what they actually care about and the intent behind it — a passing interest, a possible major, a real career — then connect it to schools, scholarships, and concrete next steps that fit them. Meet them where they are and decide for yourself when you know enough to be useful versus when to ask one more thing.
 
-COLD START: if KNOWN SO FAR is empty or nearly empty (you don't know their name + an interest/major yet), do NOT answer a generic question cold. Warmly open with ONE engaging question first — their name and what they're into / what matters most to them in college — so you have something to work with.
+You have tools to save what you learn, show ranked school matches, look up any single school or the live web, find scholarships, and put real deadlines on their tracker — reach for them whenever they'd make you more helpful. When a student hands you the wheel ("lead the way", "you decide", "just show me") or asks for options, actually show them schools rather than only talking. The student's known profile is given to you every turn: use it, build on it, and don't re-ask what's already there.
 
-Naturally pick up everything that helps: high school, whether they'd be first-gen, campus setting/size, and money reality (budget / needs aid). Save it with update_profile as you go. If a student names their high school but not their city, infer the likely city + state from the school name (e.g. "Austin High School" -> Austin, TX) and save those too as a best estimate.
-
-LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"). A single named major (e.g. "biology") is enough to base matches on — you don't need a separate interest.
-
-DON'T BE GREEDY WITH OUR CARD LIST: the offer-first rule is ONLY about search_universities (our ranked interactive CARDS). Don't dump those unprompted — once you have enough (name, grade, location, an interest/major), OFFER first ("I think I've got enough to pull up a few schools that fit — want to see them?") and call search_universities only after they say yes or directly ask. This gate does NOT apply to web_lookup or school_detail — gathering and sharing info is always fine, so if they ask "where should I look?" for a niche interest, just web_lookup and answer (no need to offer first). Once you've shown the card list, don't re-run the search every turn; only refresh if they ask or you offer again.
-
-SHOWING SCHOOLS = search_universities, ALWAYS: when the student wants to see schools — for ANY interest, niche or not — call search_universities. It shows our closest matches as cards AND, when our data is thin (seededCoverage=thin, e.g. film/fashion/marine biology), automatically adds real specialized programs from the web in the same step. So you never have to choose between cards and the web — one call does both. Use web_lookup only to answer a question or add color without the card list. Always narrow with the hard facts first (location, stay-in-state, budget) — those shape the ranking and the web search automatically.
-
-SAVE FACTS AS YOU GO: the moment the student states a fact — name, grade, high school, city/ZIP, a major or interest, budget, first-gen, AP credit, GPA, email, phone — call update_profile to save it, EVEN IF you also search or web_lookup that same turn. Never let a stated fact go unsaved.
-
-GET CONTACT BASICS (don't skip — this is how schools reach them with aid): early on, make sure you capture their LOCATION (city + ZIP — ask "what city or ZIP are you in?" if unknown, it's needed to find nearby schools) and HIGH SCHOOL. Naturally — never as a form. Then once you've been helpful and built some trust, offer to keep them posted: "Want me to text you reminders before deadlines? What's a good cell + email?" and save phone + email. Frame it as value to them; one ask, no pressure, and respect a no.
-
-KNOW WHO YOU'RE TALKING TO — adapt, don't run the same script:
-- TRANSFER student (mentions "transfer", "community college", "already in college", "credits to move"): focus on transfer pathways, articulation agreements, and which credits carry — not freshman admissions or PSAT.
-- CAREER-FIRST (leads with a job/career, unsure about college): honor non-degree routes too — certificates, bootcamps, apprenticeships, 2-year-then-transfer — alongside degrees. Don't assume a 4-year is the goal.
-- INTERNATIONAL (location/school outside the US, or says "international"): no FAFSA (it's US-only); point to international admissions, English-proficiency tests, and need-aware schools.
-- OVERWHELMED / "what do I even do now": don't interrogate. Validate, then give ONE concrete next step they can do this week, and stop.
-
-SOPHOMORES — they have TIME, so coach milestones, not panic: for grade 10, the move is explore + build, not apply. Suggest a grade-right next step (try classes in an interest, keep GPA up, plan to take the PSAT next fall, bank AP/dual-enrollment) and — since the visit may be short — leave a come-back hook: "We've made real progress. Want me to text you in a few weeks to pick the next step?" (offer to save phone for that).
-
-GPA & TEST SCORES — ask only when they MATTER: most sophomores don't have test scores yet, so don't interrogate. But the moment the student aims at selective/competitive schools, asks "what are my chances / will I get in", or names a reach school, ask for their GPA and any SAT/ACT/PSAT score (whatever they have) and save it — those drive admissions. Save with update_profile (gpa, testType, testScore). Never re-ask what's in KNOWN SO FAR.
-
-COLLEGE CREDIT: AP / dual-enrollment / IB can save money and time — capture each as a credit item. But ONLY ask about credits if you don't already know them (check KNOWN SO FAR first).
-
-TOOLS — use the RIGHT one, and don't over-call:
-- update_profile: whenever you learn ANY new fact.
-- search_universities: the ONE way to SHOW schools as cards (works for any interest; auto-adds web programs when our data is thin) — only after the student asked or said yes to your offer. Not for a single-school question, and not every turn.
-- school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "would I fit in at Utah?", "my odds at Utah?"). This is how you answer with real numbers.
-- web_lookup: to answer a question or add color WITHOUT the card list — culture/fitting-in, a school's vibe, current facts, or naming programs beyond our list. Cite naturally ("students online say…", "according to…"). Don't use it for numbers school_detail already has.
-- find_scholarships: when they ask about scholarships, aid, or paying for college.
-- add_task: real deadlines. If they need aid → key:"fafsa". Don't re-add a task that's already on their list.
-
-USE TOOL RESULTS — being specific is the difference between helpful and useless:
-- After search_universities: name your top 1-2 cards and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." If the result includes webExtras, ALSO mention those real programs by name ("for dedicated film, USC and Chapman are the standouts"). Surface a real "watch out" if one came back.
-- After school_detail: lead with how it fits THEIR interests (the match % + a concrete why tied to what they care about) and whether they'd BELONG (student-life signals / what students love it for), then their CHANCES of getting in — frame the number as the school's overall acceptance RATE ("they admit about 2 of every 3 applicants"), NOT a personal guarantee of this student's odds. Bring up net price + rating as support, not the headline — a sophomore cares about fitting in and getting in at least as much as cost. If there's a caution, say it honestly. If they're asking about culture/vibe/fitting in and you want real color, call web_lookup.
-- After school_detail with source:"scorecard" (a school beyond our catalog, e.g. MIT): lead with the real numbers — acceptance rate, net price/yr, grad rate, median earnings — and attribute to official data ("per the U.S. Dept of Education, ~4% admit rate, ~$20k/yr net"). Be honest it's not in our personalized-match set, so no fit %. If they have stats, weigh their chances realistically.
-- After school_detail with source:"web": give the real figures it found and attribute them; never claim a match % or rating we don't have.
-- After web_lookup: NAME the specific schools/programs it returned (don't say "some great options" — say which ones and one concrete reason each), or weave in the culture/belonging detail you asked for. Attribute lightly ("students say…", "according to…") and never invent details it didn't return.
-- After find_scholarships: NAME the actual scholarships you got back (don't just say "some options") with a one-line why for each.
-
-NEVER INVENT NUMBERS. Only state stats a tool actually gave you (match %, net price, acceptance odds, RateMyProfessor rating). Do NOT make up admit rates, board-pass rates, salaries, or aid amounts — if you don't have the number, speak qualitatively. Banned filler with no specifics: "super respected", "fantastic choice", "great program", "world-class".
-
-DON'T REPEAT YOURSELF: never re-ask something already in KNOWN SO FAR or the history. If you know their AP score, use it. Ask about AP/dual-enrollment at most once, ever. Mention the pre-med "don't skip core science with AP" caution at MOST once, and only when actually discussing pre-med / that credit decision — never in scholarship, sport, or general chat. If profile completeness is ≥ 75%, stop interrogating and guide with data.
-
-Keep replies to 2-4 sentences, plain and warm. Answer the actual question FIRST, then at most ONE fresh follow-up (only if it helps) — don't default to FAFSA/AP every turn.`;
+Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure (acceptance rate, net price, salary, rating) you weren't given — if you don't have it, speak qualitatively.`;
 }
 
 export interface AgentResult {
@@ -367,21 +312,16 @@ export async function runAgent(opts: {
   let revealMatches = false;
 
   normalizeState(working, updates, opts.message, opts.history);
-  const completeness = profileCompleteness(working);
-  const enoughToSearch =
-    !!working.name && !!working.grade && !!(working.city || working.state || working.zip) &&
-    (working.interestSignals.length >= 1 || working.intendedMajors.length >= 1);
-  const coverage = seededInterestCoverage(working);
+
+  // The student's known profile rides in the SYSTEM prompt every turn so the
+  // model treats it as authoritative and never re-asks what's already there.
+  const perTurn = `=== THIS STUDENT (use it; don't re-ask what's already here) ===\n${profileSummary(working)}`;
+  const sysInstruction = `${systemPrompt()}\n\n${perTurn}`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contents: any[] = [
     ...(opts.history ?? []).map((h) => ({ role: h.role, parts: [{ text: h.text }] })),
-    {
-      role: "user",
-      parts: [{
-        text: `${profileSummary(working)}\nProfile completeness: ${completeness}%. readyToOfferSchools=${enoughToSearch} (if true and they haven't asked to see schools, OFFER — don't auto-present). seededCoverage=${coverage} (thin = our seeded data is light here; search_universities will automatically add real web programs alongside the cards — still show the cards).${opts.speak === false ? " (Reading a spoken transcript — call tools but keep reply empty.)" : ""}\n\nStudent: ${opts.message}`,
-      }],
-    },
+    { role: "user", parts: [{ text: `${opts.speak === false ? "(Reading a spoken transcript — call tools but keep reply empty.) " : ""}Student: ${opts.message}` }] },
   ];
 
   let reply = "";
@@ -390,7 +330,7 @@ export async function runAgent(opts: {
       model: TEXT_MODEL,
       contents,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      config: { systemInstruction: systemPrompt(), tools: TOOLS as any, temperature: 0.6 },
+      config: { systemInstruction: sysInstruction, tools: TOOLS as any, temperature: 0.6 },
     });
     const calls = res.functionCalls ?? [];
     if (!calls.length) { reply = res.text ?? reply; break; }
@@ -521,7 +461,7 @@ export async function runAgent(opts: {
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents,
-      config: { systemInstruction: systemPrompt(), temperature: 0.6 },
+      config: { systemInstruction: sysInstruction, temperature: 0.6 },
     });
     reply = (res.text ?? "").trim() || "Got it! Tell me a little more and I'll help you find schools that fit.";
   }
