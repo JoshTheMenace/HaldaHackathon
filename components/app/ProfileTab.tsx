@@ -161,6 +161,8 @@ export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
               <ReadField label="Current Grade" value={gradeLabel(profile.grade)} />
               <ReadField label="Location" value={poolLocation(profile)} />
               <ReadField label="High School" value={profile.highSchool ?? ""} />
+              <EditField label="Email" value={profile.email ?? ""} onSave={(v) => editField("email", v)} />
+              <EditField label="Phone" value={profile.phone ?? ""} onSave={(v) => editField("phone", v)} />
               <ReadField label="Interests" value={poolInterests(profile)} />
               <EditField label="Intended Major" value={profile.intendedMajors[0] ?? ""} onSave={(v) => editField("intendedMajors", v ? [v] : [])} />
               <EditField label="Career Goal" value={profile.careerGoal ?? ""} onSave={(v) => editField("careerGoal", v)} />

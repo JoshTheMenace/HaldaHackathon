@@ -6,9 +6,29 @@ import { Icon } from "./Icon";
 import SharePlanSheet from "./SharePlanSheet";
 
 export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }) {
-  const { profile } = useHalda();
+  const { profile, editField } = useHalda();
   const savedCount = profile.savedSchoolIds?.length ?? 0;
   const [shareOpen, setShareOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [smsState, setSmsState] = useState<"idle" | "linking" | "linked" | "error">("idle");
+  const [smsMsg, setSmsMsg] = useState("");
+
+  const linkPhone = async () => {
+    setSmsState("linking"); setSmsMsg("");
+    try {
+      const r = await fetch("/api/sms/link", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, profile }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setSmsState("error"); setSmsMsg(d.error || "Couldn't link that number."); return; }
+      editField("phone", phone.trim()); // keep it on the profile too
+      setSmsState("linked");
+      setSmsMsg(d.sent ? "Texted you! Reply from your phone and we'll keep going." : "Linked — but the SMS couldn't send (check server setup).");
+    } catch {
+      setSmsState("error"); setSmsMsg("Network error — try again.");
+    }
+  };
 
   return (
     <main className="scroll">
@@ -18,17 +38,27 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
       </p>
 
       <section className="guides" style={{ marginTop: 18 }}>
+        <article className="hero teal">
+          <span className="gico"><Icon name="smartphone" /></span>
+          <h4>Continue on your phone</h4>
+          <p>Add your number and Halda will text you — pick up this exact conversation over SMS, anytime.</p>
+          <div className="phone-link">
+            <input
+              type="tel" inputMode="tel" value={phone} placeholder="(801) 555-1234"
+              onChange={(e) => setPhone(e.target.value)} aria-label="Your phone number"
+              disabled={smsState === "linking"}
+            />
+            <button className="pill" onClick={linkPhone} disabled={smsState === "linking" || phone.trim().length < 7}>
+              {smsState === "linking" ? "Texting…" : smsState === "linked" ? "Linked ✓" : "Text me"} <Icon name="send" />
+            </button>
+          </div>
+          {smsMsg && <p className={`phone-status ${smsState}`}>{smsMsg}</p>}
+        </article>
         <article className="hero emerald">
           <span className="gico"><Icon name="ios_share" /></span>
           <h4>Share your plan</h4>
           <p>Send your top matches and next steps to a parent or counselor.</p>
           <button className="pill" onClick={() => setShareOpen(true)}>Open summary <Icon name="arrow_forward" /></button>
-        </article>
-        <article className="hero teal">
-          <span className="gico"><Icon name="sms" /></span>
-          <h4>Text-message reminders</h4>
-          <p>Halda texts you before every deadline so nothing slips.</p>
-          <button className="pill" onClick={() => onAsk("Set up text reminders for my deadlines")}>Turn on <Icon name="arrow_forward" /></button>
         </article>
 
         <article className="hero emerald">

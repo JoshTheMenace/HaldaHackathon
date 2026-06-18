@@ -69,6 +69,8 @@ export interface StudentProfile {
   id: string;
   // Identity (captured naturally in conversation)
   name?: string;
+  email?: string;
+  phone?: string;
   zip?: string;
   city?: string;
   state?: string;

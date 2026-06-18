@@ -15,6 +15,7 @@ pnpm demo                # rm -rf .next && build && start — use this for the l
 node_modules/.bin/tsc --noEmit   # type-check (run from the halda/ dir). This is the de-facto test — there is no test framework.
 node --env-file=.env.local scripts/test-gemini-live.mjs   # verify Gemini Live actually streams audio back
 node scripts/fetch-rmp.mjs   # refresh cached RateMyProfessor school ratings → lib/ratings.data.ts (run occasionally, NOT at request time)
+node --env-file=.env.local scripts/fetch-scorecard.mjs   # refresh cached College Scorecard data (real acceptance/net price/earnings for schools beyond the seeded 17) → lib/scorecard.data.ts
 ```
 
 There are **no unit tests**. Verification is `tsc --noEmit` + driving the running app. When changing tailwind.config.ts, **restart the dev server** — Tailwind config changes are not reliably hot-reloaded.

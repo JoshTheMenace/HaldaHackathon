@@ -7,6 +7,7 @@ import { RATING_CATEGORIES, type RmpRating } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
 import { resolveZip, stateFromText } from "./geo";
+import { scorecardLookup } from "./scorecard";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
 
 // "Stay in-state" only ranks correctly if we know WHICH state. The model often
@@ -19,14 +20,21 @@ function normalizeState(working: StudentProfile, updates: ProfileUpdates, messag
   if (found) { working.state = found; updates.state = found; }
 }
 
+// Generic words shared by many school names — matching on these makes EVERY
+// "X University" resolve to the first seeded school (the "Pulling up UT Austin"
+// bug). Only distinctive tokens (Stanford, Provo, A&M) should match.
+const SCHOOL_STOPWORDS = new Set(["university", "college", "the", "of", "at", "in", "and", "state", "institute", "school", "main", "campus", "a"]);
+
 // Resolve a student-typed school name to a seeded school (fuzzy: short, name, tokens).
+// Returns undefined for anything not in our 17 (e.g. Stanford) → caller uses Scorecard.
 function resolveSchool(q: string): School | undefined {
   const n = q.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
   if (!n) return undefined;
+  const distinctive = n.split(" ").filter((w) => w.length > 3 && !SCHOOL_STOPWORDS.has(w));
   return (
     SCHOOLS.find((s) => s.short.toLowerCase() === n || s.name.toLowerCase() === n) ||
     SCHOOLS.find((s) => n.includes(s.short.toLowerCase()) || s.name.toLowerCase().includes(n)) ||
-    SCHOOLS.find((s) => n.split(" ").some((w) => w.length > 3 && s.name.toLowerCase().includes(w)))
+    SCHOOLS.find((s) => distinctive.some((w) => s.name.toLowerCase().includes(w) || s.short.toLowerCase().includes(w)))
   );
 }
 
@@ -147,7 +155,9 @@ const TOOLS = [
         parameters: {
           type: Type.OBJECT,
           properties: {
-            name: { type: Type.STRING },
+            name: { type: Type.STRING, description: "full name incl. last name if given" },
+            email: { type: Type.STRING },
+            phone: { type: Type.STRING },
             grade: { type: Type.NUMBER, description: "9-12; sophomore = 10" },
             highSchool: { type: Type.STRING },
             city: { type: Type.STRING },
@@ -210,7 +220,7 @@ const TOOLS = [
       {
         name: "school_detail",
         description:
-          "Get the full picture on ONE specific school the student named — how it fits THEIR interests, whether they'd belong / find their people (student-life signals), their real chances of getting in, plus net price and student rating. Use this (NOT search_universities) when they ask about a single school, e.g. 'why BYU?', 'tell me about UVU', 'would I fit in at Utah?', 'my chances at Utah'. For deeper culture/vibe color, pair it with web_lookup.",
+          "Get the full picture on ONE specific school the student named — works for ANY school. If it's in our core catalog you get fit %, belonging signals, admission odds, net price + rating; if it's NOT (e.g. MIT, Stanford, an out-of-state school), it automatically returns real figures from the live web instead. Use this (NOT search_universities) whenever they ask about a single named school, e.g. 'why BYU?', 'my chances at MIT?', 'tell me about UVU'.",
         parameters: {
           type: Type.OBJECT,
           properties: { school: { type: Type.STRING, description: "the school name the student mentioned" } },
@@ -270,7 +280,17 @@ DON'T BE GREEDY WITH OUR CARD LIST: the offer-first rule is ONLY about search_un
 
 SHOWING SCHOOLS = search_universities, ALWAYS: when the student wants to see schools — for ANY interest, niche or not — call search_universities. It shows our closest matches as cards AND, when our data is thin (seededCoverage=thin, e.g. film/fashion/marine biology), automatically adds real specialized programs from the web in the same step. So you never have to choose between cards and the web — one call does both. Use web_lookup only to answer a question or add color without the card list. Always narrow with the hard facts first (location, stay-in-state, budget) — those shape the ranking and the web search automatically.
 
-SAVE FACTS AS YOU GO: the moment the student states a fact — name, grade, high school, city/ZIP, a major or interest, budget, first-gen, AP credit — call update_profile to save it, EVEN IF you also search or web_lookup that same turn. Never let a stated major/interest go unsaved.
+SAVE FACTS AS YOU GO: the moment the student states a fact — name, grade, high school, city/ZIP, a major or interest, budget, first-gen, AP credit, GPA, email, phone — call update_profile to save it, EVEN IF you also search or web_lookup that same turn. Never let a stated fact go unsaved.
+
+GET CONTACT BASICS (don't skip — this is how schools reach them with aid): early on, make sure you capture their LOCATION (city + ZIP — ask "what city or ZIP are you in?" if unknown, it's needed to find nearby schools) and HIGH SCHOOL. Naturally — never as a form. Then once you've been helpful and built some trust, offer to keep them posted: "Want me to text you reminders before deadlines? What's a good cell + email?" and save phone + email. Frame it as value to them; one ask, no pressure, and respect a no.
+
+KNOW WHO YOU'RE TALKING TO — adapt, don't run the same script:
+- TRANSFER student (mentions "transfer", "community college", "already in college", "credits to move"): focus on transfer pathways, articulation agreements, and which credits carry — not freshman admissions or PSAT.
+- CAREER-FIRST (leads with a job/career, unsure about college): honor non-degree routes too — certificates, bootcamps, apprenticeships, 2-year-then-transfer — alongside degrees. Don't assume a 4-year is the goal.
+- INTERNATIONAL (location/school outside the US, or says "international"): no FAFSA (it's US-only); point to international admissions, English-proficiency tests, and need-aware schools.
+- OVERWHELMED / "what do I even do now": don't interrogate. Validate, then give ONE concrete next step they can do this week, and stop.
+
+SOPHOMORES — they have TIME, so coach milestones, not panic: for grade 10, the move is explore + build, not apply. Suggest a grade-right next step (try classes in an interest, keep GPA up, plan to take the PSAT next fall, bank AP/dual-enrollment) and — since the visit may be short — leave a come-back hook: "We've made real progress. Want me to text you in a few weeks to pick the next step?" (offer to save phone for that).
 
 GPA & TEST SCORES — ask only when they MATTER: most sophomores don't have test scores yet, so don't interrogate. But the moment the student aims at selective/competitive schools, asks "what are my chances / will I get in", or names a reach school, ask for their GPA and any SAT/ACT/PSAT score (whatever they have) and save it — those drive admissions. Save with update_profile (gpa, testType, testScore). Never re-ask what's in KNOWN SO FAR.
 
@@ -287,6 +307,8 @@ TOOLS — use the RIGHT one, and don't over-call:
 USE TOOL RESULTS — being specific is the difference between helpful and useless:
 - After search_universities: name your top 1-2 cards and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." If the result includes webExtras, ALSO mention those real programs by name ("for dedicated film, USC and Chapman are the standouts"). Surface a real "watch out" if one came back.
 - After school_detail: lead with how it fits THEIR interests (the match % + a concrete why tied to what they care about) and whether they'd BELONG (student-life signals / what students love it for), then their CHANCES of getting in — frame the number as the school's overall acceptance RATE ("they admit about 2 of every 3 applicants"), NOT a personal guarantee of this student's odds. Bring up net price + rating as support, not the headline — a sophomore cares about fitting in and getting in at least as much as cost. If there's a caution, say it honestly. If they're asking about culture/vibe/fitting in and you want real color, call web_lookup.
+- After school_detail with source:"scorecard" (a school beyond our catalog, e.g. MIT): lead with the real numbers — acceptance rate, net price/yr, grad rate, median earnings — and attribute to official data ("per the U.S. Dept of Education, ~4% admit rate, ~$20k/yr net"). Be honest it's not in our personalized-match set, so no fit %. If they have stats, weigh their chances realistically.
+- After school_detail with source:"web": give the real figures it found and attribute them; never claim a match % or rating we don't have.
 - After web_lookup: NAME the specific schools/programs it returned (don't say "some great options" — say which ones and one concrete reason each), or weave in the culture/belonging detail you asked for. Attribute lightly ("students say…", "according to…") and never invent details it didn't return.
 - After find_scholarships: NAME the actual scholarships you got back (don't just say "some options") with a one-line why for each.
 
@@ -300,6 +322,7 @@ Keep replies to 2-4 sentences, plain and warm. Answer the actual question FIRST,
 export interface AgentResult {
   reply: string;
   updates: ProfileUpdates;
+  profile: StudentProfile; // fully merged profile after this turn (for cross-channel state)
   tasks: TaskItem[];
   revealMatches: boolean;
   toolsUsed: string[];
@@ -308,7 +331,7 @@ export interface AgentResult {
 
 // Apply update_profile args onto a working copy so later tools see latest data.
 function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
-  const scalar = ["name", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
+  const scalar = ["name", "email", "phone", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
   const wr = w as unknown as Record<string, unknown>;
   for (const k of scalar) if (a[k] !== undefined) wr[k] = a[k];
   if (Array.isArray(a.intendedMajors)) w.intendedMajors = Array.from(new Set([...w.intendedMajors, ...(a.intendedMajors as string[])]));
@@ -431,7 +454,27 @@ export async function runAgent(opts: {
           };
           toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match` });
         } else {
-          result = { error: `No data for "${args.school}". Suggest one of the matched schools instead.` };
+          // Not in our catalog (e.g. MIT, Stanford) — never fake a card. Pull REAL
+          // figures from College Scorecard first; fall back to the live web.
+          const school = String(args.school ?? "").trim();
+          const card = await scorecardLookup(school);
+          if (card) {
+            result = {
+              school: card.name, source: "scorecard",
+              location: [card.city, card.state].filter(Boolean).join(", ") || undefined,
+              yourChances: card.acceptanceRate != null ? { acceptanceRatePct: Math.round(card.acceptanceRate * 100), odds: admissionsOdds(card.acceptanceRate) } : undefined,
+              cost: card.netPrice != null ? { netPricePerYearAfterAid: card.netPrice } : undefined,
+              undergradSize: card.size,
+              gradRatePct: card.completionRate != null ? Math.round(card.completionRate * 100) : undefined,
+              medianEarnings10yr: card.medianEarnings,
+              note: "Official U.S. Dept of Education figures (College Scorecard). Not in our match catalog, so no personalized fit % — but these numbers are real.",
+            };
+            toolEvents.push({ kind: "school", label: `Looked up ${card.name}`.slice(0, 42), detail: "official data" });
+          } else {
+            const wl = await webLookup(ai, `${school}: acceptance rate, net price after aid, and what it's known for`, working);
+            result = { school, source: "web", info: wl.answer, sources: wl.sources, note: "From the live web — confirm on the school's site." };
+            toolEvents.push({ kind: "web", label: `Looked up ${school}`.slice(0, 42), detail: "from the web", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+          }
         }
       } else if (name === "web_lookup") {
         const q = cleanWebQuery(String(args.query ?? ""));
@@ -483,5 +526,5 @@ export async function runAgent(opts: {
     reply = (res.text ?? "").trim() || "Got it! Tell me a little more and I'll help you find schools that fit.";
   }
 
-  return { reply, updates, tasks, revealMatches, toolsUsed, toolEvents };
+  return { reply, updates, profile: working, tasks, revealMatches, toolsUsed, toolEvents };
 }

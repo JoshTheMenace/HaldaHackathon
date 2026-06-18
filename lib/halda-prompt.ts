@@ -37,6 +37,8 @@ Only include fields in "updates" you actually learned THIS turn (omit unknowns â
 
 export interface ProfileUpdates {
   name?: string;
+  email?: string;
+  phone?: string;
   grade?: number;
   highSchool?: string;
   city?: string;
@@ -77,7 +79,7 @@ export interface HaldaReply {
 
 // Compact profile summary so the model has memory of what it already knows.
 export function profileSummary(p: {
-  name?: string; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
+  name?: string; email?: string; phone?: string; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
   intendedMajors?: string[]; settingPref?: string; sizePref?: string;
   needsAid?: boolean; maxBudget?: number; careerGoal?: string; stayInState?: boolean;
   gpa?: string; testType?: string; testScore?: string;
@@ -86,6 +88,8 @@ export function profileSummary(p: {
 }): string {
   const parts: string[] = [];
   if (p.name) parts.push(`name=${p.name}`);
+  if (p.email) parts.push(`email=${p.email}`);
+  if (p.phone) parts.push(`phone=${p.phone}`);
   if (p.grade) parts.push(`grade=${p.grade}`);
   if (p.highSchool) parts.push(`highSchool=${p.highSchool}`);
   if (p.city || p.state || p.zip) parts.push(`location=${[p.city, p.state].filter(Boolean).join(", ")}${p.zip ? ` ${p.zip}` : ""}`);
