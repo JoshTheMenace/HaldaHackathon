@@ -1,0 +1,20 @@
+{
+  "name": "navi-sms-backend",
+  "version": "1.0.0",
+  "description": "SMS notification backend using Surge API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@surgeapi/node": "^0.45.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
