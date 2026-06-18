@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { Icon } from "./Icon";
 import VoiceView from "./VoiceView";
 import ChatSchoolCard from "./ChatSchoolCard";
@@ -27,7 +28,8 @@ function webSources(items: { title?: string; sub?: string }[]): string[] {
 }
 
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { messages, typing, send } = useHalda();
+  const { messages, typing, send, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [input, setInput] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   useEffect(() => {
     if (mode !== "chat" || typing || !lastAi?.text) return;
     let cancelled = false;
-    fetch("/api/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: lastAi.text }) })
+    fetch("/api/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: lastAi.text, language }) })
       .then((r) => r.json())
       .then((d) => { if (!cancelled) setSuggestions(Array.isArray(d.suggestions) ? d.suggestions : []); })
       .catch(() => { if (!cancelled) setSuggestions([]); });
@@ -72,17 +74,17 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   return (
     <>
       <div className={`scrim${open ? " on" : ""}`} onClick={onClose} />
-      <section className={`sheet ai-sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="AI Guide">
+      <section className={`sheet ai-sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-label={t("guide.title", "AI Guide")}>
         <span className="grab" style={{ marginTop: 12, marginBottom: 4 }} />
         <div className="ai-head">
           <span className="ai-mark"><Icon name="hub" /></span>
           <div className="ht">
-            <h2>AI Guide</h2>
-            <div className="sub">Online · here to help</div>
+            <h2>{t("guide.title", "AI Guide")}</h2>
+            <div className="sub">{t("guide.sub", "Online · here to help")}</div>
           </div>
           <div className="ai-modes">
-            <button className={mode === "chat" ? "on" : ""} onClick={() => setMode("chat")}><Icon name="chat_bubble" />Chat</button>
-            <button className={mode === "voice" ? "on" : ""} onClick={() => setMode("voice")}><Icon name="mic" />Voice</button>
+            <button className={mode === "chat" ? "on" : ""} onClick={() => setMode("chat")}><Icon name="chat_bubble" />{t("guide.chat", "Chat")}</button>
+            <button className={mode === "voice" ? "on" : ""} onClick={() => setMode("voice")}><Icon name="mic" />{t("guide.voice", "Voice")}</button>
           </div>
           <button className="sheet-close" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>
@@ -181,7 +183,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit(input)}
-                placeholder="Ask your AI Guide…"
+                placeholder={t("guide.placeholder", "Ask your AI Guide…")}
                 autoComplete="off"
               />
               <button className="send" onClick={() => submit(input)} aria-label="Send"><Icon name="arrow_upward" /></button>

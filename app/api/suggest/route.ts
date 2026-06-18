@@ -16,13 +16,13 @@ Output ONLY a JSON array of strings. Examples: ["Stay in Utah","Open to leaving"
 export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ suggestions: [] });
-  const { message } = (await req.json()) as { message?: string };
+  const { message, language } = (await req.json()) as { message?: string; language?: string };
   if (!message?.trim()) return NextResponse.json({ suggestions: [] });
   try {
     const ai = new GoogleGenAI({ apiKey });
     const res = await ai.models.generateContent({
       model: MODEL,
-      contents: `Guide just said: "${message}"`,
+      contents: `Guide just said: "${message}"${language === "es" ? "\nReturn Spanish reply chips." : ""}`,
       config: { systemInstruction: SYS, temperature: 0.3, responseMimeType: "application/json" },
     });
     const arr = JSON.parse(res.text ?? "[]");

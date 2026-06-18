@@ -31,6 +31,9 @@
 .phone .auth.loading { display: grid; place-items: center; overflow: hidden; }
 .phone .auth-mark { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(140deg,#0a6b5e,#064a40); color: #eafff7; box-shadow: 0 14px 30px -14px rgba(10,74,62,.7); }
 .phone .auth-mark .material-symbols-outlined { font-size: 28px; font-variation-settings: 'FILL' 1; }
+.phone .lang-pick { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.phone .lang-pick button { border: 1px solid var(--h-s-highest); border-radius: 14px; background: var(--h-white); color: var(--h-ink-var); padding: 11px 12px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.phone .lang-pick button.on { border-color: var(--h-primary); background: rgba(0,107,95,.1); color: var(--h-primary); }
 .phone .auth h1 { margin-top: 22px; font-size: 28px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; color: var(--h-primary-deep); }
 .phone .auth p { margin-top: 10px; color: var(--h-ink-var); font-size: 14px; line-height: 1.45; }
 .phone .auth-form { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
@@ -62,6 +65,28 @@
 .phone .scroll::-webkit-scrollbar { width: 0; }
 .phone .greeting { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -.02em; margin: 18px 0 4px; }
 .phone .tagline { font-size: 14px; line-height: 1.45; color: var(--h-ink-var); margin: 2px 0 4px; max-width: 38ch; }
+
+/* XP / readiness card */
+.phone .xp-card { margin-top: 14px; padding: 16px; border-radius: 22px; background: linear-gradient(145deg,#fff,#eef8f5); border: 1px solid rgba(0,107,95,.16); box-shadow: var(--h-soft); }
+.phone .xp-top { display: flex; align-items: center; gap: 12px; }
+.phone .xp-badge { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: #fff3bf; color: #806000; box-shadow: inset 0 0 0 1px rgba(128,96,0,.12); flex-shrink: 0; }
+.phone .xp-badge .material-symbols-outlined { font-size: 23px; font-variation-settings: 'FILL' 1; }
+.phone .xp-main { flex: 1; min-width: 0; }
+.phone .xp-eyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--h-outline); }
+.phone .xp-main h3 { margin-top: 3px; font-size: 17px; line-height: 1.15; font-weight: 800; color: var(--h-primary-deep); }
+.phone .xp-score { min-width: 58px; padding: 7px 9px; border-radius: 14px; background: var(--h-primary-deep); color: #eafff7; text-align: center; box-shadow: 0 8px 18px -12px rgba(6,74,64,.8); }
+.phone .xp-score b { display: block; font-size: 19px; line-height: 1; }
+.phone .xp-score span { display: block; margin-top: 2px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.phone .xp-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.phone .xp-bars span { font-size: 11px; font-weight: 800; color: var(--h-ink-var); }
+.phone .xp-bars small { display: block; margin-top: 5px; min-height: 13px; font-size: 11px; line-height: 1.2; color: var(--h-outline); }
+.phone .mini-track { height: 8px; border-radius: 999px; margin-top: 6px; background: #dce5e2; overflow: hidden; }
+.phone .mini-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#f4b400,#14b8a6); transition: width .45s ease; }
+.phone .mini-track.profile i { background: linear-gradient(90deg,#006b5f,#1b3a6b); }
+.phone .quest-chip { margin-top: 14px; width: 100%; display: flex; align-items: center; gap: 8px; border: 1px dashed rgba(0,107,95,.28); border-radius: 15px; padding: 10px 12px; background: rgba(255,255,255,.72); color: var(--h-primary-deep); font-family: inherit; text-align: left; cursor: pointer; }
+.phone .quest-chip .material-symbols-outlined { font-size: 18px; color: var(--h-primary); font-variation-settings: 'FILL' 1; }
+.phone .quest-chip span { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.25; }
+.phone .quest-chip em { flex-shrink: 0; font-style: normal; font-size: 11px; font-weight: 800; padding: 5px 8px; border-radius: 999px; background: #fff3bf; color: #806000; }
 
 /* Next Step engine card */
 .phone .nextstep { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; border: none; cursor: pointer; font-family: inherit; margin: 14px 0 4px; padding: 18px; border-radius: 22px; background: linear-gradient(140deg,#0a6b5e,#064a40); color: #eafff7; box-shadow: 0 16px 36px -14px rgba(10,74,62,.6); position: relative; overflow: hidden; transition: transform .15s; }

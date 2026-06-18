@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { Icon } from "./Icon";
 import { initials } from "./helpers";
 import "@/app/settings.css";
@@ -16,7 +17,8 @@ const VIS_LABEL: Record<Vis, string> = { counselors: "Counselors only", cohort: 
 const INCLUDE = [{ k: "Deadlines", icon: "event" }, { k: "Scholarships", icon: "savings" }, { k: "GPA & tasks", icon: "school" }];
 
 export default function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { profile, editField, logout } = useHalda();
+  const { profile, editField, logout, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const first = profile.name?.split(" ")[0] || "you";
 
   const [toast, setToast] = useState("");
@@ -314,7 +316,7 @@ export default function SettingsSheet({ open, onClose }: { open: boolean; onClos
           </div>
         </div>
 
-        <button className="signout" onClick={() => { logout(); onClose(); }}>Sign out</button>
+        <button className="signout" onClick={() => { logout(); onClose(); }}>{t("settings.signOut", "Sign out")}</button>
         <div className="ver">Halda AI · Made for the class of 2028</div>
       </main>
 

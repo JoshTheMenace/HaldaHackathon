@@ -275,6 +275,10 @@ export function getStudent(id: string): StudentProfile | undefined {
   return store().students.get(id);
 }
 
+export function listStudents(): StudentProfile[] {
+  return [...store().students.values()].map((p) => ({ ...p }));
+}
+
 export function upsertStudent(p: StudentProfile) {
   const s = store();
   s.students.set(p.id, { ...p, updatedAt: Date.now() });

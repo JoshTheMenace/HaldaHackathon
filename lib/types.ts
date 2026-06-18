@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type Channel = "web" | "sms" | "email" | "voice";
+export type Language = "en" | "es";
 
 // The winning idea: match a student's LIFE INTERESTS (with intent) to schools
 // where those interests can become identity, community, career, and opportunity.
@@ -72,6 +73,7 @@ export interface StudentProfile {
   email?: string;
   phone?: string;
   age?: number;
+  language?: Language;
   zip?: string;
   city?: string;
   state?: string;

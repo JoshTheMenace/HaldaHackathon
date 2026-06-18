@@ -102,7 +102,7 @@ export interface HaldaReply {
 
 // Compact profile summary so the model has memory of what it already knows.
 export function profileSummary(p: {
-  name?: string; email?: string; phone?: string; age?: number; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
+  name?: string; email?: string; phone?: string; age?: number; language?: string; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
   intendedMajors?: string[]; settingPref?: string; sizePref?: string;
   needsAid?: boolean; maxBudget?: number; careerGoal?: string; stayInState?: boolean;
   isTransfer?: boolean; worksFullTime?: boolean; currentCollege?: string; completedCollegeYears?: number; associateDegree?: string; transferCreditsConcern?: boolean;
@@ -118,6 +118,7 @@ export function profileSummary(p: {
   if (p.email) parts.push(`email=${p.email}`);
   if (p.phone) parts.push(`phone=${p.phone}`);
   if (p.age) parts.push(`age=${p.age}`);
+  if (p.language === "es") parts.push("language=Spanish; reply in Spanish");
   if (p.grade) parts.push(`grade=${p.grade}`);
   if (p.highSchool) parts.push(`highSchool=${p.highSchool}`);
   if (p.city || p.state || p.zip) parts.push(`location=${[p.city, p.state].filter(Boolean).join(", ")}${p.zip ? ` ${p.zip}` : ""}`);

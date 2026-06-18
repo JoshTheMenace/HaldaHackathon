@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { rankInterestMatches } from "@/lib/interest-match";
 import AppBar from "@/components/app/AppBar";
 import AuthScreen from "@/components/app/AuthScreen";
@@ -16,9 +17,10 @@ import ConnectTab from "@/components/app/ConnectTab";
 import CohortTab from "@/components/app/CohortTab";
 import { Icon } from "@/components/app/Icon";
 import { matchSignature, type Tab } from "@/components/app/helpers";
+import RewardToaster from "@/components/RewardToaster";
 
 export default function App() {
-  const { ready, signedIn, send, profile, matchesRevealed } = useHalda();
+  const { ready, signedIn, language, send, profile, matchesRevealed } = useHalda();
   const [tab, setTab] = useState<Tab>("home");
   const [guideOpen, setGuideOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,6 +46,10 @@ export default function App() {
     prevSig.current = sig;
   }, [sig, matchesRevealed]);
 
+  useEffect(() => {
+    document.documentElement.lang = language === "es" ? "es" : "en";
+  }, [language]);
+
   return (
     <div className="appwrap">
       <div className="phone">
@@ -55,17 +61,18 @@ export default function App() {
 
         {tab === "home" && <HomeTab onAsk={onAsk} onGoExplore={() => setTab("explore")} />}
         {tab === "explore" && <ExploreTab onAsk={onAsk} />}
-        {tab === "profile" && <ProfileTab />}
+        {tab === "profile" && <ProfileTab onAvatar={() => setMenuOpen(true)} />}
 
         {tab === "connect" && <ConnectTab onAsk={onAsk} />}
         {tab === "cohort" && <CohortTab />}
 
-        <div className={`toast${toast ? " on" : ""}`}><Icon name="auto_awesome" /> Your matches updated</div>
+        <div className={`toast${toast ? " on" : ""}`}><Icon name="auto_awesome" /> {tr(language, "toast.matches", "Your matches updated")}</div>
 
         <Dock active={tab} onTab={setTab} onFab={() => setGuideOpen(true)} />
         <AIGuideSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
         <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} onConnect={() => setTab("connect")} onSettings={() => setSettingsOpen(true)} />
         <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <RewardToaster />
           </>
         )}
       </div>

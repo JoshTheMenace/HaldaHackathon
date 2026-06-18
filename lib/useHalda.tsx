@@ -11,7 +11,7 @@ import {
 } from "react";
 import type {
   Channel, ChatMessage, CreditItem, CreditSourceType, CreditStatus, Importance,
-  InterestIntent, InterestSignal, ProfileField, StudentProfile, TaskItem,
+  InterestIntent, InterestSignal, Language, ProfileField, StudentProfile, TaskItem,
 } from "./types";
 import { respond, type AgentTurn } from "./agent";
 import { FIELD_XP, levelFor, reconcileQuests } from "./gamify";
@@ -21,6 +21,7 @@ import { SCHOOLS, schoolById } from "./schools";
 import type { ProfileUpdates } from "./halda-prompt";
 
 const LS_KEY = "halda.profile.v1";
+const LANG_KEY = "halda.language.v1";
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export interface SignInProfile {
   name: string;
@@ -66,7 +67,7 @@ function parseLocation(input = "") {
   return { city: parts.length > 1 ? parts.slice(0, -1).join(", ") : parts[0] || undefined, state, zip };
 }
 
-function profileFromSignIn(d: SignInProfile): StudentProfile {
+function profileFromSignIn(d: SignInProfile, language: Language): StudentProfile {
   const now = Date.now();
   const interests = (d.interests || "").split(",").map((x) => x.trim()).filter(Boolean);
   const major = d.intendedMajor?.trim();
@@ -75,6 +76,7 @@ function profileFromSignIn(d: SignInProfile): StudentProfile {
     ...parseLocation(d.location),
     name: d.name.trim(),
     age: d.age,
+    language,
     grade: d.grade,
     highSchool: d.highSchool?.trim() || undefined,
     email: d.email?.trim() || undefined,
@@ -87,10 +89,12 @@ function profileFromSignIn(d: SignInProfile): StudentProfile {
   };
 }
 
-function openingFor(p: StudentProfile): ChatMessage {
+function openingFor(p: StudentProfile, language: Language): ChatMessage {
   const first = p.name?.split(/\s+/)[0] || "there";
   const facts = [p.highSchool, p.city && p.state ? `${p.city}, ${p.state}` : p.city || p.state, p.grade ? `grade ${p.grade}` : p.age ? `age ${p.age}` : ""].filter(Boolean);
-  return { id: "m0", role: "halda", channel: "web", text: `You're in, ${first}. I saved ${facts.length ? facts.join(" · ") : "your basics"} so we can skip the intake questions. What do you want help with first?`, ts: Date.now(), chips: ["Find schools", "Build my plan"] };
+  return language === "es"
+    ? { id: "m0", role: "halda", channel: "web", text: `Listo, ${first}. Guardé ${facts.length ? facts.join(" · ") : "tus datos básicos"} para no repetir preguntas. ¿Con qué quieres empezar?`, ts: Date.now(), chips: ["Buscar universidades", "Crear mi plan"] }
+    : { id: "m0", role: "halda", channel: "web", text: `You're in, ${first}. I saved ${facts.length ? facts.join(" · ") : "your basics"} so we can skip the intake questions. What do you want help with first?`, ts: Date.now(), chips: ["Find schools", "Build my plan"] };
 }
 
 export type RewardKind = "xp" | "level" | "badge" | "quest" | "match";
@@ -105,6 +109,8 @@ interface HaldaCtx {
   profile: StudentProfile;
   ready: boolean;
   signedIn: boolean;
+  language: Language;
+  setLanguage: (lang: Language) => void;
   messages: ChatMessage[];
   smsMessages: ChatMessage[];
   typing: boolean;
@@ -155,6 +161,7 @@ function computeBadges(p: StudentProfile, matchesRevealed: boolean): string[] {
   if (p.name) want.add("b_first_steps");
   if (p.grade === 10) want.add("b_early_bird");
   if (matchesRevealed) want.add("b_star_mapper");
+  if ((p.savedSchoolIds ?? []).some((id) => (schoolById(id)?.acceptanceRate ?? 1) < 0.2)) want.add("b_dreamer");
   if (p.completedQuests.includes("q_list")) want.add("b_planner");
   if (p.streak >= 3) want.add("b_on_a_roll");
   if (p.channelsLinked.includes("sms")) want.add("b_always_on");
@@ -166,16 +173,44 @@ const BADGE_NAME: Record<string, string> = {
   b_first_steps: "First Steps",
   b_early_bird: "Early Bird",
   b_star_mapper: "Star Mapper",
+  b_dreamer: "Dreamer",
   b_planner: "Planner",
   b_on_a_roll: "On a Roll",
   b_always_on: "Always-On",
   b_wordsmith: "Wordsmith",
 };
+const FIELD_NAME: Record<ProfileField, string> = {
+  name: "Name",
+  grade: "Grade",
+  location: "Location",
+  interests: "Interests",
+  major: "Major",
+  setting: "Campus setting",
+  size: "Campus size",
+  budget: "Budget",
+  goal: "Career goal",
+};
+const PROFILE_FIELD_FOR_KEY: Partial<Record<keyof StudentProfile, ProfileField>> = {
+  name: "name",
+  grade: "grade",
+  highSchool: "location",
+  city: "location",
+  state: "location",
+  zip: "location",
+  intendedMajors: "major",
+  careerGoal: "goal",
+  settingPref: "setting",
+  sizePref: "size",
+  maxBudget: "budget",
+  needsAid: "budget",
+};
+const hasValue = (v: unknown) => Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null && v !== "";
 
 export function HaldaProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<StudentProfile>(() => freshEmpty());
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [language, setLanguageState] = useState<Language>("en");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [smsMessages, setSmsMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
@@ -204,6 +239,12 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
 
   const clearEvent = useCallback((id: number) => {
     setEvents((cur) => cur.filter((e) => e.id !== id));
+  }, []);
+
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    try { localStorage.setItem(LANG_KEY, lang); } catch {}
+    setProfile((cur) => ({ ...cur, language: lang, updatedAt: Date.now() }));
   }, []);
 
   // fire-and-forget server sync so the partner console reflects the live profile
@@ -257,13 +298,18 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       next.xp += result.reward?.xp ?? 0;
 
       const evs: Omit<RewardEvent, "id">[] = [];
-      if (result.reward?.xp) evs.push({ kind: "xp", label: `+${result.reward.xp} XP` });
+      if (result.reward?.xp) evs.push({ kind: "xp", label: `+${result.reward.xp} XP`, sub: result.reward.field ? `${FIELD_NAME[result.reward.field]} saved` : "Progress saved" });
 
       const { newlyDone } = reconcileQuests(next);
       for (const q of newlyDone)
         evs.push({ kind: "quest", label: "Quest complete", sub: q.title });
 
       const willReveal = result.revealMatches || revealedRef.current;
+      const revealQuest = result.revealMatches && !next.completedQuests.includes("q_constellation");
+      if (revealQuest) {
+        next.completedQuests.push("q_constellation");
+        next.xp += 40;
+      }
       const before = new Set(next.badges);
       next.badges = computeBadges(next, willReveal);
       for (const b of next.badges)
@@ -280,6 +326,10 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
 
       if (result.revealMatches && !revealedRef.current) {
         setMatchesRevealed(true);
+        if (revealQuest) {
+          evs.push({ kind: "quest", label: "Quest complete", sub: "Light your constellation" });
+          evs.push({ kind: "xp", label: "+40 XP", sub: "Matches unlocked" });
+        }
         evs.push({ kind: "match", label: "Constellation lit", sub: "Right-fit matches unlocked" });
       }
 
@@ -477,7 +527,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
   const resetTo = useCallback((profile: StudentProfile, active: boolean) => {
     setProfile(profile);
     setSignedIn(active);
-    setMessages(active ? [openingFor(profile)] : []);
+    setMessages(active ? [openingFor(profile, language)] : []);
     setSmsMessages([]);
     setMatchesRevealed(false);
     setEvents([]);
@@ -491,9 +541,9 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       else localStorage.removeItem(LS_KEY);
     } catch {}
     if (active) sync(profile);
-  }, [sync]);
+  }, [language, sync]);
 
-  const signIn = useCallback((d: SignInProfile) => resetTo(profileFromSignIn(d), true), [resetTo]);
+  const signIn = useCallback((d: SignInProfile) => resetTo(profileFromSignIn(d, language), true), [language, resetTo]);
   const logout = useCallback(() => resetTo(freshEmpty(), false), [resetTo]);
   const reset = logout;
   const startFresh = logout;
@@ -673,6 +723,11 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
 
       const { newlyDone } = reconcileQuests(next);
       const willReveal = revealedRef.current || opts?.reveal === true;
+      const revealQuest = willReveal && !next.completedQuests.includes("q_constellation");
+      if (revealQuest) {
+        next.completedQuests.push("q_constellation");
+        next.xp += 40;
+      }
       const beforeBadges = new Set(next.badges);
       next.badges = computeBadges(next, willReveal);
       next.updatedAt = Date.now();
@@ -680,8 +735,12 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       sync(next);
 
       const evs: Omit<RewardEvent, "id">[] = [];
-      if (xpGain) evs.push({ kind: "xp", label: `+${xpGain} XP` });
+      if (xpGain) evs.push({ kind: "xp", label: `+${xpGain} XP`, sub: `${[...learned].map((f) => FIELD_NAME[f]).join(", ")} saved` });
       for (const q of newlyDone) evs.push({ kind: "quest", label: "Quest complete", sub: q.title });
+      if (revealQuest) {
+        evs.push({ kind: "quest", label: "Quest complete", sub: "Light your constellation" });
+        evs.push({ kind: "xp", label: "+40 XP", sub: "Matches unlocked" });
+      }
       for (const b of next.badges) if (!beforeBadges.has(b)) evs.push({ kind: "badge", label: "Badge earned", sub: BADGE_NAME[b] || b });
       if (willReveal && !revealedRef.current) { setMatchesRevealed(true); evs.push({ kind: "match", label: "Matches unlocked", sub: "Interest-based fits" }); }
       for (const t of newTasks) evs.push({ kind: "match", label: "Added to your list", sub: t.title });
@@ -695,11 +754,25 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
 
   const editField = useCallback(
     <K extends keyof StudentProfile>(k: K, v: StudentProfile[K]) => {
-      const next = { ...profileRef.current, [k]: v, updatedAt: Date.now() };
+      const base = profileRef.current;
+      const prevLevel = levelFor(base.xp).current.level;
+      const field = PROFILE_FIELD_FOR_KEY[k];
+      const earned = field && !hasValue(base[k]) && hasValue(v) ? FIELD_XP[field] : 0;
+      const next = { ...base, [k]: v, badges: [...base.badges], completedQuests: [...base.completedQuests], xp: base.xp + earned, updatedAt: Date.now() };
+      const { newlyDone } = reconcileQuests(next);
+      const beforeBadges = new Set(next.badges);
+      next.badges = computeBadges(next, revealedRef.current);
       setProfile(next);
       sync(next);
+      const evs: Omit<RewardEvent, "id">[] = [];
+      if (earned && field) evs.push({ kind: "xp", label: `+${earned} XP`, sub: `${FIELD_NAME[field]} saved` });
+      for (const q of newlyDone) evs.push({ kind: "quest", label: "Quest complete", sub: q.title });
+      for (const b of next.badges) if (!beforeBadges.has(b)) evs.push({ kind: "badge", label: "Badge earned", sub: BADGE_NAME[b] || b });
+      const nl = levelFor(next.xp).current;
+      if (nl.level > prevLevel) evs.push({ kind: "level", label: `Level ${nl.level}`, sub: nl.name });
+      emit(evs);
     },
-    [sync]
+    [emit, sync]
   );
 
   // Swipe-right / swipe-left a school on the Explore tab.
@@ -710,11 +783,21 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       const has = cur.includes(id);
       const want = save ?? !has;
       const savedSchoolIds = want ? (has ? cur : [...cur, id]) : cur.filter((x) => x !== id);
-      const next = { ...base, savedSchoolIds, updatedAt: Date.now() };
+      const justSaved = want && !has;
+      const prevLevel = levelFor(base.xp).current.level;
+      const next = { ...base, savedSchoolIds, badges: [...base.badges], xp: base.xp + (justSaved ? 15 : 0), updatedAt: Date.now() };
+      const beforeBadges = new Set(next.badges);
+      next.badges = computeBadges(next, revealedRef.current);
       setProfile(next);
       sync(next);
+      const evs: Omit<RewardEvent, "id">[] = [];
+      if (justSaved) evs.push({ kind: "xp", label: "+15 XP", sub: "School saved" });
+      for (const b of next.badges) if (!beforeBadges.has(b)) evs.push({ kind: "badge", label: "Badge earned", sub: BADGE_NAME[b] || b });
+      const nl = levelFor(next.xp).current;
+      if (nl.level > prevLevel) evs.push({ kind: "level", label: `Level ${nl.level}`, sub: nl.name });
+      emit(evs);
     },
-    [sync]
+    [emit, sync]
   );
 
   const upsertInterestSignal = useCallback(
@@ -794,9 +877,20 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
 
   const revealMatchesNow = useCallback(() => {
     if (revealedRef.current) return;
+    const base = profileRef.current;
+    const revealQuest = !base.completedQuests.includes("q_constellation");
+    const next = revealQuest
+      ? { ...base, completedQuests: [...base.completedQuests, "q_constellation"], badges: [...base.badges], xp: base.xp + 40, updatedAt: Date.now() }
+      : { ...base, badges: [...base.badges], updatedAt: Date.now() };
+    next.badges = computeBadges(next, true);
+    setProfile(next);
+    sync(next);
     setMatchesRevealed(true);
-    emit([{ kind: "match", label: "Matches unlocked", sub: "Right-fit schools" }]);
-  }, [emit]);
+    emit([
+      ...(revealQuest ? [{ kind: "quest" as const, label: "Quest complete", sub: "Light your constellation" }, { kind: "xp" as const, label: "+40 XP", sub: "Matches unlocked" }] : []),
+      { kind: "match", label: "Matches unlocked", sub: "Right-fit schools" },
+    ]);
+  }, [emit, sync]);
 
   const pushHaldaMessage = useCallback((text: string, channel: Channel = "web") => {
     const setMsgs = channel === "sms" ? setSmsMessages : setMessages;
@@ -823,16 +917,20 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
   // ── Persistence: resume an unfinished session ────────────────────────────────
   useEffect(() => {
     try {
+      const savedLang = localStorage.getItem(LANG_KEY) as Language | null;
+      const initialLang: Language = savedLang === "es" ? "es" : "en";
+      setLanguageState(initialLang);
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as StudentProfile;
         if (saved && saved.id) {
-          const next = hydrate(saved);
+          const next = { ...hydrate(saved), language: saved.language ?? initialLang };
+          setLanguageState(next.language ?? initialLang);
           setProfile(next);
-          setMessages([openingFor(next)]);
+          setMessages([openingFor(next, next.language ?? initialLang)]);
           setSignedIn(true);
           setHasSaved(true);
-          if (profileCompleteness(saved) >= 55) setMatchesRevealed(true);
+          if (next.completedQuests.includes("q_constellation")) setMatchesRevealed(true);
           // Re-push to server store so email/SMS lookups work after a restart.
           sync(next);
         }
@@ -853,6 +951,8 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       profile,
       ready,
       signedIn,
+      language,
+      setLanguage,
       messages,
       smsMessages,
       typing,
@@ -891,7 +991,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       revealMatchesNow,
       hasSaved,
     }),
-    [profile, ready, signedIn, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
+    [profile, ready, signedIn, language, setLanguage, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
       clearEvent, signIn, logout, send, reset, startFresh, linkSMS, completeQuest,
       smsOpen, openSMS, closeSMS, emailOpen, openEmail, closeEmail,
       applyUpdates, editField, toggleSavedSchool, upsertInterestSignal, removeInterestSignal,

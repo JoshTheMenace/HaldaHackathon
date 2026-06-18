@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
 import { ratingStrengths } from "@/lib/ratings";
 import type { InterestAlignedSchoolScore } from "@/lib/interest-match";
@@ -10,10 +11,11 @@ import { CampusPhoto, SchoolLogo } from "./SchoolImage";
 import MatchDetailSheet from "./MatchDetailSheet";
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-const roiLabel = (fit: number) => (fit >= 85 ? "Strong Alignment" : fit >= 70 ? "Good Value" : "Worth a Look");
+const roiLabel = (fit: number, es: boolean) => fit >= 85 ? (es ? "Muy alineado" : "Strong Alignment") : fit >= 70 ? (es ? "Buen valor" : "Good Value") : (es ? "Vale revisarla" : "Worth a Look");
 
 export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }) {
-  const { profile, toggleSavedSchool } = useHalda();
+  const { profile, toggleSavedSchool, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const deck = useMemo(() => rankInterestMatches(profile, 12), [profile]);
   const [idx, setIdx] = useState(0);
   const [gone, setGone] = useState<"" | "left" | "right">("");
@@ -39,37 +41,37 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
   return (
     <main className="scroll">
       <div className="sec-head" style={{ marginBottom: 4 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Top Recommendations</h2>
-        <button className="link plain" onClick={() => onAsk("Explain my top school matches")}>See All</button>
+        <h2 style={{ fontSize: 24, fontWeight: 700 }}>{t("explore.title", "Top Recommendations")}</h2>
+        <button className="link plain" onClick={() => onAsk(language === "es" ? "Explícame mis mejores opciones universitarias" : "Explain my top school matches")}>{t("explore.seeAll", "See All")}</button>
       </div>
-      <p className="tagline" style={{ margin: "0 0 14px" }}>Ranked by your interests, budget &amp; location — swipe right to save.</p>
+      <p className="tagline" style={{ margin: "0 0 14px" }}>{t("explore.tagline", "Ranked by your interests, budget & location — swipe right to save.")}</p>
 
       {current ? (
         <>
           <div className="stack">
             <div className="behind b2" />
             <div className="behind" />
-            <SwipeCard m={current} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} onSwipe={swipe} />
+            <SwipeCard m={current} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} onSwipe={swipe} es={language === "es"} />
           </div>
 
           <div className="ctrl">
             <div className="swipe">
               <button className="scbtn no" aria-label="Skip" onClick={() => swipe("left")}><Icon name="close" /></button>
-              <span className="lab">Swipe Left</span>
+              <span className="lab">{t("explore.left", "Swipe Left")}</span>
             </div>
             <div className="swipe">
               <button className="scbtn yes" aria-label="Save" onClick={() => swipe("right")}><Icon name="check" /></button>
-              <span className="lab">Swipe Right</span>
+              <span className="lab">{t("explore.right", "Swipe Right")}</span>
             </div>
           </div>
         </>
       ) : (
-        <div className="empty-stack">You&apos;ve been through your top matches. Check your saved list below, or ask your guide for more.</div>
+        <div className="empty-stack">{t("explore.empty", "You've been through your top matches. Check your saved list below, or ask your guide for more.")}</div>
       )}
 
-      <h2 className="saved-head">Saved Matches</h2>
+      <h2 className="saved-head">{t("explore.saved", "Saved Matches")}</h2>
       {saved.length === 0 ? (
-        <p style={{ fontSize: 13, color: "var(--h-ink-var)" }}>Swipe right on a school to save it here.</p>
+        <p style={{ fontSize: 13, color: "var(--h-ink-var)" }}>{t("explore.saveHint", "Swipe right on a school to save it here.")}</p>
       ) : (
         <div className="gridsaved">
           {saved.map((id) => {
@@ -80,7 +82,7 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
               <button key={id} className="saved" onClick={() => setDetail(id)}>
                 <div className="sc"><SchoolLogo id={id} /></div>
                 <h5>{s.short}</h5>
-                <span>{m ? `${m.overallFit}% Match` : "Saved"}</span>
+                <span>{m ? `${m.overallFit}% ${t("explore.match", "Match")}` : t("explore.savedOne", "Saved")}</span>
               </button>
             );
           })}
@@ -92,7 +94,7 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
   );
 }
 
-function SwipeCard({ m, gone, tags, onView, onSwipe }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void; onSwipe: (dir: "left" | "right") => void }) {
+function SwipeCard({ m, gone, tags, onView, onSwipe, es }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void; onSwipe: (dir: "left" | "right") => void; es: boolean }) {
   const s = schoolById(m.schoolId)!;
   const startX = useRef<number | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -118,9 +120,9 @@ function SwipeCard({ m, gone, tags, onView, onSwipe }: { m: InterestAlignedSchoo
       <div className="sw-body">
         <div className="idrow">
           <h3>{s.short}</h3>
-          <span className="matchpill">{m.overallFit}% Match</span>
+          <span className="matchpill">{m.overallFit}% {es ? "Coincide" : "Match"}</span>
         </div>
-        <p className="roi">ROI: <b>{roiLabel(m.overallFit)}</b></p>
+        <p className="roi">ROI: <b>{roiLabel(m.overallFit, es)}</b></p>
         {m.rating && (
           <div className="sw-rating">
             <Icon name="star" className="st" />
@@ -129,7 +131,7 @@ function SwipeCard({ m, gone, tags, onView, onSwipe }: { m: InterestAlignedSchoo
           </div>
         )}
         <div className="tags">{tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
-        <button className="cta" onClick={onView}>View Details</button>
+        <button className="cta" onClick={onView}>{es ? "Ver detalles" : "View Details"}</button>
       </div>
     </article>
   );

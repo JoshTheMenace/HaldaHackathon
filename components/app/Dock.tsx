@@ -2,6 +2,8 @@
 
 import { Icon } from "./Icon";
 import type { Tab } from "./helpers";
+import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: "home", icon: "home", label: "Home" },
@@ -11,19 +13,20 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
 ];
 
 export default function Dock({ active, onTab, onFab }: { active: Tab; onTab: (t: Tab) => void; onFab: () => void }) {
+  const { language } = useHalda();
   // Render two tabs, the FAB gap, then two tabs — matching the design layout.
   return (
     <nav className="dock">
       <div className="dock-inner">
         <div className="nav">
           {TABS.slice(0, 2).map((t) => (
-            <TabButton key={t.id} t={t} active={active} onTab={onTab} />
+            <TabButton key={t.id} t={{ ...t, label: tr(language, `tabs.${t.id}`, t.label) }} active={active} onTab={onTab} />
           ))}
           <span className="gap" />
           {TABS.slice(2).map((t) => (
-            <TabButton key={t.id} t={t} active={active} onTab={onTab} />
+            <TabButton key={t.id} t={{ ...t, label: tr(language, `tabs.${t.id}`, t.label) }} active={active} onTab={onTab} />
           ))}
-          <button className="fab" aria-label="Ask your AI Guide" onClick={onFab}>
+          <button className="fab" aria-label={tr(language, "guide.title", "Ask your AI Guide")} onClick={onFab}>
             <Icon name="mic" />
           </button>
         </div>

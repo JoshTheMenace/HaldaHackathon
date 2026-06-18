@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { Icon } from "./Icon";
 import SharePlanSheet from "./SharePlanSheet";
 
 export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }) {
-  const { profile, editField } = useHalda();
+  const { profile, editField, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const savedCount = profile.savedSchoolIds?.length ?? 0;
   const [shareOpen, setShareOpen] = useState(false);
   const [phone, setPhone] = useState("");
@@ -52,16 +54,16 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
 
   return (
     <main className="scroll">
-      <h1 className="greeting">Connect</h1>
+      <h1 className="greeting">{t("connect.title", "Connect")}</h1>
       <p style={{ fontSize: 14, color: "var(--h-ink-var)", marginBottom: 6 }}>
-        Bring the right people into your college journey.
+        {t("connect.sub", "Bring the right people into your college journey.")}
       </p>
 
       <section className="guides" style={{ marginTop: 18 }}>
         <article className="hero teal">
           <span className="gico"><Icon name="smartphone" /></span>
-          <h4>Continue on your phone</h4>
-          <p>Add your number and Halda will text you — pick up this exact conversation over SMS, anytime.</p>
+          <h4>{t("connect.phoneTitle", "Continue on your phone")}</h4>
+          <p>{t("connect.phoneBody", "Add your number and Halda will text you — pick up this exact conversation over SMS, anytime.")}</p>
           <div className="phone-link">
             <input
               type="tel" inputMode="tel" value={phone} placeholder="(801) 555-1234"
@@ -69,7 +71,7 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
               disabled={smsState === "linking"}
             />
             <button className="pill" onClick={linkPhone} disabled={smsState === "linking" || phone.trim().length < 7}>
-              {smsState === "linking" ? "Texting…" : smsState === "linked" ? "Linked ✓" : "Text me"} <Icon name="send" />
+              {smsState === "linking" ? t("connect.texting", "Texting…") : smsState === "linked" ? t("connect.linked", "Linked") : t("connect.textMe", "Text me")} <Icon name="send" />
             </button>
           </div>
           {smsMsg && <p className={`phone-status ${smsState}`}>{smsMsg}</p>}
@@ -77,8 +79,8 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
 
         <article className="hero teal">
           <span className="gico"><Icon name="mail" /></span>
-          <h4>Continue over email</h4>
-          <p>Add your email and Halda will send you a message — pick up this exact conversation in your inbox, anytime.</p>
+          <h4>{t("connect.emailTitle", "Continue over email")}</h4>
+          <p>{t("connect.emailBody", "Add your email and Halda will send you a message — pick up this exact conversation in your inbox, anytime.")}</p>
           <div className="phone-link">
             <input
               type="email" inputMode="email" value={email} placeholder="you@example.com"
@@ -86,7 +88,7 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
               disabled={emailState === "linking"}
             />
             <button className="pill" onClick={linkEmail} disabled={emailState === "linking" || !email.includes("@")}>
-              {emailState === "linking" ? "Sending…" : emailState === "linked" ? "Linked ✓" : "Email me"} <Icon name="send" />
+              {emailState === "linking" ? t("connect.sending", "Sending…") : emailState === "linked" ? t("connect.linked", "Linked") : t("connect.emailMe", "Email me")} <Icon name="send" />
             </button>
           </div>
           {emailMsg && <p className={`phone-status ${emailState}`}>{emailMsg}</p>}
@@ -94,23 +96,23 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
 
         <article className="hero emerald">
           <span className="gico"><Icon name="ios_share" /></span>
-          <h4>Share your plan</h4>
-          <p>Send your top matches and next steps to a parent or counselor.</p>
-          <button className="pill" onClick={() => setShareOpen(true)}>Open summary <Icon name="arrow_forward" /></button>
+          <h4>{t("connect.share", "Share your plan")}</h4>
+          <p>{t("connect.shareBody", "Send your top matches and next steps to a parent or counselor.")}</p>
+          <button className="pill" onClick={() => setShareOpen(true)}>{t("connect.openSummary", "Open summary")} <Icon name="arrow_forward" /></button>
         </article>
 
         <article className="hero emerald">
           <span className="gico"><Icon name="family_restroom" /></span>
-          <h4>Invite a parent or counselor</h4>
-          <p>Share your progress and let them cheer you on.</p>
-          <button className="pill" onClick={() => onAsk("How do I invite a parent to see my progress?")}>Invite <Icon name="arrow_forward" /></button>
+          <h4>{t("connect.invite", "Invite a parent or counselor")}</h4>
+          <p>{t("connect.inviteBody", "Share your progress and let them cheer you on.")}</p>
+          <button className="pill" onClick={() => onAsk(language === "es" ? "¿Cómo invito a un padre a ver mi progreso?" : "How do I invite a parent to see my progress?")}>{t("connect.invite", "Invite")} <Icon name="arrow_forward" /></button>
         </article>
 
         <article className="hero teal">
           <span className="gico"><Icon name="account_balance" /></span>
-          <h4>Hear from your schools</h4>
-          <p>{savedCount > 0 ? `Let your ${savedCount} saved school${savedCount > 1 ? "s" : ""} reach out with aid + next steps.` : "Save schools on Explore to let them reach out."}</p>
-          <button className="pill" onClick={() => onAsk("Connect me with my saved schools")}>Connect <Icon name="arrow_forward" /></button>
+          <h4>{t("connect.schools", "Hear from your schools")}</h4>
+          <p>{savedCount > 0 ? (language === "es" ? `Permite que tus ${savedCount} universidades guardadas te contacten con ayuda y próximos pasos.` : `Let your ${savedCount} saved school${savedCount > 1 ? "s" : ""} reach out with aid + next steps.`) : t("connect.schoolsBody", "Save schools on Explore to let them reach out.")}</p>
+          <button className="pill" onClick={() => onAsk(language === "es" ? "Conéctame con mis universidades guardadas" : "Connect me with my saved schools")}>{t("connect.connect", "Connect")} <Icon name="arrow_forward" /></button>
         </article>
       </section>
 
