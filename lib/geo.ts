@@ -90,6 +90,18 @@ export function stateFromText(text?: string): string | undefined {
   return undefined;
 }
 
+// Strict: only matches a fully spelled-out state name. Safe for passive capture
+// on arbitrary chat text, where the bare 2-letter form would mistake common
+// words for abbreviations ("OK thanks" → OK, "hi" → HI, "I'm in" → IN).
+export function stateNameFromText(text?: string): string | undefined {
+  if (!text) return undefined;
+  const lc = text.toLowerCase();
+  for (const [name, abbr] of Object.entries(STATE_ABBR)) {
+    if (new RegExp(`\\b${name}\\b`).test(lc)) return abbr;
+  }
+  return undefined;
+}
+
 export function haversineMi(a: LatLng, b: LatLng): number {
   const R = 3958.8;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;

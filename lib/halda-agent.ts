@@ -5,18 +5,29 @@ import { schoolById, SCHOOLS } from "./schools";
 import { RATING_CATEGORIES, type RmpRating } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
-import { resolveZip, stateFromText } from "./geo";
+import { resolveZip, stateFromText, stateNameFromText } from "./geo";
 import { scorecardLookup } from "./scorecard";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
 
-// "Stay in-state" only ranks correctly if we know WHICH state. The model often
-// sets stayInState=true but forgets state, so derive it from the conversation
-// (the "stay in Utah" message, their ZIP) and persist it.
-function normalizeState(working: StudentProfile, updates: ProfileUpdates, message: string, history?: { role: string; text: string }[]) {
-  if (!working.stayInState || working.state) return;
+// Capture location passively from whatever the student says — a spelled-out
+// state, a "stay in X" line, or a ZIP — on EVERY message, not just when they
+// set stayInState. Location drives ranking and the web-search filter, so we
+// should rarely have it empty. Uses the strict state-name matcher so chat
+// filler ("OK", "hi", "in") can't be mistaken for a state; the deliberate
+// stayInState path keeps the looser matcher (it can read a bare "UT").
+function deriveLocation(working: StudentProfile, updates: ProfileUpdates, message: string, history?: { role: string; text: string }[]) {
   const texts = [message, ...((history ?? []).map((h) => h.text))];
-  const found = texts.map(stateFromText).find(Boolean) || (working.zip ? resolveZip(working.zip)?.state : undefined);
-  if (found) { working.state = found; updates.state = found; }
+  if (!working.state) {
+    const found =
+      texts.map(stateNameFromText).find(Boolean) ||
+      (working.zip ? resolveZip(working.zip)?.state : undefined) ||
+      (working.stayInState ? texts.map(stateFromText).find(Boolean) : undefined);
+    if (found) { working.state = found; updates.state = found; }
+  }
+  if (!working.city && working.zip) {
+    const z = resolveZip(working.zip);
+    if (z?.city) { working.city = z.city; updates.city = z.city; }
+  }
 }
 
 // Generic words shared by many school names — matching on these makes EVERY
@@ -115,7 +126,7 @@ async function backstopExtract(ai: GoogleGenAI, message: string, working: Studen
     const tool = [{ functionDeclarations: [TOOLS[0].functionDeclarations[0]] }]; // update_profile only
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts explicitly stated in it (a stated major or interest MUST be included). Include nothing that isn't in the message.\n\nStudent: ${message}` }] }],
+      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts the student explicitly states about themselves — name, grade, city/state/ZIP, budget, first-gen status, citizenship/international status, transfer status, intended major, and any genuine interests. Put each in its proper field. Include nothing not present in the message; do not guess or infer.\n\nStudent: ${message}` }] }],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       config: { tools: tool as any, toolConfig: { functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["update_profile"] } } as any, temperature: 0 },
     });
@@ -176,10 +187,11 @@ const TOOLS = [
             stayInState: { type: Type.BOOLEAN, description: "wants to stay close to home (also set state)" },
             interestSignals: {
               type: Type.ARRAY,
+              description: "Things the student is genuinely drawn to (a subject, hobby, sport, cause). NOT school names, NOT logistical needs (cost, visa, credit transfer), NOT topics they merely asked about.",
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  interest: { type: Type.STRING },
+                  interest: { type: Type.STRING, description: "the subject/hobby/cause itself, e.g. 'marine biology', 'soccer'" },
                   intent: { type: Type.STRING, description: "career_path|major|serious_extracurricular|community|fan_culture|personal_hobby" },
                   importance: { type: Type.STRING, description: "low|medium|high|must_have" },
                 },
@@ -239,12 +251,12 @@ const TOOLS = [
       },
       {
         name: "add_task",
-        description: "Add a deadline or task. Prefer a canonical key so the real date fills in.",
+        description: "Put a next step on the student's tracker — a real deadline (use a canonical key so the date fills in) OR a custom 'try this' milestone (shadow a nurse, tour a campus, take a CS elective) that gives them a concrete reason to come back.",
         parameters: {
           type: Type.OBJECT,
           properties: {
             key: { type: Type.STRING, description: "fafsa | css_profile | psat | common_app | early_action | regular_decision | college_list" },
-            title: { type: Type.STRING, description: "for a custom task (when no key)" },
+            title: { type: Type.STRING, description: "for a custom task/milestone (when no key), e.g. 'Shadow a nurse this summer'" },
             detail: { type: Type.STRING },
             due: { type: Type.STRING, description: "ISO date YYYY-MM-DD (custom task)" },
           },
@@ -257,11 +269,13 @@ const TOOLS = [
 function systemPrompt(): string {
   return `You are Halda, a warm AI college guide for high-school students — mostly sophomores. Text like a sharp, encouraging older sibling: short, plain, a little playful, usually one question at a time.
 
-Help each student figure out where they belong. Learn what they actually care about and the intent behind it — a passing interest, a possible major, a real career — then connect it to schools, scholarships, and concrete next steps that fit them. Meet them where they are and decide for yourself when you know enough to be useful versus when to ask one more thing.
+Help each student figure out where they belong. Lead with what they actually came for — a career question, a transfer question, a school comparison — before pivoting to anything else. Learn what they care about and the intent behind it (a passing interest, a possible major, a real career), then connect it to schools, scholarships, and concrete next steps that fit them.
 
-You have tools to save what you learn, show ranked school matches, look up any single school or the live web, find scholarships, and put real deadlines on their tracker — reach for them whenever they'd make you more helpful. When a student hands you the wheel ("lead the way", "you decide", "just show me") or asks for options, actually show them schools rather than only talking. The student's known profile is given to you every turn: use it, build on it, and don't re-ask what's already there.
+Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, citizenship/international, transfer status — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
 
-Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure (acceptance rate, net price, salary, rating) you weren't given — if you don't have it, speak qualitatively.`;
+You have tools to save what you learn, show ranked school matches, look up any single school or the live web, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, look something up, or add a task, do it in the SAME turn. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
+
+Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure you weren't given. Before you claim a school fits a budget, an aid need, or an eligibility rule (transfer credits, international/visa, in-state cost), confirm it with a tool rather than guessing — and if money is tight, surface real aid and add the FAFSA step.`;
 }
 
 export interface AgentResult {
@@ -311,7 +325,7 @@ export async function runAgent(opts: {
   const toolEvents: ToolEvent[] = [];
   let revealMatches = false;
 
-  normalizeState(working, updates, opts.message, opts.history);
+  deriveLocation(working, updates, opts.message, opts.history);
 
   // The student's known profile rides in the SYSTEM prompt every turn so the
   // model treats it as authoritative and never re-asks what's already there.
@@ -325,6 +339,10 @@ export async function runAgent(opts: {
   ];
 
   let reply = "";
+  // Dedupe identical read-only tool calls within a turn — the model sometimes
+  // fires school_detail on the same school 2-3× in one hop. Reuse the result and
+  // suppress the duplicate chip instead of repeating the work.
+  const callCache = new Map<string, unknown>();
   for (let hop = 0; hop < 5; hop++) {
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
@@ -348,10 +366,15 @@ export async function runAgent(opts: {
       // The model occasionally hallucinates a tool name like "default_profile";
       // if it's clearly a profile save, honor it so the facts aren't lost.
       const name = call.name === "update_profile" || (call.name !== "search_universities" && /profile/i.test(call.name ?? "")) ? "update_profile" : call.name;
-      if (name === "update_profile") {
+      // Identical read-only call already run this turn → reuse, skip the dup chip.
+      const sig = `${name}:${JSON.stringify(args)}`;
+      const cached = name !== "update_profile" ? callCache.get(sig) : undefined;
+      if (cached !== undefined) {
+        result = cached;
+      } else if (name === "update_profile") {
         Object.assign(updates, args);
         mergeWorking(working, args);
-        normalizeState(working, updates, opts.message, opts.history);
+        deriveLocation(working, updates, opts.message, opts.history);
       } else if (name === "search_universities") {
         revealMatches = true;
         const ranked = rankInterestMatches(working, 5);
@@ -383,6 +406,10 @@ export async function runAgent(opts: {
         const sc = resolveSchool(String(args.school ?? ""));
         if (sc) {
           const m = scoreInterestFit(working, sc);
+          // Pull official outcome figures (grad rate, 10-yr earnings) so a seeded
+          // school shows the SAME real numbers as a Scorecard one — no "N/A"
+          // sitting next to live data. Undefined keys drop out on serialization.
+          const official = await scorecardLookup(sc.name);
           result = {
             school: sc.name,
             // What a student actually cares about, in order:
@@ -390,6 +417,9 @@ export async function runAgent(opts: {
             wouldYouBelong: m.rating ? { studentsLoveItFor: belongingSignals(m.rating), studentRating: `${m.rating.overall}/5 from ${m.rating.reviewCount} students`, tip: "For real culture/vibe & whether they'd fit in, call web_lookup." } : { tip: "Call web_lookup for student-life/culture color." },
             yourChances: { odds: admissionsOdds(sc.acceptanceRate), acceptanceRatePct: Math.round(sc.acceptanceRate * 100) },
             cost: { netPricePerYearAfterAid: sc.netPrice, creditFit: m.creditFit.level },
+            outcomes: official && (official.medianEarnings != null || official.completionRate != null)
+              ? { gradRatePct: official.completionRate != null ? Math.round(official.completionRate * 100) : undefined, medianEarnings10yr: official.medianEarnings ?? undefined, note: "official U.S. Dept of Education figures" }
+              : undefined,
             cautions: m.concerns.slice(0, 1),
           };
           toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match` });
@@ -434,6 +464,7 @@ export async function runAgent(opts: {
       } else {
         result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, web_lookup, find_scholarships, add_task.` };
       }
+      if (name !== "update_profile" && cached === undefined) callCache.set(sig, result);
       } catch (err) {
         // A malformed tool call shouldn't crash the turn — tell the model and move on.
         result = { error: `Could not run ${call.name}: ${(err as Error).message}` };
@@ -444,14 +475,23 @@ export async function runAgent(opts: {
     contents.push({ role: "user", parts: responseParts });
   }
 
-  // Data-loss backstop: if this turn captured no major/interest but the student
-  // said something substantive, force an extraction and apply it ONLY if it found
-  // a major/interest (so we never lose a stated fact, and never add noise).
-  if (!updates.intendedMajors && !updates.interestSignals && opts.message.trim().length >= 12) {
+  // Data-loss backstop: the conversational model often answers a fact-laden
+  // message without saving — or saves only the major and silently drops the
+  // name, grade, first-gen, or budget. Force a temp-0 extraction and merge every
+  // field the model DIDN'T already save this turn, so no stated fact is lost.
+  if (opts.message.trim().length >= 8) {
     const extra = await backstopExtract(ai, opts.message, working);
-    if (extra && (extra.intendedMajors || extra.interestSignals)) {
-      Object.assign(updates, extra);
-      mergeWorking(working, extra);
+    if (extra) {
+      const saved = updates as Record<string, unknown>;
+      const rescued: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(extra)) {
+        if (v != null && saved[k] === undefined) rescued[k] = v;
+      }
+      if (Object.keys(rescued).length) {
+        Object.assign(updates, rescued);
+        mergeWorking(working, rescued);
+        deriveLocation(working, updates, opts.message, opts.history);
+      }
     }
   }
 
