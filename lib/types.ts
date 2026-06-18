@@ -200,6 +200,7 @@ export interface ToolEvent {
   detail?: string; // "4 matches" / "FAFSA added"
   items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships, web sources)
   schools?: { schoolId: string; matchPct: number }[]; // search results → interactive cards
+  media?: { title: string; sub?: string; imageUrl: string; logoUrl?: string }[]; // arbitrary live school media cards
 }
 
 export interface ChatMessage {

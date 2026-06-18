@@ -494,6 +494,15 @@
 .phone .csc-save { width: 40px; height: 40px; flex-shrink: 0; border: none; background: var(--h-s-low); border-radius: 11px; display: grid; place-items: center; cursor: pointer; color: var(--h-outline); }
 .phone .csc-save.on { background: rgba(0,107,95,.1); color: var(--h-primary); }
 .phone .csc-save .material-symbols-outlined { font-size: 21px; font-variation-settings: 'FILL' 1; }
+.phone .tool-media { margin-left: 12px; display: flex; flex-direction: column; gap: 8px; }
+.phone .tool-media-card { display: flex; align-items: center; gap: 11px; background: #fff; border: 1px solid var(--h-s-highest); border-radius: 16px; padding: 9px; box-shadow: var(--h-soft); }
+.phone .tm-photo { width: 70px; height: 52px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: var(--h-s-low); }
+.phone .tm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phone .tm-b { min-width: 0; flex: 1; }
+.phone .tm-b b { display: block; font-size: 13px; font-weight: 800; color: var(--h-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone .tm-b span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--h-ink-var); line-height: 1.25; }
+.phone .tm-logo { width: 30px; height: 30px; border-radius: 9px; overflow: hidden; border: 1px solid var(--h-s-highest); background: #fff; flex-shrink: 0; display: grid; place-items: center; }
+.phone .tm-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* detail sheet sits ABOVE the chat sheet when opened from chat */
 .phone .scrim.detail-scrim { z-index: 64; }

@@ -164,6 +164,13 @@ function explicitlyRequestsSchoolCards(message: string): boolean {
   return /\b(show|pull up|find|refresh|update|see|give me|compare|list|recommend|recommendations|matches|options|schools|colleges|alternatives)\b/i.test(message);
 }
 
+function mediaForSchool(name: string) {
+  return {
+    imageUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=campus`,
+    logoUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=logo`,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Halda as a real tool-using agent. Gemini decides when to:
 //   • update_profile     — save facts (incl. AP / dual-enrollment credits)
@@ -442,19 +449,22 @@ export async function runAgent(opts: {
           // school shows the SAME real numbers as a Scorecard one — no "N/A"
           // sitting next to live data. Undefined keys drop out on serialization.
           const official = await scorecardLookup(sc.name);
+          const wl = await webLookup(ai, `${sc.name} ${opts.message}: program quality, admissions requirements, student life`, working);
           result = {
             school: sc.name,
             // What a student actually cares about, in order:
             fitForYourInterests: { matchPct: m.overallFit, why: m.reasons.slice(0, 3), evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title), strongPrograms: sc.strongMajors },
             wouldYouBelong: m.rating ? { studentsLoveItFor: belongingSignals(m.rating), studentRating: `${m.rating.overall}/5 from ${m.rating.reviewCount} students`, tip: "For real culture/vibe & whether they'd fit in, call web_lookup." } : { tip: "Call web_lookup for student-life/culture color." },
-            yourChances: { odds: admissionsOdds(sc.acceptanceRate), acceptanceRatePct: Math.round(sc.acceptanceRate * 100) },
-            cost: { netPricePerYearAfterAid: sc.netPrice, creditFit: m.creditFit.level },
+            yourChances: { odds: admissionsOdds(official?.acceptanceRate ?? sc.acceptanceRate), acceptanceRatePct: Math.round((official?.acceptanceRate ?? sc.acceptanceRate) * 100), source: official ? "College Scorecard" : "Halda catalog fallback" },
+            cost: { netPricePerYearAfterAid: official?.netPrice ?? sc.netPrice, creditFit: m.creditFit.level, source: official?.netPrice != null ? "College Scorecard" : "Halda catalog fallback" },
             outcomes: official && (official.medianEarnings != null || official.completionRate != null)
               ? { gradRatePct: official.completionRate != null ? Math.round(official.completionRate * 100) : undefined, medianEarnings10yr: official.medianEarnings ?? undefined, note: "official U.S. Dept of Education figures" }
               : undefined,
+            webContext: { answer: wl.answer, sources: wl.sources },
             cautions: m.concerns.slice(0, 1),
           };
           toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match`, schools: [{ schoolId: sc.id, matchPct: m.overallFit }] });
+          toolEvents.push({ kind: "web", label: `Searched ${sc.short}`, detail: "program context", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
         } else {
           // Not in our catalog (e.g. MIT, Stanford) — never fake a card. Pull REAL
           // figures from College Scorecard first; fall back to the live web.
@@ -471,11 +481,22 @@ export async function runAgent(opts: {
               medianEarnings10yr: card.medianEarnings,
               note: "Official U.S. Dept of Education figures (College Scorecard). Not in our match catalog, so no personalized fit % — but these numbers are real.",
             };
-            toolEvents.push({ kind: "school", label: `Looked up ${card.name}`.slice(0, 42), detail: "official data" });
+            toolEvents.push({
+              kind: "school",
+              label: `Looked up ${card.name}`.slice(0, 42),
+              detail: "official data",
+              media: [{ title: card.name, sub: "Live campus image", ...mediaForSchool(card.name) }],
+            });
           } else {
             const wl = await webLookup(ai, `${school}: acceptance rate, net price after aid, and what it's known for`, working);
             result = { school, source: "web", info: wl.answer, sources: wl.sources, note: "From the live web — confirm on the school's site." };
-            toolEvents.push({ kind: "web", label: `Looked up ${school}`.slice(0, 42), detail: "from the web", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+            toolEvents.push({
+              kind: "web",
+              label: `Looked up ${school}`.slice(0, 42),
+              detail: "from the web",
+              items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })),
+              media: [{ title: school, sub: "Live campus image", ...mediaForSchool(school) }],
+            });
           }
         }
       } else if (name === "web_lookup") {
