@@ -78,6 +78,7 @@ export function profileSummary(p: {
   intendedMajors?: string[]; settingPref?: string; sizePref?: string;
   needsAid?: boolean; maxBudget?: number; careerGoal?: string; stayInState?: boolean;
   interestSignals?: { interest: string; intent: string; importance: string }[];
+  creditWallet?: { source: string; status: string; score?: string }[];
 }): string {
   const parts: string[] = [];
   if (p.name) parts.push(`name=${p.name}`);
@@ -92,5 +93,7 @@ export function profileSummary(p: {
   if (p.maxBudget) parts.push(`budget=${p.maxBudget}`);
   if (p.interestSignals?.length)
     parts.push("interests=" + p.interestSignals.map((s) => `${s.interest}(${s.intent},${s.importance})`).join("; "));
+  if (p.creditWallet?.length)
+    parts.push("credits=" + p.creditWallet.map((c) => `${c.source}${c.score ? ` (${c.score})` : ""} [${c.status}]`).join("; "));
   return parts.length ? `KNOWN SO FAR: ${parts.join(" · ")}` : "KNOWN SO FAR: nothing yet";
 }

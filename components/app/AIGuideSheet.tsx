@@ -5,7 +5,7 @@ import { useHalda } from "@/lib/useHalda";
 import { Icon } from "./Icon";
 
 const SUGGESTIONS = ["Next deadline?", "Scholarships for me", "Why BYU?", "Boost my GPA"];
-const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person" };
+const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance" };
 
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { messages, typing, send } = useHalda();

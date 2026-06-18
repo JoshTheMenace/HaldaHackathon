@@ -191,7 +191,7 @@ export interface Lead {
 export type Role = "halda" | "student" | "system";
 
 // A visible "the agent is doing something" line in the chat (function calls).
-export type ToolKind = "search" | "scholarship" | "task" | "profile";
+export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school";
 export interface ToolEvent {
   kind: ToolKind;
   label: string; // "Searching right-fit schools"

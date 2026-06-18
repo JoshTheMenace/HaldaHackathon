@@ -8,7 +8,7 @@ import type { ToolEvent } from "@/lib/types";
 import { GuideStar } from "./brand";
 import VoiceMode from "./VoiceMode";
 
-const TOOL_ICON = { search: Search, scholarship: PiggyBank, task: CheckCircle2, profile: UserCog };
+const TOOL_ICON: Record<string, typeof Search> = { search: Search, scholarship: PiggyBank, task: CheckCircle2, profile: UserCog };
 
 function ToolCall({ tool }: { tool: ToolEvent }) {
   const Icon = TOOL_ICON[tool.kind] ?? Search;

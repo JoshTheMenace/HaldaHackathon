@@ -1,11 +1,31 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { StudentProfile, TaskItem, ToolEvent } from "./types";
+import type { StudentProfile, TaskItem, ToolEvent, School } from "./types";
 import { profileCompleteness } from "./match";
-import { rankInterestMatches } from "./interest-match";
-import { schoolById } from "./schools";
+import { rankInterestMatches, scoreInterestFit } from "./interest-match";
+import { schoolById, SCHOOLS } from "./schools";
+import { ratingStrengths } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
+
+// Resolve a student-typed school name to a seeded school (fuzzy: short, name, tokens).
+function resolveSchool(q: string): School | undefined {
+  const n = q.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+  if (!n) return undefined;
+  return (
+    SCHOOLS.find((s) => s.short.toLowerCase() === n || s.name.toLowerCase() === n) ||
+    SCHOOLS.find((s) => n.includes(s.short.toLowerCase()) || s.name.toLowerCase().includes(n)) ||
+    SCHOOLS.find((s) => n.split(" ").some((w) => w.length > 3 && s.name.toLowerCase().includes(w)))
+  );
+}
+
+// Plain-language admissions odds from an acceptance rate.
+function admissionsOdds(rate: number): string {
+  if (rate >= 0.7) return "very likely to get in";
+  if (rate >= 0.5) return "likely — a good target";
+  if (rate >= 0.3) return "a realistic target";
+  return "a reach";
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Halda as a real tool-using agent. Gemini decides when to:
@@ -85,6 +105,16 @@ const TOOLS = [
         },
       },
       {
+        name: "school_detail",
+        description:
+          "Get the full picture on ONE specific school the student named — match %, real net price, admissions odds, RateMyProfessor student rating, strong programs, why it fits. Use this (NOT search_universities) when they ask about a single school, e.g. 'why BYU?', 'tell me about UVU', 'my chances at Utah'.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: { school: { type: Type.STRING, description: "the school name the student mentioned" } },
+          required: ["school"],
+        },
+      },
+      {
         name: "find_scholarships",
         description:
           "Find scholarships and aid that fit this student. Call this when they ask about scholarships, paying for college, or money. The student will SEE the results appear.",
@@ -118,15 +148,25 @@ Naturally pick up everything that helps: high school, whether they'd be first-ge
 
 LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"), then re-run search_universities so the matches actually show in-state schools first. A single named major (e.g. "biology") is enough to start searching — you don't need a separate interest.
 
-ALSO ask about COLLEGE CREDIT: AP classes, dual/concurrent enrollment, IB. It matters because it can save them money and time — capture each as a credit item.
+COLLEGE CREDIT: AP / dual-enrollment / IB can save money and time — capture each as a credit item. But ONLY ask about credits if you don't already know them (check KNOWN SO FAR first).
 
-TOOLS — use them, don't just talk:
-- update_profile: whenever you learn ANY fact (name, grade, location, interests+intent, major, money reality, AP/dual-enrollment credits).
-- search_universities: the moment you know the basics (name, grade, location, ≥1 interest with intent). Do it proactively — the student sees matches appear. Re-run it if big new info changes things.
-- find_scholarships: when they ask about scholarships, aid, or paying for college, call it — they'll see the matched results.
-- add_task: put real deadlines on their list. If they need aid → add_task key:"fafsa". You can also add psat, common_app, college_list, etc. when relevant.
+TOOLS — use the RIGHT one, and don't over-call:
+- update_profile: whenever you learn ANY new fact.
+- search_universities: ONLY to (re)surface the ranked list when they ask broadly ("what schools should I look at?") or after big new info. Don't call it for a single-school question or a general question.
+- school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "my odds at Utah?"). This is how you answer with real numbers.
+- find_scholarships: when they ask about scholarships, aid, or paying for college.
+- add_task: real deadlines. If they need aid → key:"fafsa". Don't re-add a task that's already on their list.
 
-Know when you have ENOUGH: once basics are in, search and shift from interrogating to guiding (matches, money, next steps). Don't keep asking endless questions. Keep replies to 1-3 sentences.`;
+USE TOOL RESULTS — being specific is the difference between helpful and useless:
+- After search_universities: name your top 1-2 schools and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason or evidence item. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." Surface a real "watch out" if one came back.
+- After school_detail: lead with match % + admissions odds + net price + the student rating, then 1-2 concrete reasons. If there's a caution (e.g. pre-med credit), say it honestly.
+- After find_scholarships: NAME the actual scholarships you got back (don't just say "some options") with a one-line why for each.
+
+NEVER INVENT NUMBERS. Only state stats a tool actually gave you (match %, net price, acceptance odds, RateMyProfessor rating). Do NOT make up admit rates, board-pass rates, salaries, or aid amounts — if you don't have the number, speak qualitatively. Banned filler with no specifics: "super respected", "fantastic choice", "great program", "world-class".
+
+DON'T REPEAT YOURSELF: never re-ask something already in KNOWN SO FAR or the history. If you know their AP score, use it. Ask about AP/dual-enrollment at most once, ever. If profile completeness is ≥ 75%, stop interrogating and guide with data.
+
+Keep replies to 2-4 sentences, plain and warm. Answer the actual question FIRST, then at most ONE fresh follow-up (only if it helps) — don't default to FAFSA/AP every turn.`;
 }
 
 export interface AgentResult {
@@ -215,12 +255,41 @@ export async function runAgent(opts: {
         mergeWorking(working, args);
       } else if (call.name === "search_universities") {
         revealMatches = true;
-        const top = rankInterestMatches(working, 4).map((m) => {
+        const top = rankInterestMatches(working, 5).map((m) => {
           const s = schoolById(m.schoolId)!;
-          return { school: s.short, fit: m.overallFit, why: m.reasons[0] ?? s.vibe };
+          return {
+            school: s.short, matchPct: m.overallFit, admissions: admissionsOdds(s.acceptanceRate),
+            netPricePerYearAfterAid: s.netPrice,
+            studentRating: m.rating ? `${m.rating.overall}/5 from ${m.rating.reviewCount} students` : undefined,
+            whyItFits: m.reasons.slice(0, 3),
+            evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title),
+            watchOut: m.concerns.slice(0, 1),
+            creditFit: m.creditFit.level,
+          };
         });
         result = { matches: top };
         toolEvents.push({ kind: "search", label: "Searching right-fit schools", detail: `${top.length} matches` });
+      } else if (call.name === "school_detail") {
+        const sc = resolveSchool(String(args.school ?? ""));
+        if (sc) {
+          const m = scoreInterestFit(working, sc);
+          result = {
+            school: sc.name,
+            matchPct: m.overallFit,
+            admissions: admissionsOdds(sc.acceptanceRate),
+            acceptanceRatePct: Math.round(sc.acceptanceRate * 100),
+            netPricePerYearAfterAid: sc.netPrice,
+            strongPrograms: sc.strongMajors,
+            studentRating: m.rating ? { overallOutOf5: m.rating.overall, reviews: m.rating.reviewCount, studentsLoveItFor: ratingStrengths(m.rating).map((x) => x.label) } : undefined,
+            whyItFits: m.reasons.slice(0, 3),
+            evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title),
+            creditFit: m.creditFit.level,
+            cautions: m.concerns.slice(0, 1),
+          };
+          toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match` });
+        } else {
+          result = { error: `No data for "${args.school}". Suggest one of the matched schools instead.` };
+        }
       } else if (call.name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };
