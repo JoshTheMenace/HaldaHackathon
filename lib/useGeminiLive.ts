@@ -172,7 +172,7 @@ export function useGeminiLive(opts: {
               uBufRef.current = ""; hBufRef.current = "";
             }
           },
-          onerror: (e: any) => { setError(`Gemini Live connection error: ${e?.message || "unknown"}`); setStatus("error"); },
+          onerror: (e: any) => { setError(`Couldn't reach Gemini Live. On Firefox this is usually an ad-blocker or strict Tracking Protection blocking the connection — try Chrome, or turn off tracking protection (shield icon) for this site. (${e?.message || "connection failed"})`); setStatus("error"); },
           onclose: () => setStatus((s) => (s === "error" ? s : "idle")),
         },
       });
@@ -202,7 +202,7 @@ export function useGeminiLive(opts: {
         turnComplete: true,
       });
     } catch (e) {
-      setError(`Couldn't connect to Gemini Live (model "${LIVE_MODEL}"): ${(e as Error).message}`);
+      setError(`Couldn't connect to Gemini Live. On Firefox an ad-blocker or strict Tracking Protection often blocks this — try Chrome, or turn off tracking protection (shield icon) for this site. (model "${LIVE_MODEL}": ${(e as Error).message})`);
       setStatus("error");
       stop();
     }
