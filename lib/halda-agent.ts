@@ -6,7 +6,18 @@ import { schoolById, SCHOOLS } from "./schools";
 import { RATING_CATEGORIES, type RmpRating } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
+import { resolveZip, stateFromText } from "./geo";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
+
+// "Stay in-state" only ranks correctly if we know WHICH state. The model often
+// sets stayInState=true but forgets state, so derive it from the conversation
+// (the "stay in Utah" message, their ZIP) and persist it.
+function normalizeState(working: StudentProfile, updates: ProfileUpdates, message: string, history?: { role: string; text: string }[]) {
+  if (!working.stayInState || working.state) return;
+  const texts = [message, ...((history ?? []).map((h) => h.text))];
+  const found = texts.map(stateFromText).find(Boolean) || (working.zip ? resolveZip(working.zip)?.state : undefined);
+  if (found) { working.state = found; updates.state = found; }
+}
 
 // Resolve a student-typed school name to a seeded school (fuzzy: short, name, tokens).
 function resolveSchool(q: string): School | undefined {
@@ -29,12 +40,45 @@ function belongingSignals(r: RmpRating): string[] {
     .map((c) => c.label);
 }
 
+// The hard facts we DO have, phrased so a web search can filter by them first
+// (location/distance, stay-in-state, budget) before going deep on an interest.
+function searchConstraints(p: StudentProfile): string {
+  const bits: string[] = [];
+  const loc = p.city && p.state ? `${p.city}, ${p.state}` : p.state || p.city;
+  if (loc) bits.push(`based near ${loc}`);
+  if (p.stayInState && p.state) bits.push(`wants to stay in ${p.state} (in-state tuition)`);
+  if (p.maxBudget) bits.push(`budget ~$${p.maxBudget.toLocaleString()}/yr after aid`);
+  if (p.grade) bits.push(`high-school grade ${p.grade}`);
+  return bits.length ? `Filter to fit this student: ${bits.join("; ")}.` : "";
+}
+
 // Run a focused, Google-grounded web lookup and return a concise answer + sources.
-// Lets the agent pull live culture/belonging color our seeded data can't cover.
-async function webLookup(ai: GoogleGenAI, query: string): Promise<{ answer: string; sources: { title: string; url: string }[] }> {
+// General-purpose: campus culture/belonging, program quality for a niche interest,
+// real schools beyond our seeded list, current admissions/news — always scoped by
+// the student's hard constraints so results are relevant by distance/budget first.
+// The model sometimes leaves an empty slot in its query ("best film schools in )").
+// Strip empty parens and dangling prepositions so we never search malformed text.
+function cleanWebQuery(query: string): string {
+  // Drop unbalanced parens (keeps valid ones like "(CS)") so an empty slot can't
+  // leave a stray bracket — left-to-right kills orphan ")", right-to-left orphan "(".
+  const balance = (s: string) => {
+    let depth = 0, a = "";
+    for (const c of s) c === "(" ? (depth++, (a += c)) : c === ")" ? (depth > 0 ? (depth--, (a += c)) : null) : (a += c);
+    depth = 0; let b = "";
+    for (let i = a.length - 1; i >= 0; i--) { const c = a[i]; c === ")" ? (depth++, (b = c + b)) : c === "(" ? (depth > 0 ? (depth--, (b = c + b)) : null) : (b = c + b); }
+    return b;
+  };
+  return balance(
+    query
+      .replace(/\(\s*\)/g, "")
+      .replace(/\b(in|near|for|around)\s*(?=[).,]|\s*$)/gi, "")
+  ).replace(/\s{2,}/g, " ").trim() || "best colleges for this student";
+}
+
+async function webLookup(ai: GoogleGenAI, query: string, p: StudentProfile): Promise<{ answer: string; sources: { title: string; url: string }[] }> {
   const res = await ai.models.generateContent({
     model: TEXT_MODEL,
-    contents: `Answer concisely for a high-school sophomore (2-4 sentences), focusing on student life, culture, and whether they'd fit in: ${query}`,
+    contents: `${cleanWebQuery(query)}\n\n${searchConstraints(p)}\nAnswer concisely (2-5 sentences) for a high-school sophomore. Name specific colleges/programs and be concrete; prefer options that fit the student context above.`,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     config: { tools: [{ googleSearch: {} }] as any, temperature: 0.2 },
   });
@@ -45,6 +89,34 @@ async function webLookup(ai: GoogleGenAI, query: string): Promise<{ answer: stri
     .filter((s) => s.url)
     .slice(0, 4);
   return { answer: res.text ?? "", sources };
+}
+
+// How well our 17 seeded schools actually cover what this student cares about.
+// "thin" = niche interest (e.g. film) we likely lack data for → search-first.
+function seededInterestCoverage(p: StudentProfile): "good" | "thin" | "unknown" {
+  const hasInterest = (p.interestSignals?.length ?? 0) > 0 || p.intendedMajors.length > 0;
+  if (!hasInterest) return "unknown";
+  const best = Math.max(0, ...SCHOOLS.map((s) => scoreInterestFit(p, s).interestFit));
+  return best >= 45 ? "good" : "thin";
+}
+
+// Backstop extractor: the conversational model sometimes replies to a clear fact
+// ("I want to study CS") without calling update_profile, silently losing it. This
+// forces a temperature-0 extraction of ONLY what's stated, used to fill the gap.
+async function backstopExtract(ai: GoogleGenAI, message: string, working: StudentProfile): Promise<Record<string, unknown> | null> {
+  try {
+    const tool = [{ functionDeclarations: [TOOLS[0].functionDeclarations[0]] }]; // update_profile only
+    const res = await ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts explicitly stated in it (a stated major or interest MUST be included). Include nothing that isn't in the message.\n\nStudent: ${message}` }] }],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      config: { tools: tool as any, toolConfig: { functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["update_profile"] } } as any, temperature: 0 },
+    });
+    const call = (res.functionCalls ?? [])[0];
+    return call?.args && typeof call.args === "object" ? (call.args as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
 }
 
 // Plain-language admissions odds from an acceptance rate.
@@ -82,6 +154,9 @@ const TOOLS = [
             state: { type: Type.STRING },
             zip: { type: Type.STRING },
             firstGen: { type: Type.BOOLEAN, description: "true if first in family to attend college" },
+            gpa: { type: Type.STRING, description: 'cumulative GPA if they share it, e.g. "3.8"' },
+            testType: { type: Type.STRING, description: "SAT | ACT | PSAT" },
+            testScore: { type: Type.STRING, description: 'their score, e.g. "1340" (SAT) or "29" (ACT)' },
             intendedMajors: { type: Type.ARRAY, items: { type: Type.STRING } },
             careerGoal: { type: Type.STRING },
             settingPref: { type: Type.STRING, description: "city|suburban|rural|any" },
@@ -124,7 +199,7 @@ const TOOLS = [
       {
         name: "search_universities",
         description:
-          "Present the ranked list of right-fit schools — the student SEES them as interactive cards. This is a BIG reveal, so only call it once the student has agreed to see schools: either they explicitly asked ('what schools should I look at?', 'show me some schools'), or you offered and they said yes. Do NOT call it proactively, and do NOT re-run it every turn.",
+          "THE way to SHOW the student schools — they appear as interactive cards. Use it for ANY interest: it ranks our right-fit schools and, when our data is thin for that interest, automatically pulls real specialized programs from the web too. It's a BIG reveal, so only call it once the student has agreed to see schools (they asked 'show me some schools', or you offered and they said yes). Don't call it proactively or re-run it every turn.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -145,11 +220,11 @@ const TOOLS = [
       {
         name: "web_lookup",
         description:
-          "Search the live web for things our seeded data can't tell you — what campus life and student culture are really like, whether a student with their interests would FIT IN and find their people, clubs/community for a specific passion, vibe and traditions, recent program or admissions news. Use this to add real, current color about belonging and culture for a school the student cares about, or to answer any question our data doesn't cover. Pass a focused query naming the school and what the student cares about.",
+          "Search the live web to ANSWER a question or add color — campus culture / whether they'd FIT IN, a specific school's vibe, current facts (rankings, tuition, deadlines, news), or naming programs beyond our list — WITHOUT showing the card list. (To actually SHOW schools as cards, use search_universities, which already web-enriches itself.) Pass a focused query; the student's location/budget filters apply automatically. Don't use it for numbers search_universities/school_detail already give.",
         parameters: {
           type: Type.OBJECT,
           properties: {
-            query: { type: Type.STRING, description: "focused search, e.g. 'BYU student life for a shy first-gen biology major — clubs, culture, fitting in'" },
+            query: { type: Type.STRING, description: "focused search, e.g. 'best film schools', 'BYU student life for a shy first-gen biology major'" },
             school: { type: Type.STRING, description: "the school it's about, if any" },
           },
           required: ["query"],
@@ -191,22 +266,28 @@ Naturally pick up everything that helps: high school, whether they'd be first-ge
 
 LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"). A single named major (e.g. "biology") is enough to base matches on — you don't need a separate interest.
 
-DON'T BE GREEDY WITH SCHOOLS: presenting the ranked list is a big moment — don't dump it unprompted. Once you have enough to find good matches (name, grade, location, an interest/major), OFFER first, e.g. "I think I've got enough to pull up a few schools that fit — want to see them?" Only call search_universities after they say yes, or if they directly ask to see schools. It's always fine to talk about a school by name or answer a question about ONE specific school (school_detail) — that's helpful info, not the big reveal. Once you've shown the list, don't keep re-running the search every turn; only refresh it if they ask or you offer again.
+DON'T BE GREEDY WITH OUR CARD LIST: the offer-first rule is ONLY about search_universities (our ranked interactive CARDS). Don't dump those unprompted — once you have enough (name, grade, location, an interest/major), OFFER first ("I think I've got enough to pull up a few schools that fit — want to see them?") and call search_universities only after they say yes or directly ask. This gate does NOT apply to web_lookup or school_detail — gathering and sharing info is always fine, so if they ask "where should I look?" for a niche interest, just web_lookup and answer (no need to offer first). Once you've shown the card list, don't re-run the search every turn; only refresh if they ask or you offer again.
+
+SHOWING SCHOOLS = search_universities, ALWAYS: when the student wants to see schools — for ANY interest, niche or not — call search_universities. It shows our closest matches as cards AND, when our data is thin (seededCoverage=thin, e.g. film/fashion/marine biology), automatically adds real specialized programs from the web in the same step. So you never have to choose between cards and the web — one call does both. Use web_lookup only to answer a question or add color without the card list. Always narrow with the hard facts first (location, stay-in-state, budget) — those shape the ranking and the web search automatically.
+
+SAVE FACTS AS YOU GO: the moment the student states a fact — name, grade, high school, city/ZIP, a major or interest, budget, first-gen, AP credit — call update_profile to save it, EVEN IF you also search or web_lookup that same turn. Never let a stated major/interest go unsaved.
+
+GPA & TEST SCORES — ask only when they MATTER: most sophomores don't have test scores yet, so don't interrogate. But the moment the student aims at selective/competitive schools, asks "what are my chances / will I get in", or names a reach school, ask for their GPA and any SAT/ACT/PSAT score (whatever they have) and save it — those drive admissions. Save with update_profile (gpa, testType, testScore). Never re-ask what's in KNOWN SO FAR.
 
 COLLEGE CREDIT: AP / dual-enrollment / IB can save money and time — capture each as a credit item. But ONLY ask about credits if you don't already know them (check KNOWN SO FAR first).
 
 TOOLS — use the RIGHT one, and don't over-call:
 - update_profile: whenever you learn ANY new fact.
-- search_universities: presents the ranked list as cards — only after the student asked to see schools or said yes to your offer (see DON'T BE GREEDY above). Never for a single-school or general question, and not every turn.
+- search_universities: the ONE way to SHOW schools as cards (works for any interest; auto-adds web programs when our data is thin) — only after the student asked or said yes to your offer. Not for a single-school question, and not every turn.
 - school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "would I fit in at Utah?", "my odds at Utah?"). This is how you answer with real numbers.
-- web_lookup: pull LIVE info our data can't give — campus culture/vibe, whether they'd belong & find their people for their specific interest, clubs/community, recent news. Use it to make "would I fit in?" answers real and current; cite naturally ("students online say…"). Don't use it for numbers school_detail already has.
+- web_lookup: to answer a question or add color WITHOUT the card list — culture/fitting-in, a school's vibe, current facts, or naming programs beyond our list. Cite naturally ("students online say…", "according to…"). Don't use it for numbers school_detail already has.
 - find_scholarships: when they ask about scholarships, aid, or paying for college.
 - add_task: real deadlines. If they need aid → key:"fafsa". Don't re-add a task that's already on their list.
 
 USE TOOL RESULTS — being specific is the difference between helpful and useless:
-- After search_universities: name your top 1-2 schools and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason or evidence item. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." Surface a real "watch out" if one came back.
-- After school_detail: lead with how it fits THEIR interests (the match % + a concrete why tied to what they care about) and whether they'd BELONG (student-life signals / what students love it for), then their CHANCES of getting in. Bring up net price + rating as support, not the headline — a sophomore cares about fitting in and getting in at least as much as cost. If there's a caution, say it honestly. If they're asking about culture/vibe/fitting in and you want real color, call web_lookup.
-- After web_lookup: weave the findings into a warm, specific answer about belonging/culture; attribute lightly ("students say…") and never invent details it didn't return.
+- After search_universities: name your top 1-2 cards and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." If the result includes webExtras, ALSO mention those real programs by name ("for dedicated film, USC and Chapman are the standouts"). Surface a real "watch out" if one came back.
+- After school_detail: lead with how it fits THEIR interests (the match % + a concrete why tied to what they care about) and whether they'd BELONG (student-life signals / what students love it for), then their CHANCES of getting in — frame the number as the school's overall acceptance RATE ("they admit about 2 of every 3 applicants"), NOT a personal guarantee of this student's odds. Bring up net price + rating as support, not the headline — a sophomore cares about fitting in and getting in at least as much as cost. If there's a caution, say it honestly. If they're asking about culture/vibe/fitting in and you want real color, call web_lookup.
+- After web_lookup: NAME the specific schools/programs it returned (don't say "some great options" — say which ones and one concrete reason each), or weave in the culture/belonging detail you asked for. Attribute lightly ("students say…", "according to…") and never invent details it didn't return.
 - After find_scholarships: NAME the actual scholarships you got back (don't just say "some options") with a one-line why for each.
 
 NEVER INVENT NUMBERS. Only state stats a tool actually gave you (match %, net price, acceptance odds, RateMyProfessor rating). Do NOT make up admit rates, board-pass rates, salaries, or aid amounts — if you don't have the number, speak qualitatively. Banned filler with no specifics: "super respected", "fantastic choice", "great program", "world-class".
@@ -227,7 +308,7 @@ export interface AgentResult {
 
 // Apply update_profile args onto a working copy so later tools see latest data.
 function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
-  const scalar = ["name", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState"] as const;
+  const scalar = ["name", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
   const wr = w as unknown as Record<string, unknown>;
   for (const k of scalar) if (a[k] !== undefined) wr[k] = a[k];
   if (Array.isArray(a.intendedMajors)) w.intendedMajors = Array.from(new Set([...w.intendedMajors, ...(a.intendedMajors as string[])]));
@@ -262,10 +343,12 @@ export async function runAgent(opts: {
   const toolEvents: ToolEvent[] = [];
   let revealMatches = false;
 
+  normalizeState(working, updates, opts.message, opts.history);
   const completeness = profileCompleteness(working);
   const enoughToSearch =
     !!working.name && !!working.grade && !!(working.city || working.state || working.zip) &&
     (working.interestSignals.length >= 1 || working.intendedMajors.length >= 1);
+  const coverage = seededInterestCoverage(working);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contents: any[] = [
@@ -273,7 +356,7 @@ export async function runAgent(opts: {
     {
       role: "user",
       parts: [{
-        text: `${profileSummary(working)}\nProfile completeness: ${completeness}%. readyToOfferSchools=${enoughToSearch} (if true and they haven't asked to see schools, OFFER — don't auto-present).${opts.speak === false ? " (Reading a spoken transcript — call tools but keep reply empty.)" : ""}\n\nStudent: ${opts.message}`,
+        text: `${profileSummary(working)}\nProfile completeness: ${completeness}%. readyToOfferSchools=${enoughToSearch} (if true and they haven't asked to see schools, OFFER — don't auto-present). seededCoverage=${coverage} (thin = our seeded data is light here; search_universities will automatically add real web programs alongside the cards — still show the cards).${opts.speak === false ? " (Reading a spoken transcript — call tools but keep reply empty.)" : ""}\n\nStudent: ${opts.message}`,
       }],
     },
   ];
@@ -299,10 +382,14 @@ export async function runAgent(opts: {
       const args = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
       let result: unknown = { ok: true };
       try {
-      if (call.name === "update_profile") {
+      // The model occasionally hallucinates a tool name like "default_profile";
+      // if it's clearly a profile save, honor it so the facts aren't lost.
+      const name = call.name === "update_profile" || (call.name !== "search_universities" && /profile/i.test(call.name ?? "")) ? "update_profile" : call.name;
+      if (name === "update_profile") {
         Object.assign(updates, args);
         mergeWorking(working, args);
-      } else if (call.name === "search_universities") {
+        normalizeState(working, updates, opts.message, opts.history);
+      } else if (name === "search_universities") {
         revealMatches = true;
         const ranked = rankInterestMatches(working, 5);
         const top = ranked.map((m) => {
@@ -317,10 +404,19 @@ export async function runAgent(opts: {
             creditFit: m.creditFit.level,
           };
         });
-        result = { matches: top };
-        // Cards the chat renders inline (the student stays in the conversation).
+        // Cards the chat renders inline — ALWAYS shown (the visual payoff).
         toolEvents.push({ kind: "search", label: "Right-fit schools", detail: `${ranked.length} found`, schools: ranked.map((m) => ({ schoolId: m.schoolId, matchPct: m.overallFit })) });
-      } else if (call.name === "school_detail") {
+        // When our seeded list is thin for this interest, the SAME step also pulls
+        // real specialized programs from the web so cards never stand alone.
+        let webExtras;
+        if (seededInterestCoverage(working) === "thin") {
+          const focus = String(args.emphasize || working.intendedMajors[0] || working.interestSignals[0]?.interest || "their interests");
+          const wl = await webLookup(ai, `best colleges and programs for ${focus}`, working);
+          webExtras = { note: `Our card list is the closest local fit; these web-found programs are stronger for ${focus}.`, answer: wl.answer, sources: wl.sources };
+          toolEvents.push({ kind: "web", label: "Also searched the web", detail: focus.slice(0, 40), items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+        }
+        result = { matches: top, ...(webExtras ? { webExtras } : {}) };
+      } else if (name === "school_detail") {
         const sc = resolveSchool(String(args.school ?? ""));
         if (sc) {
           const m = scoreInterestFit(working, sc);
@@ -337,21 +433,23 @@ export async function runAgent(opts: {
         } else {
           result = { error: `No data for "${args.school}". Suggest one of the matched schools instead.` };
         }
-      } else if (call.name === "web_lookup") {
-        const q = String(args.query ?? "").trim();
-        const { answer, sources } = await webLookup(ai, q);
+      } else if (name === "web_lookup") {
+        const q = cleanWebQuery(String(args.query ?? ""));
+        const { answer, sources } = await webLookup(ai, q, working);
         result = { answer, sources };
         toolEvents.push({ kind: "web", label: "Searching the web", detail: String(args.school || q).slice(0, 48), items: sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
-      } else if (call.name === "find_scholarships") {
+      } else if (name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };
         toolEvents.push({ kind: "scholarship", label: "Scholarships for you", detail: `${found.length} found`, items: found.map((f) => ({ title: f.name, sub: f.why })) });
-      } else if (call.name === "add_task") {
+      } else if (name === "add_task") {
         const t = makeTask(args as { key?: string; title?: string; detail?: string; due?: string }, working.grade);
         tasks.push(t);
         working.tasks.push(t);
         result = { added: { title: t.title, due: t.due } };
         toolEvents.push({ kind: "task", label: "Added to your tasks", detail: t.title });
+      } else {
+        result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, web_lookup, find_scholarships, add_task.` };
       }
       } catch (err) {
         // A malformed tool call shouldn't crash the turn — tell the model and move on.
@@ -361,6 +459,28 @@ export async function runAgent(opts: {
       responseParts.push({ functionResponse: { name: call.name, response: result as object } });
     }
     contents.push({ role: "user", parts: responseParts });
+  }
+
+  // Data-loss backstop: if this turn captured no major/interest but the student
+  // said something substantive, force an extraction and apply it ONLY if it found
+  // a major/interest (so we never lose a stated fact, and never add noise).
+  if (!updates.intendedMajors && !updates.interestSignals && opts.message.trim().length >= 12) {
+    const extra = await backstopExtract(ai, opts.message, working);
+    if (extra && (extra.intendedMajors || extra.interestSignals)) {
+      Object.assign(updates, extra);
+      mergeWorking(working, extra);
+    }
+  }
+
+  // Never leave the student with silence: if the model only called tools and never
+  // spoke, do one final text-only pass (skipped for voice extraction, which wants no reply).
+  if (!reply.trim() && opts.speak !== false) {
+    const res = await ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents,
+      config: { systemInstruction: systemPrompt(), temperature: 0.6 },
+    });
+    reply = (res.text ?? "").trim() || "Got it! Tell me a little more and I'll help you find schools that fit.";
   }
 
   return { reply, updates, tasks, revealMatches, toolsUsed, toolEvents };

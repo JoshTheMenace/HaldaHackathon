@@ -139,6 +139,12 @@ export function scoreInterestFit(
       scholarshipFit * w.scholarship + creditFit.score * w.credit + familyFit * w.family) / wSum;
   let overallFit = signals.length ? clamp(blended) : baselineFit;
 
+  // Real student sentiment (RateMyProfessor) as a light differentiator: nudges
+  // a better-loved school ahead so near-identical schools don't show the exact
+  // same % — and it's a signal students actually care about. ±~2 pts.
+  const rmp = ratingFor(school.id);
+  if (rmp) overallFit = clamp(overallFit + (rmp.overall - 3.8) * 2.5);
+
   // "Stay close to home" preference: strongly float in-state schools up and push
   // out-of-state ones down, so the list honors what the student actually asked for.
   if (p.stayInState && p.state) {
@@ -159,7 +165,7 @@ export function scoreInterestFit(
     affordabilityFit,
     scholarshipFit,
     creditFit,
-    rating: ratingFor(school.id),
+    rating: rmp,
     reasons: dedupe(reasons).slice(0, 4),
     concerns: dedupe(concerns).slice(0, 2),
     nextQuestions: dedupe(nextQuestions).slice(0, 2),

@@ -444,14 +444,16 @@
 .phone .orb .orb-core { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(140deg,#16b89e,#064a40); color: #eafff7; box-shadow: 0 14px 34px -10px rgba(10,107,94,.7); transition: transform .2s; position: relative; z-index: 2; }
 .phone .orb.speak .orb-core { animation: orbpulse 1s ease-in-out infinite; }
 .phone .orb .orb-core .material-symbols-outlined { font-size: 40px; font-variation-settings: 'FILL' 1; }
-.phone .orb .ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--h-primary-c); opacity: .5; }
+.phone .orb .ring { position: absolute; inset: 0; width: auto; height: auto; border-radius: 50%; border: 2px solid var(--h-primary-c); opacity: .5; }
 .phone .orb .ring.r1 { animation: orbring 1.8s ease-out infinite; }
 .phone .orb .ring.r2 { animation: orbring 1.8s ease-out infinite .4s; }
 @keyframes orbring { 0% { transform: scale(.85); opacity: .5; } 100% { transform: scale(1.45); opacity: 0; } }
 @keyframes orbpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 .phone .voice-label { margin-top: 18px; font-size: 17px; font-weight: 800; color: var(--h-ink); letter-spacing: -.01em; }
 .phone .voice-sub { font-size: 12px; color: var(--h-outline); margin-top: 4px; }
-.phone .voice-transcript { margin-top: 18px; width: 100%; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 16px; padding: 14px; font-size: 13.5px; line-height: 1.5; box-shadow: var(--h-soft); }
+.phone .voice-transcript { margin-top: 18px; width: 100%; max-height: 240px; overflow-y: auto; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 16px; padding: 14px; font-size: 13.5px; line-height: 1.5; box-shadow: var(--h-soft); scrollbar-width: none; }
+.phone .voice-transcript::-webkit-scrollbar { display: none; }
+.phone .voice-transcript p.live { opacity: .6; }
 .phone .voice-transcript p { margin-bottom: 6px; }
 .phone .voice-transcript p:last-child { margin-bottom: 0; }
 .phone .voice-transcript b { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--h-primary); margin-right: 6px; }

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { Icon } from "./Icon";
 import VoiceView from "./VoiceView";
 import ChatSchoolCard from "./ChatSchoolCard";
 import MatchDetailSheet from "./MatchDetailSheet";
 
-const SUGGESTIONS = ["Next deadline?", "Scholarships for me", "Why BYU?", "Boost my GPA"];
 const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language" };
 
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -15,8 +14,24 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [input, setInput] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const threadRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // The guide's latest text message (skip tool chips) — what we suggest replies to.
+  const lastAi = useMemo(() => [...messages].reverse().find((m) => m.role !== "student" && !m.tool), [messages]);
+
+  // After each guide turn, ask a small model for tappable replies — but only when
+  // the question has a few natural choices (it returns [] for open-ended ones).
+  useEffect(() => {
+    if (mode !== "chat" || typing || !lastAi?.text) return;
+    let cancelled = false;
+    fetch("/api/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: lastAi.text }) })
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setSuggestions(Array.isArray(d.suggestions) ? d.suggestions : []); })
+      .catch(() => { if (!cancelled) setSuggestions([]); });
+    return () => { cancelled = true; };
+  }, [lastAi?.id, lastAi?.text, typing, mode]);
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
@@ -34,6 +49,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
     if (!t) return;
     send(t, "web");
     setInput("");
+    setSuggestions([]); // stale once the student replies
   };
 
   return (
@@ -105,11 +121,13 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
 
         {mode === "chat" && (
           <div className="ai-foot">
-            <div className="ai-sugg">
-              {SUGGESTIONS.map((s) => (
-                <b key={s} onClick={() => submit(s)}>{s}</b>
-              ))}
-            </div>
+            {suggestions.length > 0 && (
+              <div className="ai-sugg">
+                {suggestions.map((s) => (
+                  <b key={s} onClick={() => submit(s)}>{s}</b>
+                ))}
+              </div>
+            )}
             <div className="ai-inp">
               <input
                 ref={inputRef}

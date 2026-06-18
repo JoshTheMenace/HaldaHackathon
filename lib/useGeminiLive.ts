@@ -2,7 +2,6 @@
 
 import { useCallback, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
-import { HALDA_SYSTEM } from "./halda-prompt";
 
 // ── PCM helpers ───────────────────────────────────────────────────────────────
 function floatToPcm16Base64(float32: Float32Array): string {
@@ -31,17 +30,27 @@ function base64ToFloat32(b64: string): Float32Array {
   return out;
 }
 
-const VOICE_SYSTEM =
-  HALDA_SYSTEM.split("OUTPUT:")[0] +
-  "\nThis is a SPOKEN conversation — talk naturally and conversationally, like a real call. Keep replies short (1-2 sentences), one question at a time. Do not output JSON or read formatting aloud.";
+// Lean, spoken-conversation prompt (NOT the big JSON-extraction system prompt).
+// `facts` is what we already know, so Halda never re-asks.
+function voiceSystem(facts: string): string {
+  return `You are Halda, a warm, encouraging AI college guide for high-school students (mostly sophomores). This is a SPOKEN phone call: talk naturally, 1-2 short sentences, ONE question at a time. Never output JSON or read formatting aloud.
+
+Your job: learn what they care about (their interests and WHY), their location and budget, and help them find colleges that fit.
+
+- NEVER re-ask something you already know. ${facts}
+- Infer city/state from their high school or ZIP (e.g. "Timpview High" or "84604" → Provo, UT) — don't ask where a local school they named is.
+- Be specific and honest; never invent numbers or admit rates.`;
+}
 
 export type VoiceStatus = "idle" | "connecting" | "live" | "speaking" | "error";
+export interface VoiceTurn { role: "you" | "halda"; text: string }
 
 export interface UseGeminiLive {
   status: VoiceStatus;
   error: string | null;
   userText: string;
   haldaText: string;
+  transcript: VoiceTurn[];
   start: () => Promise<void>;
   stop: () => void;
   muted: boolean;
@@ -54,11 +63,13 @@ const LIVE_MODEL =
 export function useGeminiLive(opts: {
   onUserTurn?: (text: string) => void; // final user transcript → extraction
   onHaldaTurn?: (text: string) => void;
+  knownFacts?: string; // "KNOWN SO FAR: …" injected so Halda doesn't re-ask
 }): UseGeminiLive {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [userText, setUserText] = useState("");
   const [haldaText, setHaldaText] = useState("");
+  const [transcript, setTranscript] = useState<VoiceTurn[]>([]);
   const [muted, setMuted] = useState(false);
 
   const sessionRef = useRef<Session | null>(null);
@@ -100,11 +111,14 @@ export function useGeminiLive(opts: {
     procRef.current = null; streamRef.current = null;
     micCtxRef.current = null; outCtxRef.current = null; sessionRef.current = null;
     playHeadRef.current = 0;
+    uBufRef.current = ""; hBufRef.current = "";
+    setUserText(""); setHaldaText("");
     setStatus("idle");
   }, []);
 
   const start = useCallback(async () => {
     setError(null);
+    setTranscript([]);
     setStatus("connecting");
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) { setError("Missing NEXT_PUBLIC_GEMINI_API_KEY in .env.local."); setStatus("error"); return; }
@@ -148,7 +162,7 @@ export function useGeminiLive(opts: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          systemInstruction: VOICE_SYSTEM,
+          systemInstruction: voiceSystem(opts.knownFacts || "KNOWN SO FAR: nothing yet"),
         },
         callbacks: {
           onopen: () => setStatus("live"),
@@ -167,9 +181,12 @@ export function useGeminiLive(opts: {
             if (sc?.turnComplete) {
               const u = uBufRef.current.trim();
               const h = hBufRef.current.trim();
+              // Append finalized turns in spoken order → a real timeline.
+              setTranscript((cur) => [...cur, ...(u ? [{ role: "you" as const, text: u }] : []), ...(h ? [{ role: "halda" as const, text: h }] : [])]);
               if (u) opts.onUserTurn?.(u);
               if (h) opts.onHaldaTurn?.(h);
               uBufRef.current = ""; hBufRef.current = "";
+              setUserText(""); setHaldaText("");
             }
           },
           onerror: (e: any) => { setError(`Couldn't reach Gemini Live. On Firefox this is usually an ad-blocker or strict Tracking Protection blocking the connection — try Chrome, or turn off tracking protection (shield icon) for this site. (${e?.message || "connection failed"})`); setStatus("error"); },
@@ -197,8 +214,12 @@ export function useGeminiLive(opts: {
       proc.connect(micCtx.destination);
 
       // Greet first so there's always audio even before the user speaks.
+      // Adapt: ask the name only if we don't already know it.
+      const knowName = /name=/.test(opts.knownFacts || "");
       session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text: "Greet me warmly in one sentence and ask my name." }] }],
+        turns: [{ role: "user", parts: [{ text: knowName
+          ? "Greet me warmly by name in one sentence and pick up where we left off with one question."
+          : "Greet me warmly in one sentence and ask my name." }] }],
         turnComplete: true,
       });
     } catch (e) {
@@ -213,5 +234,5 @@ export function useGeminiLive(opts: {
     setMuted(mutedRef.current);
   }, []);
 
-  return { status, error, userText, haldaText, start, stop, muted, toggleMute };
+  return { status, error, userText, haldaText, transcript, start, stop, muted, toggleMute };
 }

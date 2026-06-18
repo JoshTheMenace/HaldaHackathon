@@ -62,6 +62,34 @@ export function resolveZip(
   return null;
 }
 
+// US state name → USPS abbreviation, so "stay in Utah" reliably yields state="UT".
+const STATE_ABBR: Record<string, string> = {
+  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+  colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+  hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA", kansas: "KS",
+  kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD", massachusetts: "MA",
+  michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO", montana: "MT",
+  nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
+  "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
+  ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
+  "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX",
+  utah: "UT", vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV",
+  wisconsin: "WI", wyoming: "WY",
+};
+const ABBRS = new Set(Object.values(STATE_ABBR));
+
+// Pull a state abbreviation out of free text, e.g. "I want to stay in Utah" → "UT".
+export function stateFromText(text?: string): string | undefined {
+  if (!text) return undefined;
+  const lc = text.toLowerCase();
+  for (const [name, abbr] of Object.entries(STATE_ABBR)) {
+    if (new RegExp(`\\b${name}\\b`).test(lc)) return abbr;
+  }
+  const m = text.match(/\b([A-Z]{2})\b/);
+  if (m && ABBRS.has(m[1])) return m[1];
+  return undefined;
+}
+
 export function haversineMi(a: LatLng, b: LatLng): number {
   const R = 3958.8;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;

@@ -443,8 +443,9 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
         const setMsgs = channel === "sms" ? setSmsMessages : setMessages;
         setMsgs((cur) => [
           ...cur,
-          ...toolMsgs,
+          // Halda's words first, then the cards/chips she's referring to.
           { id: `h${nid()}`, role: "halda", channel, text: d.reply || "Got it. 👍", chips, ts: Date.now() },
+          ...toolMsgs,
         ]);
       } catch {
         setT(false);

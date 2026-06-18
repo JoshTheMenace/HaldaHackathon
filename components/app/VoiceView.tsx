@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useGeminiLive } from "@/lib/useGeminiLive";
 import { useHalda } from "@/lib/useHalda";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
+import { profileSummary } from "@/lib/halda-prompt";
 import { Icon } from "./Icon";
 import { CampusPhoto, SchoolLogo } from "./SchoolImage";
 
@@ -12,10 +13,17 @@ export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string
   const live = useGeminiLive({
     onUserTurn: (t) => ingestVoiceUser(t),
     onHaldaTurn: (t) => pushHaldaMessage(t, "voice"),
+    knownFacts: profileSummary(profile),
   });
+  const tRef = useRef<HTMLDivElement>(null);
 
   // Always release the mic / live session when leaving voice.
   useEffect(() => () => live.stop(), [live.stop]);
+
+  // Keep the timeline pinned to the newest line.
+  useEffect(() => {
+    tRef.current?.scrollTo({ top: tRef.current.scrollHeight, behavior: "smooth" });
+  }, [live.transcript, live.userText, live.haldaText]);
 
   const matches = useMemo(() => (matchesRevealed ? rankInterestMatches(profile, 6) : []), [matchesRevealed, profile]);
   const active = live.status === "live" || live.status === "speaking";
@@ -39,10 +47,13 @@ export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string
       <div className="voice-label">{label}</div>
       <div className="voice-sub">Gemini Live · talk through your whole plan</div>
 
-      {(live.userText || live.haldaText) && (
-        <div className="voice-transcript">
-          {live.haldaText && <p><b>Halda</b> {live.haldaText}</p>}
-          {live.userText && <p className="you"><b>You</b> {live.userText}</p>}
+      {(live.transcript.length > 0 || live.userText || live.haldaText) && (
+        <div className="voice-transcript" ref={tRef}>
+          {live.transcript.map((t, i) => (
+            <p key={i} className={t.role === "you" ? "you" : ""}><b>{t.role === "you" ? "You" : "Halda"}</b> {t.text}</p>
+          ))}
+          {live.userText && <p className="you live"><b>You</b> {live.userText}</p>}
+          {live.haldaText && <p className="live"><b>Halda</b> {live.haldaText}</p>}
         </div>
       )}
 

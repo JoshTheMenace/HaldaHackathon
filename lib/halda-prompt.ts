@@ -50,6 +50,9 @@ export interface ProfileUpdates {
   maxBudget?: number;
   needsAid?: boolean;
   stayInState?: boolean;
+  gpa?: string;
+  testType?: string;
+  testScore?: string;
   interestSignals?: {
     interest: string;
     intent: string;
@@ -74,16 +77,20 @@ export interface HaldaReply {
 
 // Compact profile summary so the model has memory of what it already knows.
 export function profileSummary(p: {
-  name?: string; grade?: number; city?: string; state?: string;
+  name?: string; grade?: number; city?: string; state?: string; zip?: string; highSchool?: string;
   intendedMajors?: string[]; settingPref?: string; sizePref?: string;
   needsAid?: boolean; maxBudget?: number; careerGoal?: string; stayInState?: boolean;
+  gpa?: string; testType?: string; testScore?: string;
   interestSignals?: { interest: string; intent: string; importance: string }[];
   creditWallet?: { source: string; status: string; score?: string }[];
 }): string {
   const parts: string[] = [];
   if (p.name) parts.push(`name=${p.name}`);
   if (p.grade) parts.push(`grade=${p.grade}`);
-  if (p.city || p.state) parts.push(`location=${[p.city, p.state].filter(Boolean).join(", ")}`);
+  if (p.highSchool) parts.push(`highSchool=${p.highSchool}`);
+  if (p.city || p.state || p.zip) parts.push(`location=${[p.city, p.state].filter(Boolean).join(", ")}${p.zip ? ` ${p.zip}` : ""}`);
+  if (p.gpa) parts.push(`gpa=${p.gpa}`);
+  if (p.testScore) parts.push(`${p.testType || "test"}=${p.testScore}`);
   if (p.intendedMajors?.length) parts.push(`majors=${p.intendedMajors.join("/")}`);
   if (p.careerGoal) parts.push(`goal=${p.careerGoal}`);
   if (p.settingPref) parts.push(`setting=${p.settingPref}`);

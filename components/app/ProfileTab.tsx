@@ -9,6 +9,15 @@ import { initials, gradeLabel, dueLabel } from "./helpers";
 
 const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
 const CREDIT_TYPE: Record<string, string> = { ap: "AP", dual_enrollment: "Dual enrollment", ib: "IB", honors: "Honors", clep: "CLEP" };
+const INTENT_LABEL: Record<string, string> = { career_path: "career", major: "major", serious_extracurricular: "serious", community: "community", fan_culture: "fan", personal_hobby: "hobby" };
+
+const cap = (s?: string) => (s && s !== "any" ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+const poolLocation = (p: { city?: string; state?: string; zip?: string }) =>
+  [[p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" ");
+const poolInterests = (p: { interestSignals: { interest: string; intent: string }[]; interests: string[] }) =>
+  p.interestSignals.length
+    ? p.interestSignals.map((s) => `${cap(s.interest)} (${INTENT_LABEL[s.intent] || s.intent})`).join(", ")
+    : p.interests.map(cap).join(", ");
 
 export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
   const { profile, toggleTask, editField } = useHalda();
@@ -147,11 +156,22 @@ export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
             <Icon name="expand_more" className="chev" />
           </div>
           <div className={`kbody${poolOpen ? " open" : ""}`}>
-            <p className="kintro">Verified data we use to personalize your matches.</p>
+            <p className="kintro">Everything Halda has learned to personalize your matches. Blanks are what she&apos;ll ask about next.</p>
             <div className="kbody-inner">
               <ReadField label="Current Grade" value={gradeLabel(profile.grade)} />
+              <ReadField label="Location" value={poolLocation(profile)} />
+              <ReadField label="High School" value={profile.highSchool ?? ""} />
+              <ReadField label="Interests" value={poolInterests(profile)} />
               <EditField label="Intended Major" value={profile.intendedMajors[0] ?? ""} onSave={(v) => editField("intendedMajors", v ? [v] : [])} />
               <EditField label="Career Goal" value={profile.careerGoal ?? ""} onSave={(v) => editField("careerGoal", v)} />
+              <EditField label="Cumulative GPA" value={profile.gpa ?? ""} onSave={(v) => editField("gpa", v)} />
+              <EditField label={`${profile.testType || "Test"} Score`} value={profile.testScore ?? ""} onSave={(v) => editField("testScore", v)} />
+              <ReadField label="Stay Close to Home" value={profile.stayInState ? `Yes — ${profile.state || "in-state"}` : profile.stayInState === false ? "Open to anywhere" : ""} />
+              <ReadField label="Campus Setting" value={cap(profile.settingPref)} />
+              <ReadField label="Campus Size" value={cap(profile.sizePref)} />
+              <ReadField label="Budget" value={profile.maxBudget ? `~$${profile.maxBudget.toLocaleString()}/yr` : ""} />
+              <ReadField label="Financial Aid" value={profile.needsAid === true ? "Needs aid" : profile.needsAid === false ? "Not needed" : ""} />
+              <ReadField label="First-Generation" value={profile.firstGen === true ? "Yes" : profile.firstGen === false ? "No" : ""} />
             </div>
           </div>
         </section>
