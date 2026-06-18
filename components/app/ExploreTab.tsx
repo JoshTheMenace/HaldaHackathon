@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { tr } from "@/lib/i18n";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
@@ -12,6 +12,9 @@ import MatchDetailSheet from "./MatchDetailSheet";
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const roiLabel = (fit: number, es: boolean) => fit >= 85 ? (es ? "Muy alineado" : "Strong Alignment") : fit >= 70 ? (es ? "Buen valor" : "Good Value") : (es ? "Vale revisarla" : "Worth a Look");
+type ScorecardFacts = { acceptanceRate?: number; netPrice?: number; completionRate?: number };
+const pct = (n?: number) => (n == null ? "—" : `${Math.round(n * 100)}%`);
+const money = (n?: number) => (n == null ? "—" : `$${Math.round(n).toLocaleString()}`);
 
 export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }) {
   const { profile, toggleSavedSchool, language } = useHalda();
@@ -20,9 +23,21 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
   const [idx, setIdx] = useState(0);
   const [gone, setGone] = useState<"" | "left" | "right">("");
   const [detail, setDetail] = useState<string | null>(null);
+  const [facts, setFacts] = useState<Record<string, ScorecardFacts | null>>({});
 
   const current = deck[idx];
   const saved = profile.savedSchoolIds ?? [];
+
+  useEffect(() => {
+    const s = current ? schoolById(current.schoolId) : null;
+    if (!s || current.schoolId in facts) return;
+    const ctrl = new AbortController();
+    fetch(`/api/school-scorecard?school=${encodeURIComponent(s.name)}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((d) => setFacts((cur) => ({ ...cur, [s.id]: d.scorecard ?? null })))
+      .catch(() => { if (!ctrl.signal.aborted) setFacts((cur) => ({ ...cur, [s.id]: null })); });
+    return () => ctrl.abort();
+  }, [current, facts]);
 
   const swipe = (dir: "left" | "right") => {
     if (!current || gone) return;
@@ -51,7 +66,7 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
           <div className="stack">
             <div className="behind b2" />
             <div className="behind" />
-            <SwipeCard m={current} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} onSwipe={swipe} es={language === "es"} />
+            <SwipeCard m={current} facts={facts[current.schoolId]} gone={gone} tags={tagsFor(current)} onView={() => setDetail(current.schoolId)} onSwipe={swipe} es={language === "es"} />
           </div>
 
           <div className="ctrl">
@@ -94,7 +109,7 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
   );
 }
 
-function SwipeCard({ m, gone, tags, onView, onSwipe, es }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void; onSwipe: (dir: "left" | "right") => void; es: boolean }) {
+function SwipeCard({ m, facts, gone, tags, onView, onSwipe, es }: { m: InterestAlignedSchoolScore; facts?: ScorecardFacts | null; gone: string; tags: string[]; onView: () => void; onSwipe: (dir: "left" | "right") => void; es: boolean }) {
   const s = schoolById(m.schoolId)!;
   const startX = useRef<number | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -108,7 +123,11 @@ function SwipeCard({ m, gone, tags, onView, onSwipe, es }: { m: InterestAlignedS
     <article
       className={`swcard photo${gone ? " gone-" + gone : ""}`}
       style={gone || !dragX ? undefined : { transform: `translateX(${dragX}px) rotate(${dragX / 18}deg)`, transition: "none" }}
-      onPointerDown={(e) => { startX.current = e.clientX; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); }}
+      onPointerDown={(e) => {
+        if ((e.target as HTMLElement).closest("button,a,input,textarea,select")) return;
+        startX.current = e.clientX;
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      }}
       onPointerMove={(e) => { if (startX.current != null) setDragX(e.clientX - startX.current); }}
       onPointerUp={(e) => endDrag(e.clientX)}
       onPointerCancel={() => { startX.current = null; setDragX(0); }}
@@ -123,6 +142,11 @@ function SwipeCard({ m, gone, tags, onView, onSwipe, es }: { m: InterestAlignedS
           <span className="matchpill">{m.overallFit}% {es ? "Coincide" : "Match"}</span>
         </div>
         <p className="roi">ROI: <b>{roiLabel(m.overallFit, es)}</b></p>
+        <div className="sw-facts">
+          <span><b>{pct(facts?.acceptanceRate ?? s.acceptanceRate)}</b>{es ? " admisión" : " admit"}</span>
+          <span><b>{money(facts?.netPrice ?? s.netPrice)}</b>{es ? " neto" : " net"}</span>
+          <span><b>{pct(facts?.completionRate)}</b>{es ? " grad." : " grad"}</span>
+        </div>
         {m.rating && (
           <div className="sw-rating">
             <Icon name="star" className="st" />

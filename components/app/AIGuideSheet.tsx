@@ -8,7 +8,7 @@ import VoiceView from "./VoiceView";
 import ChatSchoolCard from "./ChatSchoolCard";
 import MatchDetailSheet from "./MatchDetailSheet";
 
-const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language" };
+const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language", video: "play_circle" };
 
 // Web sources come back as opaque Google grounding-redirect URLs with duplicate
 // titles. Show a clean publisher domain instead, deduped and capped — never the
@@ -146,6 +146,25 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                               </span>
                             )}
                           </div>
+                        ))}
+                      </div>
+                    )}
+                    {m.tool.videos && m.tool.videos.length > 0 && (
+                      <div className="tool-videos">
+                        {m.tool.videos.map((v) => (
+                          <a key={v.url} className="tool-video-card" href={v.url} target="_blank" rel="noopener noreferrer">
+                            <span className="tv-thumb">
+                              {v.thumbnailUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={v.thumbnailUrl} alt="" />
+                              ) : <Icon name="smart_display" />}
+                              <i><Icon name="play_arrow" /></i>
+                            </span>
+                            <span className="tv-b">
+                              <b>{v.title}</b>
+                              {v.sub && <span>{v.sub}</span>}
+                            </span>
+                          </a>
                         ))}
                       </div>
                     )}

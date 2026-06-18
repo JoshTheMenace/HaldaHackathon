@@ -1,12 +1,25 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { scoreInterestFit, schoolById } from "@/lib/interest-match";
 import { Icon } from "./Icon";
 import { CampusPhoto } from "./SchoolImage";
 
 const C = 276.46; // 2πr, r=44
+type ScorecardFacts = {
+  location?: string;
+  acceptanceRate?: number;
+  netPrice?: number;
+  undergradSize?: number;
+  completionRate?: number;
+  medianEarnings?: number;
+  source: string;
+};
+
+const pct = (n?: number) => (n == null ? "—" : `${Math.round(n * 100)}%`);
+const money = (n?: number) => (n == null ? "—" : `$${Math.round(n).toLocaleString()}`);
+const count = (n?: number) => (n == null ? "—" : Math.round(n).toLocaleString());
 
 // Shared school detail sheet used by both Explore and the AI Guide chat.
 export default function MatchDetailSheet({ schoolId, onClose, onAsk }: { schoolId: string | null; onClose: () => void; onAsk: (t?: string) => void }) {
@@ -15,6 +28,21 @@ export default function MatchDetailSheet({ schoolId, onClose, onAsk }: { schoolI
   const s = schoolId ? schoolById(schoolId) : null;
   const m = useMemo(() => (s ? scoreInterestFit(profile, s) : null), [profile, s]);
   const saved = schoolId ? (profile.savedSchoolIds?.includes(schoolId) ?? false) : false;
+  const [facts, setFacts] = useState<ScorecardFacts | null>(null);
+  const [factsLoading, setFactsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!s) { setFacts(null); return; }
+    const ctrl = new AbortController();
+    setFactsLoading(true);
+    setFacts(null);
+    fetch(`/api/school-scorecard?school=${encodeURIComponent(s.name)}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((d) => setFacts(d.scorecard ?? null))
+      .catch(() => { if (!ctrl.signal.aborted) setFacts(null); })
+      .finally(() => { if (!ctrl.signal.aborted) setFactsLoading(false); });
+    return () => ctrl.abort();
+  }, [s]);
 
   const academic = (m?.interestFit ?? 0) >= 60;
   const financial = (m?.affordabilityFit ?? 0) >= 60;
@@ -57,6 +85,24 @@ export default function MatchDetailSheet({ schoolId, onClose, onAsk }: { schoolI
               <div className="insight-eyebrow"><Icon name="auto_awesome" />AI Insight</div>
               <p className="insight-text">{insight}</p>
             </div>
+            <div className="scorecard-panel">
+              <div className="scorecard-head">
+                <span><Icon name="query_stats" />Official Scorecard facts</span>
+                <small>{facts ? facts.source : factsLoading ? "Loading..." : "Catalog fallback"}</small>
+              </div>
+              <div className="fact-grid">
+                <Fact label="Acceptance" value={pct(facts?.acceptanceRate ?? s.acceptanceRate)} />
+                <Fact label="Avg net price" value={money(facts?.netPrice ?? s.netPrice)} />
+                <Fact label="Undergrads" value={count(facts?.undergradSize)} fallback={cap(s.size)} />
+                <Fact label="Grad rate" value={pct(facts?.completionRate)} />
+                <Fact label="Earnings" value={money(facts?.medianEarnings)} sub="10 yrs" />
+                <Fact label="Setting" value={cap(s.setting)} />
+              </div>
+              <div className="program-list">
+                <b>Strong areas</b>
+                <span>{s.strongMajors.join(" · ")}</span>
+              </div>
+            </div>
             <div className="detail-actions">
               <button className={`tour-btn${saved ? " saved" : ""}`} onClick={() => toggleSavedSchool(s.id)}>
                 <Icon name={saved ? "favorite" : "favorite_border"} /> {saved ? "Saved" : "Save"}
@@ -70,6 +116,16 @@ export default function MatchDetailSheet({ schoolId, onClose, onAsk }: { schoolI
   );
 }
 
+function Fact({ label, value, fallback, sub }: { label: string; value: string; fallback?: string; sub?: string }) {
+  return (
+    <div className="fact">
+      <span>{label}</span>
+      <b>{value === "—" && fallback ? fallback : value}</b>
+      {sub && <small>{sub}</small>}
+    </div>
+  );
+}
+
 function FitPill({ icon, label, ok }: { icon: string; label: string; ok: boolean }) {
   return (
     <div className="fitpill">
@@ -79,3 +135,5 @@ function FitPill({ icon, label, ok }: { icon: string; label: string; ok: boolean
     </div>
   );
 }
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

@@ -8,6 +8,7 @@ import { findScholarships } from "./scholarships";
 import { resolveZip, stateFromText, stateNameFromText } from "./geo";
 import { scorecardLookup } from "./scorecard";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
+import { findVirtualTourVideo } from "./youtube";
 
 // Capture location passively from whatever the student says — a spelled-out
 // state, a "stay in X" line, or a ZIP — on EVERY message, not just when they
@@ -329,6 +330,15 @@ const TOOLS = [
         },
       },
       {
+        name: "virtual_tour",
+        description: "Find a YouTube virtual/campus tour video for ONE specific school the student is considering; do not use for broad discovery.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: { school: { type: Type.STRING, description: "The specific school, e.g. BYU or Utah Valley University" } },
+          required: ["school"],
+        },
+      },
+      {
         name: "find_scholarships",
         description: "Find scholarships matching this student.",
         parameters: { type: Type.OBJECT, properties: {} },
@@ -359,7 +369,7 @@ Help each student figure out where they belong. Lead with what they actually cam
 
 Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, transfer status, full-time work, current college, associate degree, country, visa need, international aid need, or schools they want to compare — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid, comparison lists in targetSchools), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
 
-You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, or add a task, do it in the SAME turn. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
+You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find a YouTube virtual tour for a specific school, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, find a tour, or add a task, do it in the SAME turn. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. Only offer or use virtual_tour when the student is thinking about one particular school; do not offer campus-tour videos during broad discovery or generic matching. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
 
 Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure you weren't given. Before you claim a school fits a budget, an aid need, or an eligibility rule (transfer credits, international/visa, in-state cost), confirm it with a tool rather than guessing — and if money is tight, surface real aid and add the FAFSA step.`;
 }
@@ -587,6 +597,23 @@ export async function runAgent(opts: {
         const { answer, sources } = await webLookup(ai, q, working);
         result = { answer, sources };
         toolEvents.push({ kind: "web", label: "Searching the web", detail: String(args.school || q).slice(0, 48), items: sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+      } else if (name === "virtual_tour") {
+        const requested = String(args.school ?? "").trim();
+        const sc = resolveSchool(requested);
+        const school = sc?.name ?? requested;
+        const video = await findVirtualTourVideo(school);
+        result = video;
+        toolEvents.push({
+          kind: "video",
+          label: `YouTube virtual tour`,
+          detail: sc?.short ?? school.slice(0, 24),
+          videos: [{
+            title: video.title,
+            sub: video.isSearchFallback ? "Open YouTube search results" : [video.channel, "Campus tour"].filter(Boolean).join(" · "),
+            url: video.url,
+            thumbnailUrl: video.thumbnailUrl,
+          }],
+        });
       } else if (name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };
@@ -598,7 +625,7 @@ export async function runAgent(opts: {
         result = { added: { title: t.title, due: t.due } };
         toolEvents.push({ kind: "task", label: "Added to your tasks", detail: t.title });
       } else {
-        result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, web_lookup, find_scholarships, add_task.` };
+        result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, compare_schools, web_lookup, virtual_tour, find_scholarships, add_task.` };
       }
       if (name !== "update_profile" && cached === undefined) callCache.set(sig, result);
       } catch (err) {

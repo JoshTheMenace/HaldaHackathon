@@ -206,7 +206,7 @@ export interface Lead {
 export type Role = "halda" | "student" | "system";
 
 // A visible "the agent is doing something" line in the chat (function calls).
-export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school" | "web" | "compare";
+export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school" | "web" | "compare" | "video";
 export interface ToolEvent {
   kind: ToolKind;
   label: string; // "Searching right-fit schools"
@@ -214,6 +214,7 @@ export interface ToolEvent {
   items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships, web sources)
   schools?: { schoolId: string; matchPct: number }[]; // search results → interactive cards
   media?: { title: string; sub?: string; imageUrl: string; logoUrl?: string }[]; // arbitrary live school media cards
+  videos?: { title: string; sub?: string; url: string; thumbnailUrl?: string }[]; // YouTube / virtual tour cards
 }
 
 export interface ChatMessage {

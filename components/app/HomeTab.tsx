@@ -71,7 +71,6 @@ export default function HomeTab({ onAsk, onGoExplore }: { onAsk: (text?: string)
 
       <div className="sec-head baseline">
         <h2>{t("home.schedule", "My Schedule")}</h2>
-        <button className="link plain" onClick={onGoExplore}>{t("home.viewCalendar", "View Calendar")}</button>
       </div>
 
       <section className="card sched">

@@ -2,23 +2,29 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Keyboard, SendHorizonal, Mic, Search, PiggyBank, CheckCircle2, UserCog } from "lucide-react";
+import { Keyboard, SendHorizonal, Mic, Search, PiggyBank, CheckCircle2, UserCog, PlayCircle } from "lucide-react";
 import { useHalda } from "@/lib/useHalda";
 import type { ToolEvent } from "@/lib/types";
 import { GuideStar } from "./brand";
 import VoiceMode from "./VoiceMode";
 
-const TOOL_ICON: Record<string, typeof Search> = { search: Search, scholarship: PiggyBank, task: CheckCircle2, profile: UserCog };
+const TOOL_ICON: Record<string, typeof Search> = { search: Search, scholarship: PiggyBank, task: CheckCircle2, profile: UserCog, video: PlayCircle };
 
 function ToolCall({ tool }: { tool: ToolEvent }) {
   const Icon = TOOL_ICON[tool.kind] ?? Search;
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start pl-6">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-start pl-6">
       <span className="inline-flex items-center gap-1.5 rounded-full border border-coral/25 bg-coral/8 px-2.5 py-1 text-[11px] font-600 text-coral-ink">
         <Icon size={12} className="text-coral" />
         {tool.label}
         {tool.detail && <span className="rounded-full bg-coral/15 px-1.5 py-px text-[10px] font-700">{tool.detail}</span>}
       </span>
+      {tool.videos?.map((v) => (
+        <a key={v.url} href={v.url} target="_blank" rel="noopener noreferrer" className="mt-2 flex max-w-[320px] gap-2 rounded-xl border border-line bg-paper p-2 text-pine shadow-soft">
+          {v.thumbnailUrl && <img src={v.thumbnailUrl} alt="" className="h-14 w-20 rounded-lg object-cover" />}
+          <span className="min-w-0 text-xs"><b className="block truncate">{v.title}</b>{v.sub && <span className="mt-1 block text-sage">{v.sub}</span>}</span>
+        </a>
+      ))}
     </motion.div>
   );
 }
