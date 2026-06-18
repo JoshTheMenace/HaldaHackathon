@@ -155,6 +155,39 @@ export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
             </div>
           </div>
         </section>
+
+        {/* Admissions Simulator handoff */}
+        {profile.id && (
+          <section className="card cardpad" style={{ marginTop: 4 }}>
+            <div className="ch">
+              <span className="l">
+                <span className="i"><Icon name="analytics" /></span>
+                Admissions Simulator
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--h-ink-var)", margin: "6px 0 12px", lineHeight: 1.55 }}>
+              See how your profile looks to real college admissions committees — powered by AI.
+            </p>
+            <a
+              href={`http://localhost:5001/?halda_id=${profile.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                padding: "13px 16px",
+                background: "var(--h-primary)",
+                color: "#fff",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 15,
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              Run Admissions Simulator →
+            </a>
+          </section>
+        )}
       </div>
 
       {/* achievements */}
