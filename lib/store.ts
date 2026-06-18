@@ -226,7 +226,7 @@ function rebuildLeads(store: StoreShape) {
   for (const t of store.tenants) {
     const map = new Map<string, Lead>();
     for (const p of store.students.values()) {
-      if (!p.consent.shareWithPartners) continue;
+      if (!p.consent?.shareWithPartners) continue;
       const lead = buildLead(t, p);
       if (lead) map.set(lead.id, lead);
     }
@@ -298,7 +298,7 @@ export class TenantScope {
 
     const p = store().students.get(lead.studentId)!;
     // Freeze a redacted snapshot — schools buy a profile, NOT live access.
-    const consented = new Set(p.consent.fields);
+    const consented = new Set(p.consent?.fields ?? []);
     lead.revealed = {
       name: consented.has("name") ? p.name || "—" : "—",
       highSchool: consented.has("location") ? p.highSchool : undefined,

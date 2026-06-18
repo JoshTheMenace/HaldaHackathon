@@ -191,12 +191,12 @@ export interface Lead {
 export type Role = "halda" | "student" | "system";
 
 // A visible "the agent is doing something" line in the chat (function calls).
-export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school";
+export type ToolKind = "search" | "scholarship" | "task" | "profile" | "school" | "web";
 export interface ToolEvent {
   kind: ToolKind;
   label: string; // "Searching right-fit schools"
   detail?: string; // "4 matches" / "FAFSA added"
-  items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships)
+  items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships, web sources)
   schools?: { schoolId: string; matchPct: number }[]; // search results → interactive cards
 }
 

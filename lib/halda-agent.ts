@@ -3,7 +3,7 @@ import type { StudentProfile, TaskItem, ToolEvent, School } from "./types";
 import { profileCompleteness } from "./match";
 import { rankInterestMatches, scoreInterestFit } from "./interest-match";
 import { schoolById, SCHOOLS } from "./schools";
-import { ratingStrengths } from "./ratings";
+import { RATING_CATEGORIES, type RmpRating } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
@@ -17,6 +17,34 @@ function resolveSchool(q: string): School | undefined {
     SCHOOLS.find((s) => n.includes(s.short.toLowerCase()) || s.name.toLowerCase().includes(n)) ||
     SCHOOLS.find((s) => n.split(" ").some((w) => w.length > 3 && s.name.toLowerCase().includes(w)))
   );
+}
+
+// Student-life categories that speak to "would I belong here?" — surface the
+// ones this school clearly shines at, strongest first.
+const BELONGING_KEYS = new Set(["happiness", "social", "clubs", "safety", "location", "facilities"]);
+function belongingSignals(r: RmpRating): string[] {
+  return RATING_CATEGORIES.filter((c) => BELONGING_KEYS.has(c.key as string) && (r[c.key] as number) >= 4.0)
+    .sort((a, b) => (r[b.key] as number) - (r[a.key] as number))
+    .slice(0, 3)
+    .map((c) => c.label);
+}
+
+// Run a focused, Google-grounded web lookup and return a concise answer + sources.
+// Lets the agent pull live culture/belonging color our seeded data can't cover.
+async function webLookup(ai: GoogleGenAI, query: string): Promise<{ answer: string; sources: { title: string; url: string }[] }> {
+  const res = await ai.models.generateContent({
+    model: TEXT_MODEL,
+    contents: `Answer concisely for a high-school sophomore (2-4 sentences), focusing on student life, culture, and whether they'd fit in: ${query}`,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    config: { tools: [{ googleSearch: {} }] as any, temperature: 0.2 },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chunks: any[] = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
+  const sources = chunks
+    .map((c) => ({ title: c.web?.title ?? "", url: c.web?.uri ?? "" }))
+    .filter((s) => s.url)
+    .slice(0, 4);
+  return { answer: res.text ?? "", sources };
 }
 
 // Plain-language admissions odds from an acceptance rate.
@@ -107,11 +135,24 @@ const TOOLS = [
       {
         name: "school_detail",
         description:
-          "Get the full picture on ONE specific school the student named — match %, real net price, admissions odds, RateMyProfessor student rating, strong programs, why it fits. Use this (NOT search_universities) when they ask about a single school, e.g. 'why BYU?', 'tell me about UVU', 'my chances at Utah'.",
+          "Get the full picture on ONE specific school the student named — how it fits THEIR interests, whether they'd belong / find their people (student-life signals), their real chances of getting in, plus net price and student rating. Use this (NOT search_universities) when they ask about a single school, e.g. 'why BYU?', 'tell me about UVU', 'would I fit in at Utah?', 'my chances at Utah'. For deeper culture/vibe color, pair it with web_lookup.",
         parameters: {
           type: Type.OBJECT,
           properties: { school: { type: Type.STRING, description: "the school name the student mentioned" } },
           required: ["school"],
+        },
+      },
+      {
+        name: "web_lookup",
+        description:
+          "Search the live web for things our seeded data can't tell you — what campus life and student culture are really like, whether a student with their interests would FIT IN and find their people, clubs/community for a specific passion, vibe and traditions, recent program or admissions news. Use this to add real, current color about belonging and culture for a school the student cares about, or to answer any question our data doesn't cover. Pass a focused query naming the school and what the student cares about.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            query: { type: Type.STRING, description: "focused search, e.g. 'BYU student life for a shy first-gen biology major — clubs, culture, fitting in'" },
+            school: { type: Type.STRING, description: "the school it's about, if any" },
+          },
+          required: ["query"],
         },
       },
       {
@@ -157,13 +198,15 @@ COLLEGE CREDIT: AP / dual-enrollment / IB can save money and time — capture ea
 TOOLS — use the RIGHT one, and don't over-call:
 - update_profile: whenever you learn ANY new fact.
 - search_universities: presents the ranked list as cards — only after the student asked to see schools or said yes to your offer (see DON'T BE GREEDY above). Never for a single-school or general question, and not every turn.
-- school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "my odds at Utah?"). This is how you answer with real numbers.
+- school_detail: when they ask about ONE named school ("why BYU?", "tell me about UVU", "would I fit in at Utah?", "my odds at Utah?"). This is how you answer with real numbers.
+- web_lookup: pull LIVE info our data can't give — campus culture/vibe, whether they'd belong & find their people for their specific interest, clubs/community, recent news. Use it to make "would I fit in?" answers real and current; cite naturally ("students online say…"). Don't use it for numbers school_detail already has.
 - find_scholarships: when they ask about scholarships, aid, or paying for college.
 - add_task: real deadlines. If they need aid → key:"fafsa". Don't re-add a task that's already on their list.
 
 USE TOOL RESULTS — being specific is the difference between helpful and useless:
 - After search_universities: name your top 1-2 schools and say WHY using their match %, net price (in dollars/yr after aid), and one concrete reason or evidence item. e.g. "BYU's your top match at 96% — about $13k/yr after aid, and students rate it 4.4/5 for its nursing pipeline." Surface a real "watch out" if one came back.
-- After school_detail: lead with match % + admissions odds + net price + the student rating, then 1-2 concrete reasons. If there's a caution (e.g. pre-med credit), say it honestly.
+- After school_detail: lead with how it fits THEIR interests (the match % + a concrete why tied to what they care about) and whether they'd BELONG (student-life signals / what students love it for), then their CHANCES of getting in. Bring up net price + rating as support, not the headline — a sophomore cares about fitting in and getting in at least as much as cost. If there's a caution, say it honestly. If they're asking about culture/vibe/fitting in and you want real color, call web_lookup.
+- After web_lookup: weave the findings into a warm, specific answer about belonging/culture; attribute lightly ("students say…") and never invent details it didn't return.
 - After find_scholarships: NAME the actual scholarships you got back (don't just say "some options") with a one-line why for each.
 
 NEVER INVENT NUMBERS. Only state stats a tool actually gave you (match %, net price, acceptance odds, RateMyProfessor rating). Do NOT make up admit rates, board-pass rates, salaries, or aid amounts — if you don't have the number, speak qualitatively. Banned filler with no specifics: "super respected", "fantastic choice", "great program", "world-class".
@@ -283,21 +326,22 @@ export async function runAgent(opts: {
           const m = scoreInterestFit(working, sc);
           result = {
             school: sc.name,
-            matchPct: m.overallFit,
-            admissions: admissionsOdds(sc.acceptanceRate),
-            acceptanceRatePct: Math.round(sc.acceptanceRate * 100),
-            netPricePerYearAfterAid: sc.netPrice,
-            strongPrograms: sc.strongMajors,
-            studentRating: m.rating ? { overallOutOf5: m.rating.overall, reviews: m.rating.reviewCount, studentsLoveItFor: ratingStrengths(m.rating).map((x) => x.label) } : undefined,
-            whyItFits: m.reasons.slice(0, 3),
-            evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title),
-            creditFit: m.creditFit.level,
+            // What a student actually cares about, in order:
+            fitForYourInterests: { matchPct: m.overallFit, why: m.reasons.slice(0, 3), evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title), strongPrograms: sc.strongMajors },
+            wouldYouBelong: m.rating ? { studentsLoveItFor: belongingSignals(m.rating), studentRating: `${m.rating.overall}/5 from ${m.rating.reviewCount} students`, tip: "For real culture/vibe & whether they'd fit in, call web_lookup." } : { tip: "Call web_lookup for student-life/culture color." },
+            yourChances: { odds: admissionsOdds(sc.acceptanceRate), acceptanceRatePct: Math.round(sc.acceptanceRate * 100) },
+            cost: { netPricePerYearAfterAid: sc.netPrice, creditFit: m.creditFit.level },
             cautions: m.concerns.slice(0, 1),
           };
           toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match` });
         } else {
           result = { error: `No data for "${args.school}". Suggest one of the matched schools instead.` };
         }
+      } else if (call.name === "web_lookup") {
+        const q = String(args.query ?? "").trim();
+        const { answer, sources } = await webLookup(ai, q);
+        result = { answer, sources };
+        toolEvents.push({ kind: "web", label: "Searching the web", detail: String(args.school || q).slice(0, 48), items: sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
       } else if (call.name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };

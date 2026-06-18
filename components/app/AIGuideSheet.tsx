@@ -8,7 +8,7 @@ import ChatSchoolCard from "./ChatSchoolCard";
 import MatchDetailSheet from "./MatchDetailSheet";
 
 const SUGGESTIONS = ["Next deadline?", "Scholarships for me", "Why BYU?", "Boost my GPA"];
-const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance" };
+const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language" };
 
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { messages, typing, send } = useHalda();
@@ -71,7 +71,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                       <div className="tool-cards">
                         {m.tool.items.map((it, i) => (
                           <div key={i} className="tool-card">
-                            <span className="tc-ico"><Icon name="savings" /></span>
+                            <span className="tc-ico"><Icon name={m.tool!.kind === "web" ? "link" : "savings"} /></span>
                             <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
                           </div>
                         ))}
