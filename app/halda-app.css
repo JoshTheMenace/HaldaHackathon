@@ -219,6 +219,32 @@
 .phone .guide-item .gt { font-weight: 700; font-size: 14.5px; }
 .phone .guide-item .gs { font-size: 13px; color: var(--h-ink-var); margin-top: 2px; line-height: 1.45; }
 
+/* ── from-your-school horizontal scroll ──────────────────────────────────── */
+.phone .hs-section { margin-top: 18px; }
+.phone .hs-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--h-ink); margin-bottom: 12px; }
+.phone .hs-head .material-symbols-outlined { font-size: 18px; color: var(--h-primary); font-variation-settings: 'FILL' 1; }
+.phone .hs-scroll { display: flex; gap: 11px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.phone .hs-scroll::-webkit-scrollbar { display: none; }
+.phone .hs-card { flex-shrink: 0; width: 120px; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 20px; padding: 14px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: var(--h-soft); }
+.phone .hs-av { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2.5px solid #16b89e; }
+.phone .hs-name { font-size: 12.5px; font-weight: 700; text-align: center; color: var(--h-ink); line-height: 1.2; }
+.phone .hs-meta { font-size: 10.5px; color: var(--h-outline); text-align: center; }
+.phone .hs-status { font-size: 10px; color: var(--h-ink-var); text-align: center; line-height: 1.35; min-height: 26px; display: flex; align-items: center; justify-content: center; }
+.phone .hs-wave { margin-top: 4px; font-family: inherit; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 9999px; border: 1px solid rgba(0,107,95,.35); color: var(--h-primary); background: rgba(0,107,95,.07); cursor: pointer; white-space: nowrap; }
+.phone .hs-wave.waved { background: rgba(0,107,95,.12); border-color: var(--h-primary); }
+
+/* ── college students section ───────────────────────────────────────────── */
+.phone .col-section { margin-top: 24px; padding-bottom: 8px; }
+.phone .col-card { display: flex; align-items: flex-start; gap: 12px; background: var(--h-white); border: 1px solid var(--h-s-highest); border-radius: 20px; padding: 15px; margin-bottom: 11px; box-shadow: var(--h-soft); }
+.phone .col-av { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2.5px solid #16b89e; flex-shrink: 0; }
+.phone .col-info { flex: 1; min-width: 0; }
+.phone .col-name { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.phone .col-school { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #fff; padding: 3px 8px; border-radius: 9999px; }
+.phone .col-meta { font-size: 11.5px; color: var(--h-outline); margin-top: 2px; }
+.phone .col-blurb { font-size: 12.5px; color: var(--h-ink-var); line-height: 1.45; margin-top: 6px; }
+.phone .col-ask { flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 9999px; border: 1px solid rgba(0,107,95,.35); color: var(--h-primary); background: rgba(0,107,95,.07); cursor: pointer; }
+.phone .col-ask.asked { background: rgba(0,107,95,.12); border-color: var(--h-primary); cursor: default; }
+
 /* tasks checklist (profile) */
 .phone .tasks { padding: 4px 18px; }
 .phone .task { display: flex; align-items: flex-start; gap: 13px; padding: 15px 0; border-bottom: 1px solid #eceef0; }

@@ -5,7 +5,8 @@ import { useHalda } from "@/lib/useHalda";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
 import {
   COHORT_PEERS, peerById, postsFor, pathwayFor, pathwayShort, cohortSize, cohortFaces,
-  type CohortPost,
+  hspeersFor, collegeStudentsFor,
+  type CohortPost, type HighSchoolPeer, type CollegeStudent,
 } from "@/lib/cohort";
 import { dueLabel } from "./helpers";
 import { Icon } from "./Icon";
@@ -37,6 +38,15 @@ export default function CohortTab() {
   );
   const faces = useMemo(() => cohortFaces(pathway), [pathway]);
   const seeded = useMemo(() => postsFor(profile), [profile]);
+
+  // Community: same high school + college students at saved/matched schools.
+  const hsPeers = useMemo(() => hspeersFor(profile), [profile]);
+  const savedIds = useMemo(() => {
+    const saved = profile.savedSchoolIds ?? [];
+    const matched = rankInterestMatches(profile, 3).map((m) => m.schoolId);
+    return [...new Set([...saved, ...matched])];
+  }, [profile]);
+  const collegeStudents = useMemo(() => collegeStudentsFor(savedIds), [savedIds]);
 
   const firstName = (profile.name || "You").split(" ")[0];
   const myInitials = (profile.name || "Y").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -112,6 +122,19 @@ export default function CohortTab() {
         <button className="sbtn" onClick={() => setSheet("guidelines")}>Guidelines</button>
       </div>
 
+      {/* From your school */}
+      {hsPeers.length > 0 && (
+        <section className="hs-section">
+          <div className="hs-head">
+            <Icon name="school" />
+            <span>From your school</span>
+          </div>
+          <div className="hs-scroll">
+            {hsPeers.map((peer) => <HsPeerCard key={peer.id} peer={peer} />)}
+          </div>
+        </section>
+      )}
+
       <div className="filters">
         {FILTERS.map((f) => (
           <button key={f} className={`fchip${filter === f ? " on" : ""}`} onClick={() => setFilter(f)}>{f}</button>
@@ -144,6 +167,17 @@ export default function CohortTab() {
           <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked} onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")} firstName={firstName} myInitials={myInitials} />
         ))}
       </div>
+
+      {/* Hear from students at your top schools */}
+      {collegeStudents.length > 0 && (
+        <section className="col-section">
+          <div className="hs-head">
+            <Icon name="account_balance" />
+            <span>Students at your top schools</span>
+          </div>
+          {collegeStudents.map((s) => <ColStudentCard key={s.id} s={s} />)}
+        </section>
+      )}
 
       {toast && <div className="cohort-toast">{toast}</div>}
 
@@ -180,6 +214,48 @@ export default function CohortTab() {
         </div>
       </section>
     </main>
+  );
+}
+
+function HsPeerCard({ peer }: { peer: HighSchoolPeer }) {
+  const [waved, setWaved] = useState(false);
+  return (
+    <div className="hs-card">
+      <img className="hs-av" src={peer.avatar} alt="" style={{ borderColor: peer.accent }} />
+      <div className="hs-name">{peer.name}</div>
+      <div className="hs-meta">{peer.pathway.split(/[& ]/)[0]} · Gr {peer.grade}</div>
+      <div className="hs-status">{peer.status}</div>
+      <button
+        className={`hs-wave${waved ? " waved" : ""}`}
+        onClick={() => setWaved(true)}
+      >
+        {waved ? "Waved 👋" : "Wave 👋"}
+      </button>
+    </div>
+  );
+}
+
+function ColStudentCard({ s }: { s: CollegeStudent }) {
+  const [asked, setAsked] = useState(false);
+  return (
+    <div className="col-card">
+      <img className="col-av" src={s.avatar} alt="" style={{ borderColor: s.accent }} />
+      <div className="col-info">
+        <div className="col-name">
+          {s.name}
+          <span className="col-school" style={{ background: s.accent }}>{s.schoolShort}</span>
+        </div>
+        <div className="col-meta">{s.year} · {s.major}</div>
+        <p className="col-blurb">{s.blurb}</p>
+      </div>
+      <button
+        className={`col-ask${asked ? " asked" : ""}`}
+        onClick={() => setAsked(true)}
+        disabled={asked}
+      >
+        {asked ? "Asked ✓" : "Ask"}
+      </button>
+    </div>
   );
 }
 
