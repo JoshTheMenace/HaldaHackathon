@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { respond } from "@/lib/agent";
-import { getStudent, upsertStudent } from "@/lib/store";
+import { runAgent } from "@/lib/halda-agent";
+import { getStudent, upsertStudent, getHistory, appendHistory } from "@/lib/store";
 import type { StudentProfile } from "@/lib/types";
 
-// The multi-channel brain, server-side. The SAME deterministic engine powers
-// web, SMS, and email — channel is just transport. Deterministic BY DESIGN:
-// no API key, no network dependency, identical output every run → zero demo
-// risk on stage. State (profile, XP, quests) is the engine's source of truth.
-//
+// Multi-channel AI brain. Uses Gemini when GEMINI_API_KEY is set, falls back
+// to the deterministic engine so the demo never dies on missing credentials.
 // Body: { profile?, studentId?, message, turn, channel, revealed? }
 export async function POST(req: Request) {
   const { profile, studentId, message, turn, channel, revealed } =
@@ -20,16 +18,50 @@ export async function POST(req: Request) {
       revealed?: boolean;
     };
 
-  // Resolve the student record from the store (proves cross-channel state lives
-  // in one place) or accept an inline profile.
   const base = profile ?? (studentId ? getStudent(studentId) : undefined);
   if (!base) {
     return NextResponse.json({ error: "profile or studentId required" }, { status: 400 });
   }
 
-  const result = respond(base, message, turn ?? 0, revealed ?? false);
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  // Persist the enrichment so the very next channel sees it.
+  if (apiKey) {
+    try {
+      const history = getHistory(base.id).map((t) => ({
+        role: t.role as "user" | "model",
+        text: t.text,
+      }));
+
+      const result = await runAgent({ apiKey, profile: base, message, history, speak: false });
+
+      const next: StudentProfile = {
+        ...base,
+        ...(result.updates as Partial<StudentProfile>),
+        intendedMajors: (result.updates as { intendedMajors?: string[] }).intendedMajors ?? base.intendedMajors,
+        updatedAt: Date.now(),
+      };
+      upsertStudent(next);
+
+      appendHistory(base.id, [
+        { role: "user", text: message, channel: (channel as "sms" | "web") ?? "web" },
+        ...(result.reply ? [{ role: "model" as const, text: result.reply, channel: (channel as "sms" | "web") ?? "web" }] : []),
+      ]);
+
+      return NextResponse.json({
+        engine: "gemini",
+        channel: channel ?? "web",
+        text: result.reply,
+        patch: result.updates,
+        revealMatches: result.revealMatches,
+        tasks: result.tasks,
+      });
+    } catch (e) {
+      console.error("[/api/chat] Gemini error, falling back to deterministic:", (e as Error).message);
+    }
+  }
+
+  // Deterministic fallback
+  const result = respond(base, message, turn ?? 0, revealed ?? false);
   const next: StudentProfile = {
     ...base,
     ...result.patch,

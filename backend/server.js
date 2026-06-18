@@ -16,12 +16,28 @@ const postmarkClient = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 const POSTMARK_INBOUND = process.env.POSTMARK_INBOUND_ADDRESS;
 const POSTMARK_FROM = process.env.POSTMARK_FROM || 'jensshumway@greatergas.com';
 
-// In-memory email sessions: address → { profile, turn, lastMessageId, references }
+// Cross-channel sessions: key (phone or email) → { studentId, turn, revealed, newProfile? }
+// newProfile is only set on the first message for a brand-new student — it's passed
+// inline to /api/chat so the store upserts it, then dropped from the session.
+const smsSessions = new Map();
 const emailSessions = new Map();
 
-function blankEmailProfile(email) {
+async function lookupStudent(key, type) {
+  try {
+    const param = type === 'phone' ? `phone=${encodeURIComponent(key)}` : `email=${encodeURIComponent(key)}`;
+    const res = await fetch(`${HALDA_URL}/api/students/lookup?${param}`);
+    if (res.ok) {
+      const { studentId, profile } = await res.json();
+      return { studentId, profile };
+    }
+  } catch {}
+  return null;
+}
+
+function blankProfile(id, channelField, channelValue) {
   return {
-    id: `email_${email.replace(/[^a-z0-9]/gi, '_')}`,
+    id,
+    [channelField]: channelValue,
     interests: [],
     interestSignals: [],
     intendedMajors: [],
@@ -31,33 +47,33 @@ function blankEmailProfile(email) {
     streak: 0,
     completedQuests: [],
     badges: [],
-    channelsLinked: ['email'],
+    channelsLinked: [channelField === 'phone' ? 'sms' : 'email'],
     consent: { fields: ['name', 'grade', 'location', 'interests', 'major', 'goal'], shareWithPartners: true },
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
 }
 
-// In-memory SMS sessions: phone_number → { profile, turn }
-const smsSessions = new Map();
+async function chatWithHalda(session, message, channel) {
+  const body = session.newProfile
+    ? { profile: session.newProfile, message, turn: session.turn, channel, revealed: session.revealed }
+    : { studentId: session.studentId, message, turn: session.turn, channel, revealed: session.revealed };
 
-function blankSmsProfile(phone) {
-  return {
-    id: `sms_${phone.replace(/\D/g, '')}`,
-    interests: [],
-    interestSignals: [],
-    intendedMajors: [],
-    tasks: [],
-    creditWallet: [],
-    xp: 0,
-    streak: 0,
-    completedQuests: [],
-    badges: [],
-    channelsLinked: ['sms'],
-    consent: { fields: ['name', 'grade', 'location', 'interests', 'major', 'goal'], shareWithPartners: true },
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+  const res = await fetch(`${HALDA_URL}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Halda chat error: ${await res.text()}`);
+  const result = await res.json();
+
+  // After the first call the profile is in the store — stop sending it inline
+  delete session.newProfile;
+  if (result.revealMatches) session.revealed = true;
+  session.turn++;
+
+  return result;
 }
 
 app.use(cors());
@@ -162,10 +178,9 @@ app.post('/api/send-email', async (req, res) => {
 });
 
 // POST /api/webhook/sms
-// Surge calls this when a user texts the Surge number. We pass the message
-// through the Halda chat engine and reply via SMS.
+// Surge calls this when a user texts the Surge number. We look up the student
+// by phone (cross-channel continuity), then pass the message through Halda and reply.
 app.post('/api/webhook/sms', async (req, res) => {
-  // Acknowledge immediately so Surge doesn't retry
   res.sendStatus(200);
 
   const { type, data: message } = req.body ?? {};
@@ -175,51 +190,31 @@ app.post('/api/webhook/sms', async (req, res) => {
   const text = message.body?.trim();
   if (!from || !text) return;
 
-  // Get or create a session for this phone number
-  if (!smsSessions.has(from)) {
-    smsSessions.set(from, { profile: blankSmsProfile(from), turn: 0 });
+  // Re-check on every turn: if the user linked their phone on the web since
+  // the session was created, switch to that richer web profile immediately.
+  const freshLookup = await lookupStudent(from, 'phone');
+  if (freshLookup) {
+    const cached = smsSessions.get(from);
+    if (!cached || cached.studentId !== freshLookup.studentId) {
+      smsSessions.set(from, {
+        studentId: freshLookup.studentId,
+        turn: cached?.turn ?? 0,
+        revealed: freshLookup.profile.completedQuests?.includes('q_constellation') ?? false,
+      });
+    }
+  } else if (!smsSessions.has(from)) {
+    const id = `sms_${from.replace(/\D/g, '')}`;
+    smsSessions.set(from, {
+      studentId: id,
+      turn: 0,
+      revealed: false,
+      newProfile: blankProfile(id, 'phone', from),
+    });
   }
   const session = smsSessions.get(from);
 
   try {
-    const chatRes = await fetch(`${HALDA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        profile: session.profile,
-        message: text,
-        turn: session.turn,
-        channel: 'sms',
-        revealed: session.profile.completedQuests.includes('q_constellation'),
-      }),
-    });
-
-    if (!chatRes.ok) {
-      console.error('Halda chat error:', await chatRes.text());
-      return;
-    }
-
-    const result = await chatRes.json();
-
-    // Merge profile patch returned by the agent
-    if (result.patch) {
-      session.profile = {
-        ...session.profile,
-        ...result.patch,
-        interests: result.patch.interests ?? session.profile.interests,
-        intendedMajors: result.patch.intendedMajors ?? session.profile.intendedMajors,
-        updatedAt: Date.now(),
-      };
-    }
-
-    // Track when schools have been revealed so subsequent turns know
-    if (result.revealMatches && !session.profile.completedQuests.includes('q_constellation')) {
-      session.profile.completedQuests = [...session.profile.completedQuests, 'q_constellation'];
-    }
-
-    session.turn++;
-
-    // Reply to the user via SMS
+    const result = await chatWithHalda(session, text, 'sms');
     if (result.text) {
       await surge.messages.create(ACCOUNT_ID, { to: from, body: result.text });
     }
@@ -229,8 +224,8 @@ app.post('/api/webhook/sms', async (req, res) => {
 });
 
 // POST /api/webhook/email
-// Postmark calls this when an email arrives at the inbound address.
-// We run it through Halda and reply in the same thread via Resend.
+// Postmark calls this when an email arrives. We look up the student by email
+// (cross-channel continuity), run it through Halda, and reply via Resend.
 app.post('/api/webhook/email', async (req, res) => {
   res.sendStatus(200);
 
@@ -239,52 +234,42 @@ app.post('/api/webhook/email', async (req, res) => {
   const subject = payload.Subject || 'Your college guide';
   const headers = payload.Headers || [];
 
-  // Prefer StrippedTextReply on follow-up emails so we only see the new text
   const text = (payload.StrippedTextReply?.trim() || payload.TextBody?.trim());
   console.log('[email webhook] from:', from, '| text:', text?.slice(0, 60));
   if (!from || !text) { console.log('[email webhook] missing from or text, skipping'); return; }
 
-  // RFC 2822 Message-ID of the incoming email (for threading)
   const rfcMessageId = headers.find(h => h.Name === 'Message-ID')?.Value
     || `<${payload.MessageID}@inbound.postmarkapp.com>`;
   const existingRefs = headers.find(h => h.Name === 'References')?.Value || '';
 
-  if (!emailSessions.has(from)) {
-    emailSessions.set(from, { profile: blankEmailProfile(from), turn: 0, references: '' });
+  // Re-check on every turn: if the user linked their email on the web since
+  // the session was created, switch to that richer web profile immediately.
+  const freshLookup = await lookupStudent(from, 'email');
+  if (freshLookup) {
+    const cached = emailSessions.get(from);
+    if (!cached || cached.studentId !== freshLookup.studentId) {
+      emailSessions.set(from, {
+        studentId: freshLookup.studentId,
+        turn: cached?.turn ?? 0,
+        revealed: freshLookup.profile.completedQuests?.includes('q_constellation') ?? false,
+        references: cached?.references ?? '',
+      });
+    }
+  } else if (!emailSessions.has(from)) {
+    const id = `email_${from.replace(/[^a-z0-9]/gi, '_')}`;
+    emailSessions.set(from, {
+      studentId: id,
+      turn: 0,
+      revealed: false,
+      newProfile: blankProfile(id, 'email', from),
+      references: '',
+    });
   }
   const session = emailSessions.get(from);
 
   try {
-    const chatRes = await fetch(`${HALDA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        profile: session.profile,
-        message: text,
-        turn: session.turn,
-        channel: 'email',
-        revealed: session.profile.completedQuests.includes('q_constellation'),
-      }),
-    });
+    const result = await chatWithHalda(session, text, 'email');
 
-    if (!chatRes.ok) { console.error('Halda chat error:', await chatRes.text()); return; }
-    const result = await chatRes.json();
-
-    if (result.patch) {
-      session.profile = {
-        ...session.profile,
-        ...result.patch,
-        interests: result.patch.interests ?? session.profile.interests,
-        intendedMajors: result.patch.intendedMajors ?? session.profile.intendedMajors,
-        updatedAt: Date.now(),
-      };
-    }
-    if (result.revealMatches && !session.profile.completedQuests.includes('q_constellation')) {
-      session.profile.completedQuests = [...session.profile.completedQuests, 'q_constellation'];
-    }
-    session.turn++;
-
-    // Build the References chain so the thread stays linked in email clients
     const newReferences = [existingRefs, rfcMessageId].filter(Boolean).join(' ').trim();
     session.references = newReferences;
 

@@ -29,6 +29,8 @@ export default function EditableProfile() {
     { key: "city", label: "City", value: profile.city ?? "", onSave: (v) => editField("city", v) },
     { key: "highSchool", label: "High school", value: profile.highSchool ?? "", onSave: (v) => editField("highSchool", v) },
     { key: "goal", label: "Goal", value: profile.careerGoal ?? "", onSave: (v) => editField("careerGoal", v) },
+    { key: "phone", label: "Phone", value: profile.phone ?? "", onSave: (v) => editField("phone", v) },
+    { key: "email", label: "Email", value: profile.email ?? "", onSave: (v) => editField("email", v) },
   ];
 
   return (

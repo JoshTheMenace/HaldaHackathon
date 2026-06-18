@@ -10,6 +10,8 @@ export async function POST(req: Request) {
   const profile: StudentProfile = {
     id: body.id,
     name: body.name,
+    phone: body.phone,
+    email: body.email,
     zip: body.zip,
     city: body.city,
     state: body.state,

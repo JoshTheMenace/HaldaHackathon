@@ -36,9 +36,10 @@ interface StoreShape {
   tenants: Tenant[];
   // tenantId -> (leadId -> Lead). The ONLY place school-visible data lives.
   leadsByTenant: Map<string, Map<string, Lead>>;
-  // Cross-channel handoff: a phone number maps to ONE studentId, and each student
-  // has ONE shared transcript — so texting picks up exactly where web left off.
+  // Cross-channel handoff: phone/email map to ONE studentId so any channel
+  // picks up exactly where the last one left off.
   phoneToStudent: Map<string, string>;
+  emailToStudent: Map<string, string>;
   historyByStudent: Map<string, ConvoTurn[]>;
 }
 
@@ -252,6 +253,7 @@ function init(): StoreShape {
     tenants: seedTenants(),
     leadsByTenant: new Map(),
     phoneToStudent: new Map(),
+    emailToStudent: new Map(),
     historyByStudent: new Map(),
   };
   rebuildLeads(store);
@@ -276,6 +278,9 @@ export function getStudent(id: string): StudentProfile | undefined {
 export function upsertStudent(p: StudentProfile) {
   const s = store();
   s.students.set(p.id, { ...p, updatedAt: Date.now() });
+  // Keep cross-channel lookup maps in sync automatically
+  if (p.phone) s.phoneToStudent.set(normalizePhone(p.phone), p.id);
+  if (p.email) s.emailToStudent.set(p.email.toLowerCase(), p.id);
   rebuildLeads(s); // learning more => better matches, live
 }
 
@@ -308,6 +313,10 @@ export function linkPhone(phone: string, studentId: string) {
 
 export function studentForPhone(phone: string): string | undefined {
   return store().phoneToStudent.get(normalizePhone(phone));
+}
+
+export function studentForEmail(email: string): string | undefined {
+  return store().emailToStudent.get(email.toLowerCase());
 }
 
 export function getHistory(studentId: string): ConvoTurn[] {

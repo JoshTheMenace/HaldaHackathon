@@ -69,9 +69,18 @@ const MAJOR_ALIASES: Record<string, string> = {
 };
 
 const STATES: Record<string, string> = {
-  texas: "TX", california: "CA", arizona: "AZ", colorado: "CO", georgia: "GA",
-  washington: "WA", massachusetts: "MA", "new york": "NY", michigan: "MI",
-  indiana: "IN", florida: "FL", illinois: "IL",
+  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+  colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+  hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
+  kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+  massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS",
+  missouri: "MO", montana: "MT", nebraska: "NE", nevada: "NV",
+  "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK",
+  oregon: "OR", pennsylvania: "PA", "rhode island": "RI", "south carolina": "SC",
+  "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT", vermont: "VT",
+  virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
+  wyoming: "WY",
 };
 
 const GREETINGS = new Set(["hi", "hey", "hello", "yo", "sup", "hiya", "heya"]);
@@ -145,8 +154,8 @@ function extractLocation(text: string): { zip?: string; state?: string; city?: s
   const stAbbr = text.match(/\b([A-Z]{2})\b/);
   if (!out.state && stAbbr && Object.values(STATES).includes(stAbbr[1]))
     out.state = stAbbr[1];
-  const city = text.match(/\b(?:in|from|near)\s+([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?)/);
-  if (city) out.city = city[1];
+  const city = text.match(/\b(?:in|from|near)\s+([A-Za-z][a-zA-Z]+(?:\s[A-Za-z][a-zA-Z]+)?)/i);
+  if (city) out.city = cap(city[1].toLowerCase());
   return out;
 }
 
