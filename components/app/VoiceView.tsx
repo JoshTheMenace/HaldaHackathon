@@ -23,7 +23,7 @@ export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string
     live.status === "idle" ? "Tap to talk to Halda" :
     live.status === "connecting" ? "Connecting…" :
     live.status === "speaking" ? "Halda is speaking…" :
-    live.status === "error" ? "Mic blocked — tap to retry" :
+    live.status === "error" ? "Couldn't start — tap to retry" :
     "Listening… just talk";
 
   return (
@@ -71,7 +71,7 @@ export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string
           <button className="vc-btn end" onClick={live.stop}><Icon name="call_end" /> End</button>
         </div>
       )}
-      {live.error && active && <p className="voice-err">{live.error}</p>}
+      {live.error && <p className="voice-err">{live.error}</p>}
     </div>
   );
 }

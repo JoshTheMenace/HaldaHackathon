@@ -107,10 +107,36 @@ export function useGeminiLive(opts: {
     setError(null);
     setStatus("connecting");
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey) { setError("Missing NEXT_PUBLIC_GEMINI_API_KEY"); setStatus("error"); return; }
+    if (!apiKey) { setError("Missing NEXT_PUBLIC_GEMINI_API_KEY in .env.local."); setStatus("error"); return; }
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setError("This page can't use the microphone. Voice needs a secure context — open the app at http://localhost:3000 or over https:// (an IP address or plain http won't work).");
+      setStatus("error");
+      return;
+    }
 
+    // 1) MICROPHONE FIRST, so the browser's permission prompt is clearly tied to
+    // the tap — and so we can give a precise reason if it's blocked.
+    let stream: MediaStream;
     try {
-      // Output playback context (24 kHz from Gemini)
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      });
+      streamRef.current = stream;
+    } catch (e) {
+      const name = (e as { name?: string })?.name;
+      setError(
+        name === "NotAllowedError" || name === "SecurityError"
+          ? "Microphone permission is blocked. Click the camera/🔒 icon in your browser's address bar, set Microphone to Allow, reload, then tap again."
+          : name === "NotFoundError" || name === "DevicesNotFoundError"
+          ? "No microphone was found. Connect one and tap to retry."
+          : `Microphone error (${name || "unknown"}): ${(e as Error).message}`
+      );
+      setStatus("error");
+      return;
+    }
+
+    // 2) Connect to Gemini Live and wire the audio in/out.
+    try {
       const OutCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       outCtxRef.current = new OutCtx({ sampleRate: 24000 });
       await outCtxRef.current.resume();
@@ -146,47 +172,37 @@ export function useGeminiLive(opts: {
               uBufRef.current = ""; hBufRef.current = "";
             }
           },
-          onerror: (e: any) => { setError(e?.message || "live error"); setStatus("error"); },
+          onerror: (e: any) => { setError(`Gemini Live connection error: ${e?.message || "unknown"}`); setStatus("error"); },
           onclose: () => setStatus((s) => (s === "error" ? s : "idle")),
         },
       });
       sessionRef.current = session;
 
-      // Mic capture (16 kHz to Gemini). Non-fatal: if the mic is blocked we keep
-      // the session so Halda can still speak (and the receive path is testable).
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-        });
-        streamRef.current = stream;
-        const MicCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const micCtx = new MicCtx({ sampleRate: 16000 });
-        micCtxRef.current = micCtx;
-        const source = micCtx.createMediaStreamSource(stream);
-        const proc = micCtx.createScriptProcessor(4096, 1, 1);
-        procRef.current = proc;
-        proc.onaudioprocess = (ev) => {
-          if (mutedRef.current || !sessionRef.current) return;
-          const data = ev.inputBuffer.getChannelData(0);
-          try {
-            sessionRef.current.sendRealtimeInput({
-              audio: { data: floatToPcm16Base64(data), mimeType: "audio/pcm;rate=16000" },
-            });
-          } catch {}
-        };
-        source.connect(proc);
-        proc.connect(micCtx.destination);
-      } catch {
-        setError("Mic unavailable — you can still hear Halda; type to reply.");
-      }
+      const MicCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const micCtx = new MicCtx({ sampleRate: 16000 });
+      micCtxRef.current = micCtx;
+      const source = micCtx.createMediaStreamSource(stream);
+      const proc = micCtx.createScriptProcessor(4096, 1, 1);
+      procRef.current = proc;
+      proc.onaudioprocess = (ev) => {
+        if (mutedRef.current || !sessionRef.current) return;
+        const data = ev.inputBuffer.getChannelData(0);
+        try {
+          sessionRef.current.sendRealtimeInput({
+            audio: { data: floatToPcm16Base64(data), mimeType: "audio/pcm;rate=16000" },
+          });
+        } catch {}
+      };
+      source.connect(proc);
+      proc.connect(micCtx.destination);
 
-      // Greet first so the demo always has audio even before the user speaks.
+      // Greet first so there's always audio even before the user speaks.
       session.sendClientContent({
         turns: [{ role: "user", parts: [{ text: "Greet me warmly in one sentence and ask my name." }] }],
         turnComplete: true,
       });
     } catch (e) {
-      setError((e as Error).message);
+      setError(`Couldn't connect to Gemini Live (model "${LIVE_MODEL}"): ${(e as Error).message}`);
       setStatus("error");
       stop();
     }
