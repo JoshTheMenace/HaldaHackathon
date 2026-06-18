@@ -163,11 +163,20 @@ function chosenSchoolIds(p: StudentProfile): string[] {
 function chosenSchoolLine(p: StudentProfile): string {
   const names = chosenSchoolIds(p).map((id) => schoolById(id)!.short);
   if (!names.length) return "";
-  return `\n\n=== CURRENT MODE ===\nThe student has chosen or saved: ${names.join(", ")}. Switch from broad discovery into application-coach mode: help them meet requirements, improve odds, finish tasks, afford it, and prepare essays/transcripts/recommendations. Do not keep showing broad school-match cards unless they explicitly ask for alternatives or a refreshed list. Prefer school_detail, web_lookup, find_scholarships, and add_task for the chosen school(s).`;
+  return `\n\n=== CURRENT MODE ===\nThe student has chosen or saved: ${names.join(", ")}. Switch from broad discovery into application-coach mode: help them meet requirements, improve odds, finish tasks, afford it, and prepare essays/transcripts/recommendations. Do not keep showing broad school-match cards unless they explicitly ask for alternatives or a refreshed list. Prefer school_detail, web_lookup, and find_scholarships for the chosen school(s). Only use add_task after the student explicitly asks you to add/track a task/deadline or confirms your offer to add one.`;
 }
 
 function explicitlyRequestsSchoolCards(message: string): boolean {
   return /\b(show|pull up|find|refresh|update|see|give me|compare|list|recommend|recommendations|matches|options|schools|colleges|alternatives)\b/i.test(message);
+}
+
+function explicitlyAllowsTaskAdd(message: string, history?: { role: string; text: string }[]): boolean {
+  if (/\b(add|track|save|remind me|put|create|make)\b.*\b(task|deadline|todo|to-do|checklist|reminder|tracker)\b/i.test(message)) return true;
+  if (/\b(add it|track it|save it|put it on|remind me|yes|yeah|yep|sure|ok|okay|please do|do that)\b/i.test(message)) {
+    const last = [...(history ?? [])].reverse().find((h) => h.role === "model")?.text ?? "";
+    return /\b(add|track|save|put).{0,40}\b(task|deadline|todo|to-do|checklist|tracker|reminder)\b/i.test(last);
+  }
+  return false;
 }
 
 function mediaForSchool(name: string) {
@@ -345,7 +354,7 @@ const TOOLS = [
       },
       {
         name: "add_task",
-        description: "Put a next step on the student's tracker — a real deadline (use a canonical key so the date fills in) OR a custom 'try this' milestone (shadow a nurse, tour a campus, take a CS elective) that gives them a concrete reason to come back.",
+        description: "Only after explicit student request or confirmation, put a next step on the student's tracker — a real deadline OR a custom milestone.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -369,7 +378,7 @@ Help each student figure out where they belong. Lead with what they actually cam
 
 Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, transfer status, full-time work, current college, associate degree, country, visa need, international aid need, or schools they want to compare — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid, comparison lists in targetSchools), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
 
-You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find a YouTube virtual tour for a specific school, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, find a tour, or add a task, do it in the SAME turn. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. Only offer or use virtual_tour when the student is thinking about one particular school; do not offer campus-tour videos during broad discovery or generic matching. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
+You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find a YouTube virtual tour for a specific school, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, or find a tour, do it in the SAME turn. Only add tasks/deadlines if the student specifically asked you to add/track one or clearly confirmed your offer to add it; otherwise suggest the next step conversationally and ask before adding it. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. Only offer or use virtual_tour when the student is thinking about one particular school; do not offer campus-tour videos during broad discovery or generic matching. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
 
 Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure you weren't given. Before you claim a school fits a budget, an aid need, or an eligibility rule (transfer credits, international/visa, in-state cost), confirm it with a tool rather than guessing — and if money is tight, surface real aid and add the FAFSA step.`;
 }
@@ -619,6 +628,11 @@ export async function runAgent(opts: {
         result = { scholarships: found };
         toolEvents.push({ kind: "scholarship", label: "Scholarships for you", detail: `${found.length} found`, items: found.map((f) => ({ title: f.name, sub: f.why })) });
       } else if (name === "add_task") {
+        if (!explicitlyAllowsTaskAdd(opts.message, opts.history)) {
+          result = { ok: false, needsConfirmation: true, message: "Do not add this task yet. Ask the student if they want it added to their tracker." };
+          responseParts.push({ functionResponse: { name: call.name, response: result as object } });
+          continue;
+        }
         const t = makeTask(args as { key?: string; title?: string; detail?: string; due?: string }, working.grade);
         tasks.push(t);
         working.tasks.push(t);
