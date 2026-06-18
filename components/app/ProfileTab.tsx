@@ -8,6 +8,7 @@ import { SchoolLogo } from "./SchoolImage";
 import { initials, gradeLabel, dueLabel } from "./helpers";
 
 const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
+const CREDIT_TYPE: Record<string, string> = { ap: "AP", dual_enrollment: "Dual enrollment", ib: "IB", honors: "Honors", clep: "CLEP" };
 
 export default function ProfileTab() {
   const { profile, toggleTask, editField } = useHalda();
@@ -115,6 +116,25 @@ export default function ProfileTab() {
           <section className="card cardpad stack-gap">
             <div className="ch"><span className="l"><span className="i"><Icon name="groups" /></span>Extracurricular</span></div>
             <div className="chips">{extras.map((e) => <span key={e} className="chip">{e}</span>)}</div>
+          </section>
+        )}
+
+        {/* credit wallet — a key differentiator */}
+        {profile.creditWallet.length > 0 && (
+          <section className="card cardpad stack-gap">
+            <div className="ch">
+              <span className="l"><span className="i"><Icon name="workspace_premium" /></span>Credit Wallet</span>
+              <span className="badge ok">{profile.creditWallet.length} banked</span>
+            </div>
+            <div className="credit-list">
+              {profile.creditWallet.map((c) => (
+                <div key={c.id} className="credit-row">
+                  <div className="cr-b"><b>{c.source}</b><span>{CREDIT_TYPE[c.type] ?? c.type} · {c.subject}</span></div>
+                  {c.score && <span className="cr-score">{c.score}</span>}
+                </div>
+              ))}
+            </div>
+            <p className="credit-note">College credit you&apos;ve already banked — ask Halda where each one actually counts.</p>
           </section>
         )}
 

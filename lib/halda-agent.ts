@@ -248,8 +248,10 @@ export async function runAgent(opts: {
     contents.push(modelContent ?? { role: "model", parts: calls.map((c) => ({ functionCall: c })) });
     const responseParts: { functionResponse: unknown }[] = [];
     for (const call of calls) {
-      const args = (call.args ?? {}) as Record<string, unknown>;
+      const raw = call.args;
+      const args = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
       let result: unknown = { ok: true };
+      try {
       if (call.name === "update_profile") {
         Object.assign(updates, args);
         mergeWorking(working, args);
@@ -293,13 +295,17 @@ export async function runAgent(opts: {
       } else if (call.name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };
-        toolEvents.push({ kind: "scholarship", label: "Looking up scholarships", detail: `${found.length} found` });
+        toolEvents.push({ kind: "scholarship", label: "Scholarships for you", detail: `${found.length} found`, items: found.map((f) => ({ title: f.name, sub: f.why })) });
       } else if (call.name === "add_task") {
         const t = makeTask(args as { key?: string; title?: string; detail?: string; due?: string }, working.grade);
         tasks.push(t);
         working.tasks.push(t);
         result = { added: { title: t.title, due: t.due } };
         toolEvents.push({ kind: "task", label: "Added to your tasks", detail: t.title });
+      }
+      } catch (err) {
+        // A malformed tool call shouldn't crash the turn — tell the model and move on.
+        result = { error: `Could not run ${call.name}: ${(err as Error).message}` };
       }
       toolsUsed.push(call.name ?? "?");
       responseParts.push({ functionResponse: { name: call.name, response: result as object } });

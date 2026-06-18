@@ -21,6 +21,7 @@ export default function HomeTab({ onAsk, onGoExplore }: { onAsk: (text?: string)
   return (
     <main className="scroll">
       <h1 className="greeting">Good morning, {first}!</h1>
+      <p className="tagline">I learn what you actually care about and find schools where it becomes a career — backed by real student reviews.</p>
 
       <div className="sec-head baseline">
         <h2>My Schedule</h2>

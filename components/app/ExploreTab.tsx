@@ -104,6 +104,13 @@ function SwipeCard({ m, gone, tags, onView }: { m: InterestAlignedSchoolScore; g
           <span className="matchpill">{m.overallFit}% Match</span>
         </div>
         <p className="roi">ROI: <b>{roiLabel(m.overallFit)}</b></p>
+        {m.rating && (
+          <div className="sw-rating">
+            <Icon name="star" className="st" />
+            <b>{m.rating.overall.toFixed(1)}</b>
+            <span>· {m.rating.reviewCount.toLocaleString()} students{ratingStrengths(m.rating, 4.0, 1)[0] ? ` love its ${ratingStrengths(m.rating, 4.0, 1)[0].label.toLowerCase()}` : ""}</span>
+          </div>
+        )}
         <div className="tags">{tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
         <button className="cta" onClick={onView}>View Details</button>
       </div>

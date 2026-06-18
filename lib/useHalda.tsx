@@ -68,7 +68,11 @@ function freshMaya(): StudentProfile {
       { id: "t_hosa", title: "HOSA Volunteering Plan", detail: "Required for nursing clinical eligibility.", due: "2026-11-15", kind: "todo", status: "open", source: "halda" },
       { id: "t_rec", title: "Letters of Rec", detail: "Contact Bio teacher and Coach.", due: "2026-12-01", kind: "todo", status: "open", source: "halda" },
     ],
-    creditWallet: [],
+    creditWallet: [
+      { id: "cr1", source: "AP Biology", type: "ap", subject: "science", status: "completed", score: "4" },
+      { id: "cr2", source: "AP English Language", type: "ap", subject: "writing", status: "completed", score: "4" },
+      { id: "cr3", source: "Concurrent Enrollment Math 1050", type: "dual_enrollment", subject: "math", status: "completed", score: "A" },
+    ],
     xp: 320,
     streak: 4,
     completedQuests: ["q_spark", "q_direction"],

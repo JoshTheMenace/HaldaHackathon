@@ -45,10 +45,22 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
         <div className="ai-thread" ref={threadRef}>
           {messages.map((m) =>
             m.tool ? (
-              <div key={m.id} className="toolchip">
-                <Icon name={TOOL_ICON[m.tool.kind] ?? "bolt"} />
-                {m.tool.label}
-                {m.tool.detail && <span className="d">{m.tool.detail}</span>}
+              <div key={m.id} className="toolwrap">
+                <div className="toolchip">
+                  <Icon name={TOOL_ICON[m.tool.kind] ?? "bolt"} />
+                  {m.tool.label}
+                  {m.tool.detail && <span className="d">{m.tool.detail}</span>}
+                </div>
+                {m.tool.items && m.tool.items.length > 0 && (
+                  <div className="tool-cards">
+                    {m.tool.items.map((it, i) => (
+                      <div key={i} className="tool-card">
+                        <span className="tc-ico"><Icon name="savings" /></span>
+                        <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div key={m.id} className={`ai-row ${m.role === "student" ? "me" : "ai"}`}>

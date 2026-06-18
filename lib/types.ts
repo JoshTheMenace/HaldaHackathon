@@ -196,6 +196,7 @@ export interface ToolEvent {
   kind: ToolKind;
   label: string; // "Searching right-fit schools"
   detail?: string; // "4 matches" / "FAFSA added"
+  items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships)
 }
 
 export interface ChatMessage {
