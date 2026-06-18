@@ -1,0 +1,82 @@
+{
+  "name": "Ohio State University",
+  "slug": "osu",
+  "unitid": "204796",
+  "location": {
+    "city": "Columbus",
+    "state": "OH"
+  },
+  "type": "public",
+  "url": "www.osu.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.6057,
+    "enrollment": 45638,
+    "sat_math_25": 670,
+    "sat_math_75": 760,
+    "act_25": 28,
+    "act_75": 32
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.8773,
+    "avg_net_price": 17339,
+    "pell_grant_rate": 0.2016,
+    "first_gen_share": 0.2622,
+    "median_earnings_6yr": 51438
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Important",
+    "test_scores": "Important",
+    "application_essay": "Important",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Considered",
+    "talent_ability": "Considered",
+    "character_personal_qualities": "Considered",
+    "interview": "Not Considered",
+    "first_generation": "Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Considered",
+    "state_residency": "Important",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": false,
+    "early_action": true,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "One of the largest universities in the US by enrollment \u2014 GPA and class rank serve as primary volume filters",
+    "Early Action (non-binding) is strongly encouraged; scholarship decisions begin in December",
+    "In-state applicants have a significantly higher acceptance rate than out-of-state",
+    "Specialized programs (Fisher School of Business, College of Engineering) have separate, more competitive admissions"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.31,
+    "hs_rank_top_25_pct": 0.64,
+    "gpa_4_0_plus": 0.36,
+    "gpa_3_75_to_3_99": 0.29,
+    "gpa_3_5_to_3_74": 0.18,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 13200,
+    "merit_aid_available": true,
+    "notes": "Merit scholarships include Eminence Fellows (full ride), Maximus, and automatic renewable awards for 3.7+ GPA / 31+ ACT. Meets ~55% of demonstrated need on average.",
+    "source": "CDS"
+  }
+}

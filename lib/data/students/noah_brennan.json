@@ -1,0 +1,149 @@
+{
+  "name": "Noah Brennan",
+  "slug": "noah_brennan",
+  "archetype": "The Legacy Candidate",
+  "year": "junior",
+  "profile_completeness": "projected",
+  "profile_completeness_notes": "11th grade. One SAT attempt (planning retake). No essays written. Junior year grades through spring semester. AP scores from junior year pending. Senior year courses not yet finalized. Legacy status is a significant factor this profile that quantitative evaluation alone cannot fully capture.",
+  "demographics": {
+    "state": "New Hampshire",
+    "first_gen": false,
+    "financial_need": "none",
+    "ethnicity": "White / Irish American",
+    "citizenship": "US Citizen",
+    "hometown": "Greenwich, CT"
+  },
+  "academic": {
+    "gpa_unweighted": 3.42,
+    "gpa_weighted": 3.81,
+    "gpa_scale": 4.0,
+    "gpa_note": "At St. Paul's School, a 3.42 UW reflects genuine effort in an extremely demanding curriculum. Grading is rigorous and unforgiving — St. Paul's does not inflate. This GPA, in context, represents a solid B+ student at one of the most academically demanding secondary schools in the United States.",
+    "gpa_by_year": {
+      "freshman_unweighted": 3.28,
+      "sophomore_unweighted": 3.44,
+      "junior_unweighted": 3.55
+    },
+    "class_rank": null,
+    "class_rank_percentile": 55,
+    "class_size": 132,
+    "school_type": "private_boarding",
+    "school_name": "St. Paul's School",
+    "ap_courses": [
+      {"course": "US History", "score": 3, "status": "completed"},
+      {"course": "English Language & Composition", "score": 3, "status": "completed"},
+      {"course": "Calculus AB", "score": null, "status": "in_progress", "note": "Junior year. On track for 3-4."},
+      {"course": "Economics", "score": null, "status": "in_progress", "note": "Junior year. On track for 4."}
+    ],
+    "ib_courses": [],
+    "honors_courses": [],
+    "planned_senior_courses": [
+      "AP Statistics",
+      "AP Government & Politics",
+      "AP English Literature",
+      "Advanced Topics in Economics (St. Paul's proprietary)"
+    ],
+    "note": "St. Paul's does not use a traditional honors/AP differentiation — essentially all courses are taught at an honors level. AP courses are supplements. College counselors at St. Paul's write extensively contextualized school profiles that admissions officers at elite schools read carefully and trust."
+  },
+  "test_scores": {
+    "sat": {
+      "total": 1380,
+      "ebrw": 710,
+      "math": 670,
+      "attempts": 1,
+      "note": "First attempt, fall of junior year. Planning one or two more attempts. SAT prep tutoring engaged (private tutor, $250/hr). Projected improvement: 1420-1460 range."
+    },
+    "act": null,
+    "psat": {
+      "total": 1310,
+      "note": "Taken sophomore year."
+    },
+    "sat_projected": "1420-1460 after additional preparation",
+    "ap_exams_completed": 2,
+    "ap_exams_with_5": 0
+  },
+  "activities": [
+    {
+      "name": "Varsity Crew (Rowing)",
+      "role": "Varsity Rower — Bow Seat, Men's 8",
+      "years": 3,
+      "hours_per_week": 16,
+      "weeks_per_year": 26,
+      "description": "Three-year varsity rower at a program with a nationally respected tradition. Men's 8 placed 3rd at New England Prep School Championships junior year. Not at recruited athlete level for D1 colleges, but a committed and contributing member of a competitive team.",
+      "awards": ["New England Prep School Championships: 3rd place (team, junior year)", "St. Paul's School Athletic Award (sophomore year)"]
+    },
+    {
+      "name": "Model United Nations",
+      "role": "Delegate, Crisis Committee Chair (junior year)",
+      "years": 3,
+      "hours_per_week": 4,
+      "weeks_per_year": 28,
+      "description": "Represented St. Paul's at Yale Model UN (YMUN) and Harvard HMUN. Junior year, served as a crisis committee chair at the school's internal MUN conference. Strong verbal debater; written submissions are adequate.",
+      "awards": ["Outstanding Delegate, YMUN (junior year)"]
+    },
+    {
+      "name": "Community Service — Concord Soup Kitchen",
+      "role": "Volunteer",
+      "years": 3,
+      "hours_per_week": 2,
+      "weeks_per_year": 30,
+      "description": "Required community service through school program. Serves monthly shifts. Not independently initiated.",
+      "awards": []
+    },
+    {
+      "name": "Investment Club",
+      "role": "Member",
+      "years": 2,
+      "hours_per_week": 2,
+      "weeks_per_year": 28,
+      "description": "Participates in the school's student-run investment portfolio (mock). Manages a hypothetical position in consumer staples. More interested in finance than investing per se.",
+      "awards": []
+    },
+    {
+      "name": "Chapel Choir",
+      "role": "Tenor, Member",
+      "years": 3,
+      "hours_per_week": 3,
+      "weeks_per_year": 30,
+      "description": "Sings in the school's chapel choir — a required activity at St. Paul's that continues voluntarily after the required period. Not a standout musician but a consistent presence.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Economics",
+  "intended_major_alt": "Political Science or History",
+  "intended_career": "Finance or investment management; has expressed interest in private equity",
+  "essays": {
+    "main_essay_quality": "not_yet_written",
+    "main_essay_theme": "Likely topic: the experience of losing a critical race at the New England Championships and what rowing as a team sport taught him about interdependence. Safe topic, competently delivered — will not hurt him but is unlikely to be a differentiating essay. Alternative topic being explored: his relationship with his father's expectations and how he is defining his own path independent of legacy.",
+    "supplemental_quality": "not_yet_written",
+    "supplemental_notes": "No essays written. School college counselor (experienced, placed 15+ students at Ivies last year) will provide extensive support. Writing is adequate but not a strength. The most interesting essay he could write is about the weight of legacy — but that requires self-awareness he may or may not be ready to demonstrate.",
+    "writing_style": "Competent and clear. Academic in register. Unlikely to be a differentiating positive factor; needs to avoid being a negative one."
+  },
+  "hooks": [
+    "Legacy — father attended Yale (class of '93, donated annually, involved alumni)",
+    "Legacy — paternal uncle attended Princeton (class of '95)",
+    "Legacy — paternal grandfather attended Harvard (class of '63)",
+    "St. Paul's School institutional relationship with selective colleges (school sends 20-30% of graduates to T20 schools annually)",
+    "No URM, athletic, or first-gen consideration"
+  ],
+  "additional_info": "Father is a managing partner at a mid-size hedge fund in Greenwich, CT. Mother is a former attorney, now a philanthropist and board member at several arts institutions. Family has made gifts to Yale in the six-figure range over the past decade. Noah is genuinely aware that his background is privileged and is occasionally defensive about it in conversation, which may surface in interviews. College counselor at St. Paul's has strong relationships with admissions officers at Yale, Princeton, and Harvard and will write an unusually detailed and contextualized letter.",
+  "special_circumstances": "Legacy consideration is real and documented, particularly at Yale. However, admissions committees at the most selective schools have been reducing legacy weight in recent years. Noah's profile — mid-50s class rank at a top boarding school, 1380 SAT, no exceptional spike — would be a strong admit at many excellent schools (Colby, Bowdoin, Tulane, USC) but is genuinely borderline at Yale/Princeton without legacy consideration. The honest evaluation question is: how much does a Yale legacy hook actually move the needle for a student like this in 2026?",
+  "high_school": {
+    "name": "St. Paul's School",
+    "type": "private_boarding",
+    "city": "Concord",
+    "state": "NH",
+    "rigor_tier": 5,
+    "ap_courses_offered": 18,
+    "challenge_index": null,
+    "challenge_index_note": "Not applicable — all courses are taught at advanced level; AP is supplementary",
+    "avg_class_gpa_unweighted": 3.38,
+    "tuition_annual": 67000,
+    "pct_free_reduced_lunch": 0.08,
+    "pct_attending_4yr_college": 0.99,
+    "pct_attending_highly_selective": 0.28,
+    "niche_grade": "A+",
+    "committee_context": "One of the oldest and most academically rigorous boarding schools in the United States. Grading is genuinely demanding — the school does not inflate. A 3.42 UW here is the equivalent of a 3.75+ at most public schools. Admissions officers at elite colleges know St. Paul's grading conventions well and adjust accordingly. The school counselor's letter carries significant credibility at selective schools.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.42 UW at St. Paul's is read as approximately 3.75-3.85 in a conventional grading context. The school's rigorous culture means a B+ average reflects genuine academic ability."
+  }
+}

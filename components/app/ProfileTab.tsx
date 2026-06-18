@@ -169,7 +169,7 @@ export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
               See how your profile looks to real college admissions committees — powered by AI.
             </p>
             <a
-              href={`http://localhost:5001/?halda_id=${profile.id}`}
+              href="/simulator"
               target="_blank"
               rel="noopener noreferrer"
               style={{

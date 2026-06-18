@@ -1,0 +1,175 @@
+{
+  "name": "Emma Rivera",
+  "slug": "emma_rivera",
+  "archetype": "The Humanities Spike",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "New Mexico",
+    "first_gen": false,
+    "financial_need": "medium",
+    "ethnicity": "Hispanic / Latina",
+    "citizenship": "US Citizen",
+    "hometown": "Albuquerque, NM"
+  },
+  "academic": {
+    "gpa_unweighted": 3.62,
+    "gpa_weighted": 3.94,
+    "gpa_scale": 5.0,
+    "class_rank": null,
+    "class_rank_percentile": 79,
+    "class_size": 390,
+    "school_type": "public",
+    "school_name": "Rio Grande High School",
+    "ap_courses": [
+      {
+        "course": "English Language & Composition",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "English Literature & Composition",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "US History",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Art History",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Spanish Language & Culture",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Calculus AB",
+        "score": 2,
+        "status": "completed",
+        "note": "Clear weakness; math is not her area"
+      },
+      {
+        "course": "Psychology",
+        "score": null,
+        "status": "in_progress"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors World History",
+      "Honors Art"
+    ],
+    "note": "Emma has pursued the most rigorous humanities track available at her school. Math and science coursework is at grade level but not advanced \u2014 a visible gap compared to her humanities excellence."
+  },
+  "test_scores": {
+    "sat": {
+      "total": 1310,
+      "ebrw": 730,
+      "math": 580,
+      "attempts": 2,
+      "note": "First attempt: 1270. Second: 1310. EBRW is a strength; math score is a weakness. Score is reflective of genuine math difficulty, not lack of effort."
+    },
+    "act": null,
+    "ap_exams_completed": 6,
+    "ap_exams_with_5": 3
+  },
+  "activities": [
+    {
+      "name": "Poetry Writing (Independent)",
+      "role": "Poet / Author",
+      "years": 6,
+      "hours_per_week": 10,
+      "weeks_per_year": 50,
+      "description": "Has been writing poetry seriously since age 12. Published in three literary journals including 'Ploughshares' (national, adult publication \u2014 exceptionally rare for a high school student) and 'The Adroit Journal' (national youth). Won the Scholastic Art & Writing Gold Key nationally two consecutive years in poetry. Work explores borderland identity, grief, and the experience of being bilingual.",
+      "awards": [
+        "Scholastic Art & Writing Gold Key \u2014 Poetry (2023, 2024)",
+        "Published in Ploughshares literary journal (2024)",
+        "Published in The Adroit Journal (2023, 2024)",
+        "New Mexico Young Writers Award (2023)",
+        "National YoungArts Foundation \u2014 Poetry Merit Award (2024)"
+      ]
+    },
+    {
+      "name": "School Literary Magazine \u2014 'Mesa'",
+      "role": "Editor-in-Chief (senior year), Staff Editor (junior year)",
+      "years": 3,
+      "hours_per_week": 5,
+      "weeks_per_year": 32,
+      "description": "Redesigned the magazine's editorial process and secured first-ever outside submission from a published alumni. Under her leadership, circulation doubled and the magazine was recognized at the state level.",
+      "awards": [
+        "New Mexico Scholastic Press Association: Best Literary Magazine (2024)"
+      ]
+    },
+    {
+      "name": "Theater / Drama",
+      "role": "Lead Actress (junior and senior year), Ensemble (freshman and sophomore)",
+      "years": 4,
+      "hours_per_week": 8,
+      "weeks_per_year": 20,
+      "description": "Lead roles in 'The House on Mango Street' (adapted, junior year) and 'The Crucible' (senior year). Received outstanding actress recognition at district theater festival.",
+      "awards": [
+        "District Theater Festival: Outstanding Lead Actress (2024)"
+      ]
+    },
+    {
+      "name": "Albuquerque Journal \u2014 Student Contributor",
+      "role": "Freelance Contributor",
+      "years": 2,
+      "hours_per_week": 3,
+      "weeks_per_year": 36,
+      "description": "Has written 14 pieces for the paper's student voices section. Topics include immigration policy, local arts, and youth mental health. One piece (on a migrant shelter) was picked up by the AP wire.",
+      "awards": [
+        "AP Wire pickup for article on El Refugio migrant shelter (2024)"
+      ]
+    },
+    {
+      "name": "Senior Center Reading & Writing Program (Volunteer)",
+      "role": "Volunteer Facilitator",
+      "years": 2,
+      "hours_per_week": 3,
+      "weeks_per_year": 40,
+      "description": "Leads weekly reading and creative writing sessions for elderly residents. Compiled a small anthology of resident poems and stories ('Voices from La Puerta') and donated copies to the facility's library.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Creative Writing",
+  "intended_major_alt": "Comparative Literature or English",
+  "intended_career": "Author, poet, or literary editor. Long-term interest in teaching creative writing at the university level.",
+  "essays": {
+    "main_essay_quality": "exceptional",
+    "main_essay_theme": "Explores the experience of writing a poem in Spanish that she could not fully translate \u2014 arguing that some truths live only in one language, and how living bilingually means always carrying an untranslatable version of yourself. Formally inventive (includes untranslated lines). Among the strongest personal statements her school counselor has read in 12 years.",
+    "supplemental_quality": "exceptional",
+    "supplemental_notes": "Why Creative Writing essays are specific, technically sophisticated, and show genuine engagement with each program's faculty and approach. Portfolio submissions (where accepted) include three of her published poems. Writing sample quality is nationally competitive.",
+    "writing_style": "Distinctive voice. Rhythmic, precise, emotionally layered. Rarely over-explains. Best writing in the application pool at most schools she applies to."
+  },
+  "hooks": [
+    "Hispanic / Latina \u2014 URM consideration at many schools",
+    "Nationally published and award-winning creative writer \u2014 highly unusual for a high school student",
+    "Geographic diversity \u2014 New Mexico is underrepresented at many selective schools"
+  ],
+  "additional_info": "Father is a high school art teacher; mother works as a medical assistant. Family can contribute approximately $10,000-15,000/year. Will need financial aid. Guidance counselor describes her as 'the most genuinely talented writer I have encountered in my career.'",
+  "special_circumstances": "Low math scores and GPA are genuine weaknesses. Her calculus AP score (2) reflects a real ceiling on quantitative ability, not lack of effort \u2014 she retook the final twice. Schools should weigh these against a humanities profile that is nationally exceptional. Not suited for STEM programs.",
+  "high_school": {
+    "name": "Rio Grande High School",
+    "type": "public_title1",
+    "city": "Albuquerque",
+    "state": "NM",
+    "rigor_tier": 2,
+    "ap_courses_offered": 9,
+    "challenge_index": 0.62,
+    "avg_class_gpa_unweighted": 3.05,
+    "pct_free_reduced_lunch": 0.71,
+    "pct_attending_4yr_college": 0.44,
+    "niche_grade": "C",
+    "committee_context": "Title I public school in Albuquerque with a predominantly low-income student body. Strong arts and humanities programming but limited advanced STEM course access. Emma has pursued every available humanities AP and placed in the top 21% of her class. Performance here \u2014 particularly in humanities \u2014 reflects genuine ability, not a weak pool.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.62 UW at a Title I school with this grade distribution is meaningfully above average. At a school with more grade inflation, she might show a higher number; here the grades are hard-earned."
+  }
+}

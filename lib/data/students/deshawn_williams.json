@@ -1,0 +1,176 @@
+{
+  "name": "DeShawn Williams",
+  "slug": "deshawn_williams",
+  "archetype": "The Late Bloomer",
+  "year": "senior",
+  "profile_completeness": "complete",
+  "demographics": {
+    "state": "Georgia",
+    "first_gen": true,
+    "financial_need": "high",
+    "ethnicity": "African American",
+    "citizenship": "US Citizen",
+    "hometown": "Macon, GA"
+  },
+  "academic": {
+    "gpa_unweighted": 3.38,
+    "gpa_unweighted_note": "Cumulative 3.38 masks significant upward trend \u2014 see semester breakdown",
+    "gpa_weighted": 3.72,
+    "gpa_scale": 5.0,
+    "gpa_by_year": {
+      "freshman_unweighted": 2.81,
+      "sophomore_unweighted": 3.1,
+      "junior_unweighted": 3.82,
+      "senior_unweighted_so_far": 3.91
+    },
+    "class_rank": null,
+    "class_rank_percentile": 70,
+    "class_size": 355,
+    "school_type": "public",
+    "school_name": "Central High School",
+    "ap_courses": [
+      {
+        "course": "Environmental Science",
+        "score": 3,
+        "status": "completed",
+        "note": "Taken junior year \u2014 first AP ever attempted"
+      },
+      {
+        "course": "Biology",
+        "score": null,
+        "status": "in_progress"
+      },
+      {
+        "course": "Statistics",
+        "score": null,
+        "status": "in_progress"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 11",
+      "Honors English 12"
+    ],
+    "dual_enrollment": [
+      {
+        "course": "Calculus I",
+        "institution": "Central Georgia Technical College",
+        "grade": "A",
+        "status": "completed",
+        "note": "Taken junior year spring semester. Strongest academic performance of his career."
+      },
+      {
+        "course": "Introduction to Engineering Design",
+        "institution": "Central Georgia Technical College",
+        "grade": "A",
+        "status": "completed"
+      },
+      {
+        "course": "Calculus II",
+        "institution": "Central Georgia Technical College",
+        "grade": "In progress \u2014 A so far",
+        "status": "in_progress"
+      }
+    ],
+    "note": "School has limited AP offerings. DeShawn took every available AP from junior year onward. His dual enrollment performance is the most reliable indicator of his current academic ability \u2014 'A' in Calculus I at a college level is significant given his earlier record."
+  },
+  "test_scores": {
+    "sat": null,
+    "act": {
+      "composite": 28,
+      "english": 30,
+      "math": 26,
+      "reading": 29,
+      "science": 27,
+      "attempts": 2,
+      "note": "First attempt (junior year): 25. Second attempt (fall senior year): 28. Meaningful improvement. Plans to attempt a third time in February."
+    },
+    "ap_exams_completed": 1,
+    "ap_exams_with_5": 0
+  },
+  "activities": [
+    {
+      "name": "Track and Field",
+      "role": "Varsity Sprinter / 400m",
+      "years": 4,
+      "hours_per_week": 12,
+      "weeks_per_year": 22,
+      "description": "4-year varsity member. Specialized in 400m and 4x400m relay. Qualified for Georgia Class 5A State Championship junior year (team). Personal record: 49.8 seconds in 400m. Sport has been a lifeline \u2014 his coach, Coach Marcus Tatum, is also his most important mentor and letter writer.",
+      "awards": [
+        "Region 2-5A All-Region (junior and senior year)",
+        "State Championship qualifier \u2014 4x400 relay (junior year, team)"
+      ]
+    },
+    {
+      "name": "Youth Mentorship Program",
+      "role": "Mentor",
+      "years": 2,
+      "hours_per_week": 4,
+      "weeks_per_year": 44,
+      "description": "Mentors two middle school boys through a community center program. Meets weekly. Both boys are from single-parent households; one is now on the school's track team. DeShawn describes this as the activity he is most proud of.",
+      "awards": []
+    },
+    {
+      "name": "Church Choir",
+      "role": "Tenor Section Leader",
+      "years": 6,
+      "hours_per_week": 4,
+      "weeks_per_year": 46,
+      "description": "Sings in a 40-person gospel choir at Beulah Baptist Church. Became section leader junior year. Helped organize choir's first public performance outside the church (MLK Day community event, 2024).",
+      "awards": []
+    },
+    {
+      "name": "Part-Time Employment \u2014 Circle K",
+      "role": "Cashier / Shift Lead",
+      "years": 2,
+      "hours_per_week": 15,
+      "weeks_per_year": 48,
+      "description": "Works evenings and weekends. Promoted to shift lead after 10 months. Contributes earnings to household expenses following father's death.",
+      "awards": []
+    },
+    {
+      "name": "Engineering Club",
+      "role": "Member",
+      "years": 1,
+      "hours_per_week": 2,
+      "weeks_per_year": 28,
+      "description": "Joined senior year after dual enrollment engineering course sparked interest. Participated in Rube Goldberg machine competition. Only STEM-focused extracurricular \u2014 but aligns with his intended major.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Civil Engineering",
+  "intended_major_alt": "Construction Management or Mechanical Engineering",
+  "intended_career": "Infrastructure engineering, specifically interested in bridge and roadway projects in underserved communities",
+  "essays": {
+    "main_essay_quality": "strong",
+    "main_essay_theme": "Describes the week after his father died sophomore year \u2014 how he sat in the bleachers during track practice unable to run, and how Coach Tatum sat with him in silence for an hour without saying anything. Uses that moment to explore what it means to show up. Pivots to dual enrollment Calculus as the moment he discovered what he was actually capable of. Honest, specific, not self-pitying.",
+    "supplemental_quality": "average_to_strong",
+    "supplemental_notes": "Why Engineering essays are genuine but less polished. Why School essays vary \u2014 stronger at schools he visited. One school-specific essay about community impact is excellent. Writing skills are a mild weakness but authentic voice carries the work.",
+    "writing_style": "Direct, unpretentious, emotionally honest. Not technically polished but the voice is distinct and compelling. Reads like a person, not a resume."
+  },
+  "hooks": [
+    "First-generation college student",
+    "African American \u2014 URM consideration at many schools",
+    "Low-income household \u2014 Pell Grant eligible",
+    "Demonstrated upward academic trajectory",
+    "Significant family hardship (father deceased)"
+  ],
+  "additional_info": "Mother works two jobs (home health aide and school cafeteria). No father in household since sophomore year. Family income approximately $28,000/year. Maximum Pell Grant eligible. Will need substantial financial aid. Track coach Coach Marcus Tatum is writing what the school counselor describes as the most passionate teacher recommendation she has ever read. School counselor also writing a context letter explaining limited AP offerings and the GPA trend.",
+  "special_circumstances": "Father passed away at the start of DeShawn's sophomore year. GPA dropped significantly that year (2.81 freshman to 3.10 sophomore \u2014 but most of the sophomore dip happened in the first semester, immediately after the death). Recovery was steady and sustained: 3.82 junior year, 3.91 senior year so far. Dual enrollment college GPA: 4.0. Cumulative GPA of 3.38 significantly undersells current ability. Admission committees who look only at the cumulative number will miss the story. Schools with holistic review and context-sensitive evaluation are significantly more likely to see this application accurately.",
+  "high_school": {
+    "name": "Central High School",
+    "type": "public",
+    "city": "Macon",
+    "state": "GA",
+    "rigor_tier": 2,
+    "ap_courses_offered": 6,
+    "challenge_index": 0.45,
+    "avg_class_gpa_unweighted": 3.12,
+    "pct_free_reduced_lunch": 0.68,
+    "pct_attending_4yr_college": 0.38,
+    "niche_grade": "C+",
+    "committee_context": "Under-resourced Macon public school with only 6 AP offerings and 68% of students on free/reduced lunch. DeShawn took every AP available from junior year onward. A 3.38 cumulative GPA must be contextualized against this school's grade distribution and his upward trajectory \u2014 his dual enrollment college GPA of 4.0 is the most meaningful data point about his current ability.",
+    "gpa_adjustment": "read_up",
+    "gpa_adjustment_note": "3.38 cumulative UW understates current ability. Junior-year 3.82 and senior-year 3.91 are the operative numbers, and a 4.0 in dual-enrollment college calculus confirms trajectory. Read current performance, not cumulative."
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "Kenji Nakamura",
+  "slug": "kenji_nakamura",
+  "archetype": "The Math Prodigy in Progress",
+  "year": "sophomore",
+  "profile_completeness": "incomplete",
+  "profile_completeness_notes": "10th grade. No SAT/ACT taken. No essays written. Only 2 years of high school transcript. AP exams not yet taken. Profile reflects end-of-sophomore-year status. Evaluations should project trajectory heavily and focus on what to improve.",
+  "demographics": {
+    "state": "Oregon",
+    "first_gen": false,
+    "financial_need": "low",
+    "ethnicity": "Japanese American",
+    "citizenship": "US Citizen",
+    "hometown": "Portland, OR"
+  },
+  "academic": {
+    "gpa_unweighted": 3.52,
+    "gpa_weighted": 3.89,
+    "gpa_scale": 4.0,
+    "gpa_by_year": {
+      "freshman_unweighted": 3.31,
+      "sophomore_unweighted": 3.72
+    },
+    "gpa_note": "Upward trend is meaningful. Freshman year was rocky — adjusting from 9 years of homeschooling to a large public school environment. Sophomore year steadied significantly. Math and CS grades are near-perfect; English and History pull the average down.",
+    "class_rank": null,
+    "class_rank_percentile": 74,
+    "class_size": 510,
+    "school_type": "public",
+    "school_name": "Lincoln High School",
+    "ap_courses": [],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors Algebra II / Trig (freshman)",
+      "Honors Pre-Calculus (sophomore)",
+      "Honors Biology (sophomore)"
+    ],
+    "planned_junior_courses": [
+      "AP Calculus BC",
+      "AP Computer Science A",
+      "AP Physics C: Mechanics",
+      "Honors English 11"
+    ],
+    "note": "School allows APs starting junior year. Kenji has been placed in the most advanced math track available. His sophomore-year Pre-Calculus teacher has noted he is 'operating at a different level than his classmates — more like a college student working on intuition, not procedure.'"
+  },
+  "test_scores": {
+    "sat": null,
+    "act": null,
+    "psat": null,
+    "psat_planned": "October of junior year",
+    "ap_exams_completed": 0,
+    "ap_exams_with_5": 0,
+    "competition_scores": {
+      "mathcounts": "Oregon State Finalist, 8th grade (top 12 in state)",
+      "amc_10": "Score 121.5 — top 20% nationally (freshman year, self-studied)",
+      "amc_10_note": "Did not qualify for AIME (cutoff was 103.5 his year — he did qualify). Correction: AMC 10A 2025 AIME cutoff was 103.5, Kenji scored 121.5 — he did qualify for AIME.",
+      "aime": "Score 4/15 — qualified freshman year, strong result for a first-year student with no coaching",
+      "usaco": "Silver division (self-taught competitive programming)"
+    }
+  },
+  "activities": [
+    {
+      "name": "Math Team",
+      "role": "President (sophomore year), Member (freshman year)",
+      "years": 2,
+      "hours_per_week": 6,
+      "weeks_per_year": 32,
+      "description": "Led team to 2nd place at Oregon state math league competition sophomore year. Runs weekly practice sessions. Has started a freshman mentorship track within the club.",
+      "awards": ["Oregon State Math League: 2nd place (team, sophomore year)", "Individual 1st place: Portland Metro Math Invitational (sophomore year)"]
+    },
+    {
+      "name": "Competitive Programming (Independent)",
+      "role": "Self-directed",
+      "years": 3,
+      "hours_per_week": 8,
+      "weeks_per_year": 48,
+      "description": "Self-taught competitive programmer. Reached USACO Silver division sophomore year. Working toward Gold. Participates in Codeforces and LeetCode contests regularly. Has solved 400+ problems across platforms.",
+      "awards": ["USACO Silver Division (2025)", "Codeforces rating 1542 (Expert level)"]
+    },
+    {
+      "name": "Chess Club",
+      "role": "Member",
+      "years": 2,
+      "hours_per_week": 2,
+      "weeks_per_year": 28,
+      "description": "USCF rated 1687 (Class A). Participates in Oregon scholastic chess tournaments.",
+      "awards": ["USCF Class A rating"]
+    },
+    {
+      "name": "Japanese Cultural Association",
+      "role": "Member",
+      "years": 2,
+      "hours_per_week": 1,
+      "weeks_per_year": 24,
+      "description": "Participates in cultural events and language practice. Near-native Japanese speaker — primary language at home.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Mathematics",
+  "intended_major_alt": "Computer Science or Applied Mathematics",
+  "intended_career": "Mathematical research or quantitative finance; long-term interest in cryptography",
+  "essays": {
+    "main_essay_quality": "not_yet_written",
+    "main_essay_theme": "Potential topic: what it felt like to solve an AMC problem in the margin of a history textbook and realize that math was the only place where his homeschool instinct to go deep still worked in a structured classroom. Has the raw material; hasn't written anything.",
+    "supplemental_quality": "not_yet_written",
+    "supplemental_notes": "No essays written. Writing is a genuine weakness — 9 years of homeschooling did not emphasize structured essay writing. Will need significant development.",
+    "writing_style": "Undeveloped for formal academic purposes. Clear thinker verbally; struggles to translate logic into prose. Identified as a growth area."
+  },
+  "hooks": ["None — no legacy, URM, athletic, or development hook. Profile strength must come from math/CS achievements alone."],
+  "additional_info": "Father is a math professor at Reed College (Portland). Mother is a software engineer. Family is comfortable financially. Kenji was homeschooled K-8 under a rigorous curriculum his father designed, with emphasis on proof-based mathematics from age 10. Transitioning to a conventional high school has been socially and stylistically difficult — he finds the pace of classroom instruction slow and has occasionally been written up for not paying attention. No disciplinary record beyond minor classroom incidents.",
+  "special_circumstances": "9-year homeschool background means Kenji is genuinely unusual as an applicant — his mathematical ability is significantly ahead of his transcript and his social/extracurricular development lags behind peers. His sophomore-year GPA improvement and his competition record are the most reliable signals. Colleges that run math-heavy programs and evaluate competition scores seriously will read this very differently than schools that rely primarily on GPA and test scores.",
+  "high_school": {
+    "name": "Lincoln High School",
+    "type": "public",
+    "city": "Portland",
+    "state": "OR",
+    "rigor_tier": 3,
+    "ap_courses_offered": 18,
+    "challenge_index": 1.12,
+    "avg_class_gpa_unweighted": 3.31,
+    "pct_free_reduced_lunch": 0.29,
+    "pct_attending_4yr_college": 0.67,
+    "niche_grade": "B+",
+    "committee_context": "Mid-tier Portland public school with solid but not exceptional AP access. Grade distribution is honest — a 3.52 UW here is respectable but below the school's top decile. APs not available until junior year. The school does not have a strong math competition pipeline, which makes Kenji's AIME qualification and USACO Silver notable — he achieved these with no school support or coaching.",
+    "gpa_adjustment": "neutral",
+    "gpa_adjustment_note": "3.52 UW is read at face value. However, the upward trend (3.31 → 3.72) and the context of a homeschool-to-public transition are highly relevant to trajectory interpretation."
+  }
+}

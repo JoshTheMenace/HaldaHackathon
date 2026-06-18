@@ -1,0 +1,78 @@
+{
+  "name": "Arizona State University",
+  "slug": "asu",
+  "unitid": "104151",
+  "location": {
+    "city": "Tempe",
+    "state": "AZ"
+  },
+  "type": "public",
+  "url": "www.asu.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.8989,
+    "enrollment": 64674
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.6795,
+    "avg_net_price": 14967,
+    "pell_grant_rate": 0.2899,
+    "first_gen_share": 0.3813,
+    "median_earnings_6yr": 52843
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Important",
+    "gpa": "Very Important",
+    "class_rank": "Important",
+    "test_scores": "Considered",
+    "application_essay": "Not Considered",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Not Considered",
+    "talent_ability": "Not Considered",
+    "character_personal_qualities": "Not Considered",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": false,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Formula-based admission: applicants are auto-admitted if they graduate top 25% of class, have a 3.0+ GPA, or meet test score benchmarks \u2014 no holistic review for standard admission",
+    "No essays, recommendations, or extracurriculars evaluated in standard admissions \u2014 purely an academic index",
+    "Barrett Honors College has a separate competitive application requiring essays and a higher GPA",
+    "One of the largest universities in the US with over 60,000 online students in addition to the Tempe residential campus"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.26,
+    "hs_rank_top_25_pct": 0.53,
+    "gpa_4_0_plus": 0.31,
+    "gpa_3_75_to_3_99": 0.26,
+    "gpa_3_5_to_3_74": 0.2,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 10800,
+    "merit_aid_available": true,
+    "notes": "Automatic merit tiers: New American University (3.0 GPA), Dean's (3.5 GPA), President's (3.7+ GPA). National Merit full rides available.",
+    "source": "CDS"
+  }
+}

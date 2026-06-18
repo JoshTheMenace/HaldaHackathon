@@ -1,0 +1,86 @@
+{
+  "name": "Brigham Young University",
+  "slug": "byu",
+  "unitid": "230047",
+  "location": {
+    "city": "Laie",
+    "state": "HI"
+  },
+  "type": "private_nonprofit",
+  "url": "www.byuh.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.4696,
+    "enrollment": 2889,
+    "sat_math_25": 480,
+    "sat_math_75": 570,
+    "act_25": 21,
+    "act_75": 25
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.5359,
+    "avg_net_price": 16774,
+    "pell_grant_rate": 0.151,
+    "first_gen_share": 0.1919,
+    "median_earnings_6yr": 39316
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Very Important",
+    "application_essay": "Important",
+    "recommendations": "Important",
+    "extracurricular_activities": "Considered",
+    "talent_ability": "Considered",
+    "character_personal_qualities": "Very Important",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Important",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Very Important",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": false,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Not offered",
+    "recommendations_required": 2,
+    "additional_materials": [
+      "Ecclesiastical endorsement (required for LDS applicants)",
+      "Honor code acknowledgment"
+    ]
+  },
+  "special_considerations": [
+    "Membership in or commitment to The Church of Jesus Christ of Latter-day Saints is strongly preferred; ecclesiastical endorsement required for LDS applicants",
+    "Honor code mandates abstinence from alcohol, tobacco, coffee, and tea, with strict dress/grooming standards \u2014 all students must comply",
+    "Character and religious values carry very high weight; admissions committee reviews ecclesiastical endorsement alongside academic record",
+    "Mission service (typically 18\u201324 months) is common; admissions readily accommodates deferrals",
+    "Uses its own application portal \u2014 not Common App"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.47,
+    "hs_rank_top_25_pct": 0.8,
+    "gpa_4_0_plus": 0.57,
+    "gpa_3_75_to_3_99": 0.23,
+    "gpa_3_5_to_3_74": 0.12,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 7200,
+    "merit_aid_available": true,
+    "notes": "LDS Church subsidy keeps tuition very low (~$6,500/yr for members, ~$13,000 for non-members). Need-aware; merit scholarships available.",
+    "source": "CDS"
+  }
+}

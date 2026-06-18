@@ -1,0 +1,82 @@
+{
+  "name": "Berea College",
+  "slug": "berea",
+  "unitid": "156295",
+  "location": {
+    "city": "Berea",
+    "state": "KY"
+  },
+  "type": "private_nonprofit",
+  "url": "https://www.berea.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.1934,
+    "enrollment": 1513,
+    "sat_math_25": 568,
+    "sat_math_75": 655,
+    "act_25": 23,
+    "act_75": 28
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.6012,
+    "avg_net_price": 6106,
+    "pell_grant_rate": 0.8373,
+    "first_gen_share": 0.4058,
+    "median_earnings_6yr": 35676
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Important",
+    "test_scores": "Important",
+    "application_essay": "Very Important",
+    "recommendations": "Important",
+    "extracurricular_activities": "Important",
+    "talent_ability": "Important",
+    "character_personal_qualities": "Very Important",
+    "interview": "Considered",
+    "first_generation": "Very Important",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Very Important",
+    "state_residency": "Important",
+    "religious_affiliation": "Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Very Important",
+    "work_experience": "Very Important",
+    "demonstrated_interest": "Important"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": true,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Recommended",
+    "recommendations_required": 2,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "No tuition \u2014 every admitted student receives a full-tuition scholarship; Berea is entirely free to attend",
+    "Every student works 10-15 hours/week in the student labor program as a core part of the educational model",
+    "Only admits students who demonstrate financial need \u2014 this is an explicit admission criterion, making it need-conscious by design",
+    "Strong geographic preference for students from Appalachia and other underserved regions of the American South"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.25,
+    "hs_rank_top_25_pct": 0.55,
+    "gpa_4_0_plus": 0.3,
+    "gpa_3_75_to_3_99": 0.25,
+    "gpa_3_5_to_3_74": 0.2,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": false,
+    "meets_full_need": true,
+    "no_loan_policy": true,
+    "avg_need_based_aid": 42000,
+    "merit_aid_available": false,
+    "notes": "Every student receives a full-tuition scholarship (~$42K value). Only admits students who demonstrate financial need \u2014 need-conscious by design. Room/board covered through labor program earnings.",
+    "source": "CDS"
+  }
+}

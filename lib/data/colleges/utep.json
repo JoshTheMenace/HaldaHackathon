@@ -1,0 +1,73 @@
+{
+  "name": "University of Texas at El Paso",
+  "slug": "utep",
+  "unitid": "492689",
+  "location": {
+    "city": "El Paso",
+    "state": "TX"
+  },
+  "type": "public",
+  "url": "elpaso.ttuhsc.edu/",
+  "selectivity": {
+    "enrollment": 242
+  },
+  "outcomes": {
+    "pell_grant_rate": 0.5297
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Considered",
+    "gpa": "Important",
+    "class_rank": "Considered",
+    "test_scores": "Considered",
+    "application_essay": "Not Considered",
+    "recommendations": "Not Considered",
+    "extracurricular_activities": "Not Considered",
+    "talent_ability": "Not Considered",
+    "character_personal_qualities": "Not Considered",
+    "interview": "Not Considered",
+    "first_generation": "Not Considered",
+    "alumni_relation": "Not Considered",
+    "geographical_residence": "Not Considered",
+    "state_residency": "Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Not Considered",
+    "volunteer_work": "Not Considered",
+    "work_experience": "Not Considered",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": true,
+    "early_action": false,
+    "early_decision": false,
+    "common_app": false
+  },
+  "requirements": {
+    "essays_required": false,
+    "interview": "Not offered",
+    "recommendations_required": 0,
+    "additional_materials": []
+  },
+  "special_considerations": [
+    "Open-access university serving the El Paso and US-Mexico border region \u2014 one of the most accessible R1 research universities in the country",
+    "Designated Hispanic Serving Institution (HSI): over 80% of students identify as Hispanic/Latino",
+    "Uses ApplyTexas application system \u2014 Common App is not accepted",
+    "Ranked as a top-10 university for social mobility; serves a predominantly first-generation and low-income student population"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.22,
+    "hs_rank_top_25_pct": 0.43,
+    "gpa_4_0_plus": 0.21,
+    "gpa_3_75_to_3_99": 0.16,
+    "gpa_3_5_to_3_74": 0.16,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": false,
+    "no_loan_policy": false,
+    "avg_need_based_aid": 8900,
+    "merit_aid_available": true,
+    "notes": "Open-access HSI with low tuition. Strong Pell/SEOG access. UTEP Promesa covers tuition for students with family income under ~$30K.",
+    "source": "CDS"
+  }
+}

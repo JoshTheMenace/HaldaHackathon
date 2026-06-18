@@ -1,0 +1,84 @@
+{
+  "name": "Massachusetts Institute of Technology",
+  "slug": "mit",
+  "unitid": "166683",
+  "location": {
+    "city": "Cambridge",
+    "state": "MA"
+  },
+  "type": "private_nonprofit",
+  "url": "web.mit.edu/",
+  "selectivity": {
+    "acceptance_rate": 0.0455,
+    "enrollment": 4535,
+    "sat_math_25": 780,
+    "sat_math_75": 800,
+    "act_25": 34,
+    "act_75": 36
+  },
+  "outcomes": {
+    "graduation_rate_4yr": 0.9624,
+    "avg_net_price": 20111,
+    "pell_grant_rate": 0.1932,
+    "first_gen_share": 0.2585,
+    "median_earnings_6yr": 131633
+  },
+  "admission_factors": {
+    "rigor_of_coursework": "Very Important",
+    "gpa": "Very Important",
+    "class_rank": "Considered",
+    "test_scores": "Very Important",
+    "application_essay": "Very Important",
+    "recommendations": "Very Important",
+    "extracurricular_activities": "Very Important",
+    "talent_ability": "Very Important",
+    "character_personal_qualities": "Very Important",
+    "interview": "Important",
+    "first_generation": "Considered",
+    "alumni_relation": "Considered",
+    "geographical_residence": "Considered",
+    "state_residency": "Not Considered",
+    "religious_affiliation": "Not Considered",
+    "racial_ethnic_status": "Considered",
+    "volunteer_work": "Important",
+    "work_experience": "Important",
+    "demonstrated_interest": "Not Considered"
+  },
+  "policies": {
+    "test_optional": false,
+    "early_action": true,
+    "early_decision": false,
+    "common_app": true
+  },
+  "requirements": {
+    "essays_required": true,
+    "interview": "Recommended (alumni Educational Counselor interview)",
+    "recommendations_required": 3,
+    "additional_materials": [
+      "Optional portfolio for architecture and visual arts applicants"
+    ]
+  },
+  "special_considerations": [
+    "SAT/ACT required (reinstated for 2024 cycle) \u2014 one of few elite schools to mandate standardized testing",
+    "Alumni Educational Counselor interview is strongly recommended and weighted in holistic review",
+    "Demonstrated passion for STEM carries enormous weight \u2014 research projects, science olympiad, independent study, and competition results are closely examined",
+    "Demonstrated interest is explicitly not tracked \u2014 admissions is purely merit-based"
+  ],
+  "class_profile": {
+    "hs_rank_top_10_pct": 0.97,
+    "hs_rank_top_25_pct": 1.0,
+    "gpa_4_0_plus": 0.91,
+    "gpa_3_75_to_3_99": 0.06,
+    "gpa_3_5_to_3_74": 0.02,
+    "source": "CDS"
+  },
+  "financial_aid": {
+    "need_blind": true,
+    "meets_full_need": true,
+    "no_loan_policy": true,
+    "avg_need_based_aid": 57986,
+    "merit_aid_available": false,
+    "notes": "Need-blind for domestic and international applicants. All aid is need-based \u2014 no merit scholarships. Loans replaced with grants.",
+    "source": "CDS"
+  }
+}

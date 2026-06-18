@@ -1,0 +1,180 @@
+{
+  "name": "Alex Kim",
+  "slug": "alex_kim",
+  "archetype": "The Junior in Progress",
+  "year": "junior",
+  "profile_completeness": "incomplete",
+  "profile_completeness_notes": "No SAT/ACT score yet (PSAT taken). No essays written. Senior year courses not yet selected. AP scores from junior year APs pending. Profile reflects end-of-junior-year status.",
+  "demographics": {
+    "state": "Washington",
+    "first_gen": false,
+    "financial_need": "medium_low",
+    "ethnicity": "Korean American",
+    "citizenship": "US Citizen",
+    "hometown": "Bellevue, WA"
+  },
+  "academic": {
+    "gpa_unweighted": 3.91,
+    "gpa_weighted": 4.58,
+    "gpa_scale": 5.0,
+    "class_rank": null,
+    "class_rank_percentile": 91,
+    "class_size": 480,
+    "school_type": "public",
+    "school_name": "Bellevue High School",
+    "ap_courses": [
+      {
+        "course": "Human Geography",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "World History: Modern",
+        "score": 4,
+        "status": "completed"
+      },
+      {
+        "course": "Computer Science Principles",
+        "score": 5,
+        "status": "completed"
+      },
+      {
+        "course": "Calculus BC",
+        "score": null,
+        "status": "in_progress",
+        "note": "Exam in May; on track for 4-5 based on coursework"
+      },
+      {
+        "course": "Computer Science A",
+        "score": null,
+        "status": "in_progress",
+        "note": "Exam in May; teacher projects 5"
+      },
+      {
+        "course": "Physics 1",
+        "score": null,
+        "status": "in_progress",
+        "note": "Exam in May; on track for 3-4"
+      },
+      {
+        "course": "US History",
+        "score": null,
+        "status": "in_progress",
+        "note": "Exam in May"
+      }
+    ],
+    "ib_courses": [],
+    "honors_courses": [
+      "Honors English 9",
+      "Honors English 10",
+      "Honors Chemistry",
+      "Honors Algebra II"
+    ],
+    "planned_senior_courses": [
+      "AP Physics C: Mechanics",
+      "AP Physics C: E&M",
+      "AP English Literature",
+      "AP Statistics",
+      "Multivariable Calculus (Running Start at Bellevue College)"
+    ],
+    "note": "School uses 5.0 weighted scale for AP courses. Alex has taken the most rigorous available curriculum for STEM track."
+  },
+  "test_scores": {
+    "sat": null,
+    "act": null,
+    "psat": {
+      "total": 1380,
+      "note": "Taken October junior year. National Merit Commended threshold in Washington is approximately 1490; Alex did not qualify."
+    },
+    "sat_projected": "1440-1500 based on PSAT score and prep trajectory",
+    "act_projected": null,
+    "test_prep": "Currently working through Khan Academy SAT prep. Plans to take SAT in October and again in December of senior year.",
+    "ap_exams_completed": 3,
+    "ap_exams_with_5": 1
+  },
+  "activities": [
+    {
+      "name": "Robotics Team (FRC)",
+      "role": "Design Lead / CAD Engineer",
+      "years": 3,
+      "hours_per_week": 12,
+      "weeks_per_year": 28,
+      "description": "Leads mechanical design on the team's FRC robot using SolidWorks CAD. Responsible for drivetrain and game mechanism design. Mentors two sophomore members on design principles. Team qualified for Pacific Northwest Regional Championship both junior and sophomore years.",
+      "awards": [
+        "PNW Regional Qualifier (team, 2023 and 2024)",
+        "Engineering Inspiration Award nominee (2024)"
+      ]
+    },
+    {
+      "name": "Coding Club",
+      "role": "President (junior year)",
+      "years": 3,
+      "hours_per_week": 3,
+      "weeks_per_year": 34,
+      "description": "Runs weekly coding sessions. Organized first-ever school hackathon (24-hour event, 60 participants). Built a web app to help students find tutors, currently used by 80+ students.",
+      "awards": [
+        "School Innovation Award (2024)"
+      ]
+    },
+    {
+      "name": "Cross Country",
+      "role": "Varsity Runner",
+      "years": 2,
+      "hours_per_week": 8,
+      "weeks_per_year": 14,
+      "description": "Runs 5K on varsity team. Personal record: 18:42. Placed in top 20 at district meet junior year. Runs for fitness and mental clarity during stressful academic seasons.",
+      "awards": []
+    },
+    {
+      "name": "Model UN",
+      "role": "Delegate",
+      "years": 2,
+      "hours_per_week": 2,
+      "weeks_per_year": 28,
+      "description": "Participated in two regional Model UN conferences. Represented Germany (committee: Technology & Innovation) and Japan (committee: Climate Change). Received Honorable Mention at 2024 regional conference.",
+      "awards": [
+        "Honorable Mention, PNW Model UN Regional Conference (2024)"
+      ]
+    },
+    {
+      "name": "Korean Language School",
+      "role": "Student",
+      "years": 10,
+      "hours_per_week": 3,
+      "weeks_per_year": 40,
+      "description": "Has attended Korean heritage language school since age 6. Reads, writes, and speaks Korean at near-native level. Helps translate for grandparents who do not speak English.",
+      "awards": []
+    }
+  ],
+  "intended_major": "Mechanical Engineering",
+  "intended_major_alt": "Computer Science or Robotics Engineering",
+  "intended_career": "Robotics or autonomous systems engineering, potentially in aerospace or manufacturing automation",
+  "essays": {
+    "main_essay_quality": "not_yet_written",
+    "main_essay_theme": "Likely topic: the moment the team's robot failed at regionals due to a design flaw he created, and what rebuilding it taught him about iterative design and accountability. Has outlined this essay but not drafted it.",
+    "supplemental_quality": "not_yet_written",
+    "supplemental_notes": "No supplements written. Has strong material to draw from. Writing ability is solid but not exceptional \u2014 English is a relative weakness compared to STEM skills.",
+    "writing_style": "Clear and logical; somewhat mechanical. Will need development to show personality beyond technical accomplishments."
+  },
+  "hooks": [
+    "None \u2014 no legacy, athletic, or development hook"
+  ],
+  "additional_info": "Parents are both software engineers at tech companies in Bellevue. Family can contribute approximately $30,000-40,000/year. Not Pell Grant eligible but middle-class squeeze \u2014 will need some merit aid or reasonable net price.",
+  "special_circumstances": "Profile is incomplete as Alex is still a junior. All evaluations should account for projected senior year performance and the absence of final SAT scores, AP scores from junior year, and essays. Evaluations should include specific guidance on what Alex can do between now and applications to strengthen the profile.",
+  "high_school": {
+    "name": "Bellevue High School",
+    "type": "public",
+    "city": "Bellevue",
+    "state": "WA",
+    "rigor_tier": 4,
+    "ap_courses_offered": 21,
+    "challenge_index": 2.1,
+    "avg_class_gpa_unweighted": 3.42,
+    "pct_free_reduced_lunch": 0.17,
+    "pct_attending_4yr_college": 0.84,
+    "niche_grade": "A",
+    "committee_context": "Competitive suburban Seattle school in an affluent tech-industry community. AP participation is high and grade distribution is honest. A 3.91 UW places Alex in roughly the top 9% of the class \u2014 strong performance in a genuinely challenging environment.",
+    "gpa_adjustment": "neutral",
+    "gpa_adjustment_note": "3.91 UW is read at face value \u2014 above-average performance at an above-average school."
+  }
+}
