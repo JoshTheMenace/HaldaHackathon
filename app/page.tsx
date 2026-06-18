@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { rankInterestMatches } from "@/lib/interest-match";
 import AppBar from "@/components/app/AppBar";
+import AuthScreen from "@/components/app/AuthScreen";
 import Dock from "@/components/app/Dock";
 import AIGuideSheet from "@/components/app/AIGuideSheet";
 import ProfileMenu from "@/components/app/ProfileMenu";
@@ -16,7 +17,7 @@ import { Icon } from "@/components/app/Icon";
 import { matchSignature, type Tab } from "@/components/app/helpers";
 
 export default function App() {
-  const { send, profile, matchesRevealed } = useHalda();
+  const { ready, signedIn, send, profile, matchesRevealed } = useHalda();
   const [tab, setTab] = useState<Tab>("home");
   const [guideOpen, setGuideOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,6 +45,10 @@ export default function App() {
   return (
     <div className="appwrap">
       <div className="phone">
+        {!ready && <main className="auth loading"><div className="auth-mark"><Icon name="auto_awesome" /></div></main>}
+        {ready && !signedIn && <AuthScreen />}
+        {ready && signedIn && (
+          <>
         {tab !== "profile" && <AppBar onAvatar={() => setMenuOpen(true)} />}
 
         {tab === "home" && <HomeTab onAsk={onAsk} onGoExplore={() => setTab("explore")} />}
@@ -57,6 +62,8 @@ export default function App() {
         <Dock active={tab} onTab={setTab} onFab={() => setGuideOpen(true)} />
         <AIGuideSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
         <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} onConnect={() => setTab("connect")} />
+          </>
+        )}
       </div>
     </div>
   );

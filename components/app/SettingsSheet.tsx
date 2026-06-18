@@ -16,7 +16,7 @@ const VIS_LABEL: Record<Vis, string> = { counselors: "Counselors only", cohort: 
 const INCLUDE = [{ k: "Deadlines", icon: "event" }, { k: "Scholarships", icon: "savings" }, { k: "GPA & tasks", icon: "school" }];
 
 export default function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { profile, editField, reset } = useHalda();
+  const { profile, editField, logout } = useHalda();
   const first = profile.name?.split(" ")[0] || "you";
 
   const [toast, setToast] = useState("");
@@ -301,7 +301,7 @@ export default function SettingsSheet({ open, onClose }: { open: boolean; onClos
           </div>
         </div>
 
-        <button className="signout" onClick={() => { reset(); onClose(); }}>Sign out</button>
+        <button className="signout" onClick={() => { logout(); onClose(); }}>Sign out</button>
         <div className="ver">Halda AI · Made for the class of 2028</div>
       </main>
 
