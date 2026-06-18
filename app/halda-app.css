@@ -375,6 +375,32 @@
 .phone .tool-card .tc-b { min-width: 0; }
 .phone .tool-card .tc-b b { display: block; font-size: 13.5px; font-weight: 700; color: var(--h-ink); }
 .phone .tool-card .tc-b span { display: block; font-size: 12px; color: var(--h-ink-var); margin-top: 2px; line-height: 1.4; }
+
+/* interactive school cards in the chat */
+.phone .chat-schools { margin-left: 12px; display: flex; flex-direction: column; gap: 8px; }
+.phone .csc { display: flex; align-items: center; gap: 11px; background: #fff; border: 1px solid var(--h-s-highest); border-radius: 16px; padding: 9px; box-shadow: var(--h-soft); cursor: pointer; }
+.phone .csc:active { transform: scale(.99); }
+.phone .csc-photo { position: relative; width: 58px; height: 58px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg,#e9f3f0,#cfeae6); }
+.phone .csc-photo img { width: 100%; height: 100%; object-fit: cover; }
+.phone .csc-logo { position: absolute; left: 4px; bottom: 4px; width: 22px; height: 22px; border-radius: 7px; background: #fff; border: 1.5px solid #fff; display: grid; place-items: center; overflow: hidden; box-shadow: 0 2px 6px -2px rgba(0,0,0,.3); }
+.phone .csc-logo img { width: 76%; height: 76%; object-fit: contain; }
+.phone .csc-logo b { font-size: 9px; font-weight: 800; }
+.phone .csc-b { flex: 1; min-width: 0; }
+.phone .csc-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.phone .csc-top b { font-size: 15px; font-weight: 700; color: var(--h-ink); }
+.phone .csc-pct { font-size: 12px; font-weight: 800; color: var(--h-primary); white-space: nowrap; }
+.phone .csc-sub { font-size: 12px; color: var(--h-ink-var); margin-top: 2px; }
+.phone .csc-save { width: 40px; height: 40px; flex-shrink: 0; border: none; background: var(--h-s-low); border-radius: 11px; display: grid; place-items: center; cursor: pointer; color: var(--h-outline); }
+.phone .csc-save.on { background: rgba(0,107,95,.1); color: var(--h-primary); }
+.phone .csc-save .material-symbols-outlined { font-size: 21px; font-variation-settings: 'FILL' 1; }
+
+/* detail sheet sits ABOVE the chat sheet when opened from chat */
+.phone .scrim.detail-scrim { z-index: 64; }
+.phone .sheet.detail { z-index: 66; }
+.phone .detail-actions { display: flex; gap: 10px; margin-top: 18px; }
+.phone .detail-actions .tour-btn { margin-top: 0; flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; }
+.phone .tour-btn.saved { background: var(--h-primary); color: #fff; border-color: var(--h-primary); }
+.phone .tour-btn .material-symbols-outlined { font-size: 19px; }
 .phone .typing { display: flex; gap: 5px; padding: 15px 16px; }
 .phone .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--h-outline-v); animation: hblink 1.2s infinite; }
 .phone .typing span:nth-child(2) { animation-delay: .2s; }

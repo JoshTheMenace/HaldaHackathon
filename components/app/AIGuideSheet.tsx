@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { Icon } from "./Icon";
 import VoiceView from "./VoiceView";
+import ChatSchoolCard from "./ChatSchoolCard";
+import MatchDetailSheet from "./MatchDetailSheet";
 
 const SUGGESTIONS = ["Next deadline?", "Scholarships for me", "Why BYU?", "Boost my GPA"];
 const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance" };
@@ -12,6 +14,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   const { messages, typing, send } = useHalda();
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [input, setInput] = useState("");
+  const [detailId, setDetailId] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,6 +77,13 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                         ))}
                       </div>
                     )}
+                    {m.tool.schools && m.tool.schools.length > 0 && (
+                      <div className="chat-schools">
+                        {m.tool.schools.map((sc) => (
+                          <ChatSchoolCard key={sc.schoolId} schoolId={sc.schoolId} matchPct={sc.matchPct} onOpen={() => setDetailId(sc.schoolId)} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -114,6 +124,8 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
           </div>
         )}
       </section>
+
+      <MatchDetailSheet schoolId={detailId} onClose={() => setDetailId(null)} onAsk={(t) => t && send(t, "web")} />
     </>
   );
 }

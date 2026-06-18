@@ -259,7 +259,8 @@ export async function runAgent(opts: {
         mergeWorking(working, args);
       } else if (call.name === "search_universities") {
         revealMatches = true;
-        const top = rankInterestMatches(working, 5).map((m) => {
+        const ranked = rankInterestMatches(working, 5);
+        const top = ranked.map((m) => {
           const s = schoolById(m.schoolId)!;
           return {
             school: s.short, matchPct: m.overallFit, admissions: admissionsOdds(s.acceptanceRate),
@@ -272,7 +273,8 @@ export async function runAgent(opts: {
           };
         });
         result = { matches: top };
-        toolEvents.push({ kind: "search", label: "Searching right-fit schools", detail: `${top.length} matches` });
+        // Cards the chat renders inline (the student stays in the conversation).
+        toolEvents.push({ kind: "search", label: "Right-fit schools", detail: `${ranked.length} found`, schools: ranked.map((m) => ({ schoolId: m.schoolId, matchPct: m.overallFit })) });
       } else if (call.name === "school_detail") {
         const sc = resolveSchool(String(args.school ?? ""));
         if (sc) {

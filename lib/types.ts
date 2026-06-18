@@ -197,6 +197,7 @@ export interface ToolEvent {
   label: string; // "Searching right-fit schools"
   detail?: string; // "4 matches" / "FAFSA added"
   items?: { title: string; sub?: string }[]; // optional result cards (e.g. scholarships)
+  schools?: { schoolId: string; matchPct: number }[]; // search results → interactive cards
 }
 
 export interface ChatMessage {
