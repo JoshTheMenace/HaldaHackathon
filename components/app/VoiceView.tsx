@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLive } from "@/lib/useGeminiLive";
 import { useHalda } from "@/lib/useHalda";
-import { rankInterestMatches, schoolById } from "@/lib/interest-match";
+import { rankInterestMatches, schoolById, scoreInterestFit } from "@/lib/interest-match";
 import { profileSummary } from "@/lib/halda-prompt";
 import { Icon } from "./Icon";
 import { CampusPhoto, SchoolLogo } from "./SchoolImage";
 
 export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string) => void }) {
   const { ingestVoiceUser, pushHaldaMessage, profile, matchesRevealed } = useHalda();
+  const [cardIds, setCardIds] = useState<string[]>([]);
   const live = useGeminiLive({
     onUserTurn: (t) => ingestVoiceUser(t),
     onHaldaTurn: (t) => pushHaldaMessage(t, "voice"),
     knownFacts: profileSummary(profile),
+    profile,
   });
   const tRef = useRef<HTMLDivElement>(null);
 
@@ -25,7 +27,16 @@ export default function VoiceView({ onOpenSchool }: { onOpenSchool?: (id: string
     tRef.current?.scrollTo({ top: tRef.current.scrollHeight, behavior: "smooth" });
   }, [live.transcript, live.userText, live.haldaText]);
 
-  const matches = useMemo(() => (matchesRevealed ? rankInterestMatches(profile, 6) : []), [matchesRevealed, profile]);
+  const chosenIds = useMemo(() => Array.from(new Set([
+    ...(profile.savedSchoolIds ?? []),
+    ...((profile.trackedSchools ?? []).map((s) => s.id)),
+  ])).filter((id) => !!schoolById(id)), [profile.savedSchoolIds, profile.trackedSchools]);
+  useEffect(() => {
+    if (chosenIds.length) { setCardIds(chosenIds.slice(0, 4)); return; }
+    if (!matchesRevealed) { setCardIds([]); return; }
+    setCardIds((cur) => cur.length ? cur : rankInterestMatches(profile, 4).map((m) => m.schoolId));
+  }, [chosenIds, matchesRevealed, profile]);
+  const matches = useMemo(() => cardIds.map((id) => scoreInterestFit(profile, schoolById(id)!)), [cardIds, profile]);
   const active = live.status === "live" || live.status === "speaking";
   const label =
     live.status === "idle" ? "Tap to talk to Halda" :

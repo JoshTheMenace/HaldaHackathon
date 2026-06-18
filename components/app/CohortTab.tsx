@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { rankInterestMatches, schoolById } from "@/lib/interest-match";
 import {
   COHORT_PEERS, peerById, postsFor, pathwayFor, pathwayShort, cohortSize, cohortFaces,
@@ -60,7 +61,8 @@ function colToPeerCard(s: CollegeStudent): PeerCardData {
 interface Comment { id: string; author: string; text: string; time: string; }
 
 export default function CohortTab() {
-  const { profile } = useHalda();
+  const { profile, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const pathway = pathwayFor(profile) || "Class of 2025";
   const hasPath = !!pathwayFor(profile);
 
@@ -162,14 +164,14 @@ export default function CohortTab() {
   return (
     <main className="scroll cohort">
       <div className="htitle">
-        <h1>Cohort</h1>
-        <p>Your Class of 2025 community</p>
+        <h1>{t("cohort.title", "Cohort")}</h1>
+        <p>{t("cohort.sub", "Your Class of 2025 community")}</p>
       </div>
 
       <div className="banner">
         <span className="bglow" />
-        <span className="eyebrow">{hasPath ? `${pathway} pathway` : "Find your pathway"}</span>
-        <h2>{hasPath ? `${cohortSize(pathway)} students are on your path` : "Tell Halda your major to meet your cohort"}</h2>
+        <span className="eyebrow">{hasPath ? `${pathway} ${language === "es" ? "ruta" : "pathway"}` : t("cohort.findPath", "Find your pathway")}</span>
+        <h2>{hasPath ? (language === "es" ? `${cohortSize(pathway)} estudiantes están en tu ruta` : `${cohortSize(pathway)} students are on your path`) : t("cohort.meet", "Tell Halda your major to meet your cohort")}</h2>
         <div className="brow">
           <div className="faces">
             {faces.map((f) => <img key={f.id} src={f.avatar} alt="" />)}
@@ -182,10 +184,10 @@ export default function CohortTab() {
       <div className="safety">
         <span className="sh"><Icon name="verified_user" /></span>
         <div className="st">
-          <div className="stt">Safe, verified community</div>
-          <div className="sts">Private to Class of 2025 · AI-moderated · built for students under 18</div>
+          <div className="stt">{t("cohort.safe", "Safe, verified community")}</div>
+          <div className="sts">{t("cohort.safeSub", "Private to Class of 2025 · AI-moderated · built for students under 18")}</div>
         </div>
-        <button className="sbtn" onClick={() => setSheet("guidelines")}>Guidelines</button>
+        <button className="sbtn" onClick={() => setSheet("guidelines")}>{t("cohort.guidelines", "Guidelines")}</button>
       </div>
 
       {/* ── From your High School ── */}
@@ -234,7 +236,7 @@ export default function CohortTab() {
         ) : (
           <button className="composer" onClick={() => setComposeOpen(true)}>
             <span className="cmp-av">{myInitials}</span>
-            <span>Share something with your cohort…</span>
+            <span>{t("cohort.share", "Share something with your cohort…")}</span>
             <Icon name="edit" />
           </button>
         )}
@@ -246,7 +248,7 @@ export default function CohortTab() {
               firstName={firstName} myInitials={myInitials}
               comments={commentsByPost.get(pinned.id) ?? []} onAddComment={addComment} />
           )}
-          {feed.length === 0 && <p className="cohort-empty">No posts here yet — be the first to share something with your {pathwayShort(pathway)} cohort.</p>}
+          {feed.length === 0 && <p className="cohort-empty">{t("cohort.noPosts", "No posts here yet — be the first to share something with your cohort.")}</p>}
           {feed.map((p) => (
             <PostCard key={p.id} p={p} my={p.authorId === "me"} likeCount={likeCount} liked={liked}
               onLike={toggleLike} onAct={flash} onReport={() => setSheet("report")}

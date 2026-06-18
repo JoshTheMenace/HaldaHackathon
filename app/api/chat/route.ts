@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         text: t.text,
       }));
 
-      const result = await runAgent({ apiKey, profile: base, message, history, speak: false });
+      const result = await runAgent({ apiKey, profile: base, message, history, speak: true });
 
       const next: StudentProfile = {
         ...base,
@@ -42,15 +42,17 @@ export async function POST(req: Request) {
       };
       upsertStudent(next);
 
+      const reply = result.reply || "I'm still thinking — give me a moment and try again!";
+
       appendHistory(base.id, [
         { role: "user", text: message, channel: (channel as "sms" | "web") ?? "web" },
-        ...(result.reply ? [{ role: "model" as const, text: result.reply, channel: (channel as "sms" | "web") ?? "web" }] : []),
+        { role: "model" as const, text: reply, channel: (channel as "sms" | "web") ?? "web" },
       ]);
 
       return NextResponse.json({
         engine: "gemini",
         channel: channel ?? "web",
-        text: result.reply,
+        text: reply,
         patch: result.updates,
         revealMatches: result.revealMatches,
         tasks: result.tasks,

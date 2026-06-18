@@ -2,15 +2,34 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { tr } from "@/lib/i18n";
 import { Icon } from "./Icon";
 import VoiceView from "./VoiceView";
 import ChatSchoolCard from "./ChatSchoolCard";
 import MatchDetailSheet from "./MatchDetailSheet";
 
-const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language" };
+const TOOL_ICON: Record<string, string> = { search: "travel_explore", scholarship: "savings", task: "event_available", profile: "person", school: "account_balance", web: "language", video: "play_circle" };
+
+// Web sources come back as opaque Google grounding-redirect URLs with duplicate
+// titles. Show a clean publisher domain instead, deduped and capped — never the
+// raw vertexaisearch redirect.
+const hostname = (s: string) => { try { return new URL(s).hostname.replace(/^www\./, ""); } catch { return s.replace(/^www\./, ""); } };
+function webSources(items: { title?: string; sub?: string }[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const it of items) {
+    const t = (it.title || "").trim();
+    let label = t && !/^https?:\/\//i.test(t) ? t : hostname(t || it.sub || "");
+    if (!label || /vertexaisearch|googleusercontent|google\.com/i.test(label)) label = "web source";
+    const key = label.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(label); }
+  }
+  return out.slice(0, 3);
+}
 
 export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { messages, typing, send } = useHalda();
+  const { messages, typing, send, language } = useHalda();
+  const t = (key: string, fallback: string) => tr(language, key, fallback);
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [input, setInput] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -26,7 +45,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   useEffect(() => {
     if (mode !== "chat" || typing || !lastAi?.text) return;
     let cancelled = false;
-    fetch("/api/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: lastAi.text }) })
+    fetch("/api/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: lastAi.text, language }) })
       .then((r) => r.json())
       .then((d) => { if (!cancelled) setSuggestions(Array.isArray(d.suggestions) ? d.suggestions : []); })
       .catch(() => { if (!cancelled) setSuggestions([]); });
@@ -55,17 +74,17 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
   return (
     <>
       <div className={`scrim${open ? " on" : ""}`} onClick={onClose} />
-      <section className={`sheet ai-sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="AI Guide">
+      <section className={`sheet ai-sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-label={t("guide.title", "AI Guide")}>
         <span className="grab" style={{ marginTop: 12, marginBottom: 4 }} />
         <div className="ai-head">
           <span className="ai-mark"><Icon name="hub" /></span>
           <div className="ht">
-            <h2>AI Guide</h2>
-            <div className="sub">Online · here to help</div>
+            <h2>{t("guide.title", "AI Guide")}</h2>
+            <div className="sub">{t("guide.sub", "Online · here to help")}</div>
           </div>
           <div className="ai-modes">
-            <button className={mode === "chat" ? "on" : ""} onClick={() => setMode("chat")}><Icon name="chat_bubble" />Chat</button>
-            <button className={mode === "voice" ? "on" : ""} onClick={() => setMode("voice")}><Icon name="mic" />Voice</button>
+            <button className={mode === "chat" ? "on" : ""} onClick={() => setMode("chat")}><Icon name="chat_bubble" />{t("guide.chat", "Chat")}</button>
+            <button className={mode === "voice" ? "on" : ""} onClick={() => setMode("voice")}><Icon name="mic" />{t("guide.voice", "Voice")}</button>
           </div>
           <button className="sheet-close" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>
@@ -84,19 +103,68 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                       {m.tool.detail && <span className="d">{m.tool.detail}</span>}
                     </div>
                     {m.tool.items && m.tool.items.length > 0 && (
-                      <div className="tool-cards">
-                        {m.tool.items.map((it, i) => (
-                          <div key={i} className="tool-card">
-                            <span className="tc-ico"><Icon name={m.tool!.kind === "web" ? "link" : "savings"} /></span>
-                            <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
-                          </div>
-                        ))}
-                      </div>
+                      m.tool.kind === "web" ? (
+                        <div className="tool-sources">
+                          {webSources(m.tool.items).map((src, i) => (
+                            <span key={i} className="tool-source"><Icon name="link" /> {src}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="tool-cards">
+                          {m.tool.items.map((it, i) => (
+                            <div key={i} className="tool-card">
+                              <span className="tc-ico"><Icon name="savings" /></span>
+                              <div className="tc-b"><b>{it.title}</b>{it.sub && <span>{it.sub}</span>}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )
                     )}
                     {m.tool.schools && m.tool.schools.length > 0 && (
                       <div className="chat-schools">
                         {m.tool.schools.map((sc) => (
                           <ChatSchoolCard key={sc.schoolId} schoolId={sc.schoolId} matchPct={sc.matchPct} onOpen={() => setDetailId(sc.schoolId)} />
+                        ))}
+                      </div>
+                    )}
+                    {m.tool.media && m.tool.media.length > 0 && (
+                      <div className="tool-media">
+                        {m.tool.media.map((it) => (
+                          <div key={it.title} className="tool-media-card">
+                            <span className="tm-photo">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={it.imageUrl} alt={`${it.title} campus`} />
+                            </span>
+                            <span className="tm-b">
+                              <b>{it.title}</b>
+                              {it.sub && <span>{it.sub}</span>}
+                            </span>
+                            {it.logoUrl && (
+                              <span className="tm-logo">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={it.logoUrl} alt={`${it.title} logo`} />
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {m.tool.videos && m.tool.videos.length > 0 && (
+                      <div className="tool-videos">
+                        {m.tool.videos.map((v) => (
+                          <a key={v.url} className="tool-video-card" href={v.url} target="_blank" rel="noopener noreferrer">
+                            <span className="tv-thumb">
+                              {v.thumbnailUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={v.thumbnailUrl} alt="" />
+                              ) : <Icon name="smart_display" />}
+                              <i><Icon name="play_arrow" /></i>
+                            </span>
+                            <span className="tv-b">
+                              <b>{v.title}</b>
+                              {v.sub && <span>{v.sub}</span>}
+                            </span>
+                          </a>
                         ))}
                       </div>
                     )}
@@ -134,7 +202,7 @@ export default function AIGuideSheet({ open, onClose }: { open: boolean; onClose
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit(input)}
-                placeholder="Ask your AI Guide…"
+                placeholder={t("guide.placeholder", "Ask your AI Guide…")}
                 autoComplete="off"
               />
               <button className="send" onClick={() => submit(input)} aria-label="Send"><Icon name="arrow_upward" /></button>

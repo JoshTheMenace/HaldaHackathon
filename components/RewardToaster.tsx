@@ -25,7 +25,7 @@ function Confetti() {
   const bits = Array.from({ length: 26 });
   const colors = ["var(--gold)", "var(--coral)", "var(--success)", "var(--pine)"];
   return (
-    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-[60] overflow-hidden">
       {bits.map((_, i) => {
         const left = (i * 37) % 100;
         const delay = (i % 6) * 0.05;
@@ -48,12 +48,12 @@ function Confetti() {
 
 export default function RewardToaster() {
   const { events, clearEvent } = useHalda();
-  const hasBurst = events.some((e) => e.kind === "level" || e.kind === "match");
+  const hasBurst = events.some((e) => e.kind !== "xp");
 
   useEffect(() => {
     if (!events.length) return;
     const timers = events.map((e) =>
-      window.setTimeout(() => clearEvent(e.id), e.kind === "xp" ? 1500 : 2600)
+      window.setTimeout(() => clearEvent(e.id), e.kind === "xp" ? 1900 : 3600)
     );
     return () => timers.forEach(clearTimeout);
   }, [events, clearEvent]);
@@ -61,7 +61,7 @@ export default function RewardToaster() {
   return (
     <>
       <AnimatePresence>{hasBurst && <Confetti key="confetti" />}</AnimatePresence>
-      <div className="pointer-events-none fixed bottom-24 right-5 z-[61] flex w-[260px] flex-col items-end gap-2">
+      <div className="pointer-events-none absolute bottom-24 right-5 z-[61] flex w-[282px] flex-col items-end gap-2">
         <AnimatePresence>
           {events.map((e) => (
             <motion.div

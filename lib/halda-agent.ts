@@ -5,18 +5,30 @@ import { schoolById, SCHOOLS } from "./schools";
 import { RATING_CATEGORIES, type RmpRating } from "./ratings";
 import { makeTask } from "./deadlines";
 import { findScholarships } from "./scholarships";
-import { resolveZip, stateFromText } from "./geo";
+import { resolveZip, stateFromText, stateNameFromText } from "./geo";
 import { scorecardLookup } from "./scorecard";
 import { profileSummary, type ProfileUpdates } from "./halda-prompt";
+import { findVirtualTourVideo } from "./youtube";
 
-// "Stay in-state" only ranks correctly if we know WHICH state. The model often
-// sets stayInState=true but forgets state, so derive it from the conversation
-// (the "stay in Utah" message, their ZIP) and persist it.
-function normalizeState(working: StudentProfile, updates: ProfileUpdates, message: string, history?: { role: string; text: string }[]) {
-  if (!working.stayInState || working.state) return;
+// Capture location passively from whatever the student says — a spelled-out
+// state, a "stay in X" line, or a ZIP — on EVERY message, not just when they
+// set stayInState. Location drives ranking and the web-search filter, so we
+// should rarely have it empty. Uses the strict state-name matcher so chat
+// filler ("OK", "hi", "in") can't be mistaken for a state; the deliberate
+// stayInState path keeps the looser matcher (it can read a bare "UT").
+function deriveLocation(working: StudentProfile, updates: ProfileUpdates, message: string, history?: { role: string; text: string }[]) {
   const texts = [message, ...((history ?? []).map((h) => h.text))];
-  const found = texts.map(stateFromText).find(Boolean) || (working.zip ? resolveZip(working.zip)?.state : undefined);
-  if (found) { working.state = found; updates.state = found; }
+  if (!working.state) {
+    const found =
+      texts.map(stateNameFromText).find(Boolean) ||
+      (working.zip ? resolveZip(working.zip)?.state : undefined) ||
+      (working.stayInState ? texts.map(stateFromText).find(Boolean) : undefined);
+    if (found) { working.state = found; updates.state = found; }
+  }
+  if (!working.city && working.zip) {
+    const z = resolveZip(working.zip);
+    if (z?.city) { working.city = z.city; updates.city = z.city; }
+  }
 }
 
 // Generic words shared by many school names — matching on these makes EVERY
@@ -56,6 +68,11 @@ function searchConstraints(p: StudentProfile): string {
   if (p.stayInState && p.state) bits.push(`wants to stay in ${p.state} (in-state tuition)`);
   if (p.maxBudget) bits.push(`budget ~$${p.maxBudget.toLocaleString()}/yr after aid`);
   if (p.grade) bits.push(`high-school grade ${p.grade}`);
+  if (p.isTransfer) bits.push("transfer applicant; preserve credits");
+  if (p.worksFullTime) bits.push("works full time; needs practical/flexible options");
+  if (p.country) bits.push(`applying from ${p.country}`);
+  if (p.visaNeed) bits.push("needs visa/I-20 support");
+  if (p.internationalAidNeed) bits.push("needs aid available to international students");
   return bits.length ? `Filter to fit this student: ${bits.join("; ")}.` : "";
 }
 
@@ -115,7 +132,7 @@ async function backstopExtract(ai: GoogleGenAI, message: string, working: Studen
     const tool = [{ functionDeclarations: [TOOLS[0].functionDeclarations[0]] }]; // update_profile only
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts explicitly stated in it (a stated major or interest MUST be included). Include nothing that isn't in the message.\n\nStudent: ${message}` }] }],
+      contents: [{ role: "user", parts: [{ text: `${profileSummary(working)}\n\nFrom the student message below, extract ONLY facts the student explicitly states about themselves — name, grade, city/state/ZIP, budget, first-gen status, transfer status, work schedule, current college, associate degree, transfer-credit concern, country, visa need, international aid need, intended major, chosen/saved/compared target schools, and any genuine interests. Put each in its proper field. Include nothing not present in the message; do not guess or infer.\n\nStudent: ${message}` }] }],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       config: { tools: tool as any, toolConfig: { functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["update_profile"] } } as any, temperature: 0 },
     });
@@ -134,6 +151,62 @@ function admissionsOdds(rate: number): string {
   return "a reach";
 }
 
+function chosenSchoolIds(p: StudentProfile): string[] {
+  return Array.from(new Set([
+    ...(p.savedSchoolIds ?? []),
+    ...((p.trackedSchools ?? [])
+      .filter((s) => ["saved", "draft", "action"].includes(s.status))
+      .map((s) => s.id)),
+  ])).filter((id) => !!schoolById(id));
+}
+
+function chosenSchoolLine(p: StudentProfile): string {
+  const names = chosenSchoolIds(p).map((id) => schoolById(id)!.short);
+  if (!names.length) return "";
+  return `\n\n=== CURRENT MODE ===\nThe student has chosen or saved: ${names.join(", ")}. Switch from broad discovery into application-coach mode: help them meet requirements, improve odds, finish tasks, afford it, and prepare essays/transcripts/recommendations. Do not keep showing broad school-match cards unless they explicitly ask for alternatives or a refreshed list. Prefer school_detail, web_lookup, find_scholarships, and add_task for the chosen school(s).`;
+}
+
+function explicitlyRequestsSchoolCards(message: string): boolean {
+  return /\b(show|pull up|find|refresh|update|see|give me|compare|list|recommend|recommendations|matches|options|schools|colleges|alternatives)\b/i.test(message);
+}
+
+function mediaForSchool(name: string) {
+  return {
+    imageUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=campus`,
+    logoUrl: `/api/school-media?school=${encodeURIComponent(name)}&kind=logo`,
+  };
+}
+
+function mergeTargetSchools(p: StudentProfile, names: string[]) {
+  const clean = names.map((n) => n.trim()).filter(Boolean);
+  if (clean.length) p.targetSchools = Array.from(new Set([...(p.targetSchools ?? []), ...clean]));
+}
+
+async function compareSchools(ai: GoogleGenAI, names: string[], focus: string | undefined, p: StudentProfile) {
+  const schools = names.map((n) => n.trim()).filter(Boolean).slice(0, 8);
+  const rows = [];
+  for (const name of schools) {
+    const catalog = resolveSchool(name);
+    const card = await scorecardLookup(catalog?.name ?? name);
+    const label = card?.name ?? catalog?.name ?? name;
+    rows.push({
+      school: label,
+      location: card ? [card.city, card.state].filter(Boolean).join(", ") : catalog ? `${catalog.city}, ${catalog.state}` : undefined,
+      acceptanceRatePct: card?.acceptanceRate != null ? Math.round(card.acceptanceRate * 100) : catalog ? Math.round(catalog.acceptanceRate * 100) : undefined,
+      netPricePerYearAfterAid: card?.netPrice ?? catalog?.netPrice,
+      medianEarnings10yr: card?.medianEarnings,
+      gradRatePct: card?.completionRate != null ? Math.round(card.completionRate * 100) : undefined,
+      undergradSize: card?.size,
+      programContext: catalog
+        ? `${catalog.short}: strong in ${catalog.strongMajors.join(", ")}. ${catalog.vibe}`
+        : `Scorecard-backed school; use the web context for current ${focus || "program"} details.`,
+      source: card ? "College Scorecard" : catalog ? "Halda catalog fallback" : "web context",
+    });
+  }
+  const web = await webLookup(ai, `${schools.join(", ")} ${focus || "computer science"} program context outcomes ROI internships comparison`, p);
+  return { schools: rows, webContext: web };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Halda as a real tool-using agent. Gemini decides when to:
 //   • update_profile     — save facts (incl. AP / dual-enrollment credits)
@@ -142,7 +215,7 @@ function admissionsOdds(rate: number): string {
 // We run the tool loop server-side and return the resulting actions.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.1-flash-lite";
+const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.5-flash";
 
 // Lean tool set. Descriptions are ONE line — when-to-call routing lives in the
 // system prompt, not here. update_profile MUST stay first (backstopExtract indexes [0]).
@@ -174,12 +247,24 @@ const TOOLS = [
             maxBudget: { type: Type.NUMBER },
             needsAid: { type: Type.BOOLEAN },
             stayInState: { type: Type.BOOLEAN, description: "wants to stay close to home (also set state)" },
+            isTransfer: { type: Type.BOOLEAN },
+            worksFullTime: { type: Type.BOOLEAN },
+            currentCollege: { type: Type.STRING },
+            completedCollegeYears: { type: Type.NUMBER },
+            associateDegree: { type: Type.STRING },
+            transferCreditsConcern: { type: Type.BOOLEAN },
+            country: { type: Type.STRING, description: "home/applicant country if outside the U.S." },
+            visaNeed: { type: Type.BOOLEAN },
+            internationalAidNeed: { type: Type.BOOLEAN },
+            chosenSchools: { type: Type.ARRAY, description: "School names the student explicitly chose, saved, is applying to, or wants to focus on", items: { type: Type.STRING } },
+            targetSchools: { type: Type.ARRAY, description: "Free-text school names the student wants to compare or track, including non-catalog schools", items: { type: Type.STRING } },
             interestSignals: {
               type: Type.ARRAY,
+              description: "Things the student is genuinely drawn to (a subject, hobby, sport, cause). NOT school names, NOT logistical needs (cost, visa, credit transfer), NOT topics they merely asked about.",
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  interest: { type: Type.STRING },
+                  interest: { type: Type.STRING, description: "the subject/hobby/cause itself, e.g. 'marine biology', 'soccer'" },
                   intent: { type: Type.STRING, description: "career_path|major|serious_extracurricular|community|fan_culture|personal_hobby" },
                   importance: { type: Type.STRING, description: "low|medium|high|must_have" },
                 },
@@ -206,7 +291,7 @@ const TOOLS = [
       },
       {
         name: "search_universities",
-        description: "Show the student ranked school cards. Only once they've asked to see schools or agreed to your offer; don't re-run every turn.",
+        description: "Show a ranked school-card deck. Use for first reveal or explicit requests for schools/options/alternatives; do NOT re-run every turn or after they chose a target school unless they ask for alternatives.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -224,6 +309,18 @@ const TOOLS = [
         },
       },
       {
+        name: "compare_schools",
+        description: "Build a data-first comparison table for multiple named schools; use for ROI/outcomes/no-pep-talk comparison requests.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            schools: { type: Type.ARRAY, items: { type: Type.STRING } },
+            focus: { type: Type.STRING, description: "program or decision lens, e.g. computer science ROI" },
+          },
+          required: ["schools"],
+        },
+      },
+      {
         name: "web_lookup",
         description: "Search the live web for an answer or campus color (no cards).",
         parameters: {
@@ -233,18 +330,27 @@ const TOOLS = [
         },
       },
       {
+        name: "virtual_tour",
+        description: "Find a YouTube virtual/campus tour video for ONE specific school the student is considering; do not use for broad discovery.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: { school: { type: Type.STRING, description: "The specific school, e.g. BYU or Utah Valley University" } },
+          required: ["school"],
+        },
+      },
+      {
         name: "find_scholarships",
         description: "Find scholarships matching this student.",
         parameters: { type: Type.OBJECT, properties: {} },
       },
       {
         name: "add_task",
-        description: "Add a deadline or task. Prefer a canonical key so the real date fills in.",
+        description: "Put a next step on the student's tracker — a real deadline (use a canonical key so the date fills in) OR a custom 'try this' milestone (shadow a nurse, tour a campus, take a CS elective) that gives them a concrete reason to come back.",
         parameters: {
           type: Type.OBJECT,
           properties: {
             key: { type: Type.STRING, description: "fafsa | css_profile | psat | common_app | early_action | regular_decision | college_list" },
-            title: { type: Type.STRING, description: "for a custom task (when no key)" },
+            title: { type: Type.STRING, description: "for a custom task/milestone (when no key), e.g. 'Shadow a nurse this summer'" },
             detail: { type: Type.STRING },
             due: { type: Type.STRING, description: "ISO date YYYY-MM-DD (custom task)" },
           },
@@ -257,11 +363,15 @@ const TOOLS = [
 function systemPrompt(): string {
   return `You are Halda, a warm AI college guide for high-school students — mostly sophomores. Text like a sharp, encouraging older sibling: short, plain, a little playful, usually one question at a time.
 
-Help each student figure out where they belong. Learn what they actually care about and the intent behind it — a passing interest, a possible major, a real career — then connect it to schools, scholarships, and concrete next steps that fit them. Meet them where they are and decide for yourself when you know enough to be useful versus when to ask one more thing.
+It is currently 2026; use 2026 whenever you need the current year.
 
-You have tools to save what you learn, show ranked school matches, look up any single school or the live web, find scholarships, and put real deadlines on their tracker — reach for them whenever they'd make you more helpful. When a student hands you the wheel ("lead the way", "you decide", "just show me") or asks for options, actually show them schools rather than only talking. The student's known profile is given to you every turn: use it, build on it, and don't re-ask what's already there.
+Help each student figure out where they belong. Lead with what they actually came for — a career question, a transfer question, a school comparison — before pivoting to anything else. Learn what they care about and the intent behind it (a passing interest, a possible major, a real career), then connect it to schools, scholarships, and concrete next steps that fit them.
 
-Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure (acceptance rate, net price, salary, rating) you weren't given — if you don't have it, speak qualitatively.`;
+Build their profile as you talk: the moment a student reveals a fact — name, grade, a town or ZIP, budget, first-gen, transfer status, full-time work, current college, associate degree, country, visa need, international aid need, or schools they want to compare — save it that turn; don't wait to be asked. Put each fact in its proper place (a career in careerGoal, money in budget/needsAid, comparison lists in targetSchools), and reserve interest signals for things they're genuinely drawn to — not school names, logistical needs, or topics they merely asked about. Don't assert a fact you haven't confirmed; if age only implies a grade, ask (16 is usually a sophomore or junior).
+
+You have tools to save what you learn, show ranked school matches, compare multiple named schools, look up any single school or the live web, find a YouTube virtual tour for a specific school, find scholarships, and put real next steps on their tracker — reach for them whenever they'd make you more helpful, and if you tell the student you'll pull schools, compare schools, look something up, find a tour, or add a task, do it in the SAME turn. When a student asks for ROI/outcomes/data across multiple schools, switch into comparison mode and use compare_schools instead of normal guidance. When a student chooses/saves/names a school as their target, save it in chosenSchools and shift into helping them get in. Only offer or use virtual_tour when the student is thinking about one particular school; do not offer campus-tour videos during broad discovery or generic matching. When a student hands you the wheel ("lead the way", "just show me") or asks for options, actually show them schools. Their known profile is given every turn: use it, build on it, don't re-ask what's there.
+
+Be specific and honest: name the actual schools, scholarships, and numbers your tools return, and never invent a figure you weren't given. Before you claim a school fits a budget, an aid need, or an eligibility rule (transfer credits, international/visa, in-state cost), confirm it with a tool rather than guessing — and if money is tight, surface real aid and add the FAFSA step.`;
 }
 
 export interface AgentResult {
@@ -276,9 +386,10 @@ export interface AgentResult {
 
 // Apply update_profile args onto a working copy so later tools see latest data.
 function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
-  const scalar = ["name", "email", "phone", "grade", "highSchool", "city", "state", "zip", "firstGen", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
+  const scalar = ["name", "email", "phone", "grade", "highSchool", "city", "state", "zip", "firstGen", "isTransfer", "worksFullTime", "currentCollege", "completedCollegeYears", "associateDegree", "transferCreditsConcern", "country", "visaNeed", "internationalAidNeed", "careerGoal", "settingPref", "sizePref", "maxBudget", "needsAid", "stayInState", "gpa", "testType", "testScore"] as const;
   const wr = w as unknown as Record<string, unknown>;
   for (const k of scalar) if (a[k] !== undefined) wr[k] = a[k];
+  if (Array.isArray(a.targetSchools)) mergeTargetSchools(w, a.targetSchools as string[]);
   if (Array.isArray(a.intendedMajors)) w.intendedMajors = Array.from(new Set([...w.intendedMajors, ...(a.intendedMajors as string[])]));
   if (Array.isArray(a.interestSignals)) {
     for (const s of a.interestSignals as StudentProfile["interestSignals"]) {
@@ -294,6 +405,13 @@ function mergeWorking(w: StudentProfile, a: Record<string, unknown>) {
       else w.creditWallet.push({ ...c, id: c.id || `cr_${w.creditWallet.length}_${Date.now()}` });
     }
   }
+  if (Array.isArray(a.chosenSchools)) {
+    const names = a.chosenSchools as string[];
+    mergeTargetSchools(w, names);
+    const ids = names.map((name) => resolveSchool(name)?.id)
+      .filter(Boolean) as string[];
+    if (ids.length) w.savedSchoolIds = Array.from(new Set([...(w.savedSchoolIds ?? []), ...ids]));
+  }
 }
 
 export async function runAgent(opts: {
@@ -302,6 +420,7 @@ export async function runAgent(opts: {
   message: string;
   history?: { role: "user" | "model"; text: string }[];
   speak?: boolean;
+  matchesRevealed?: boolean;
 }): Promise<AgentResult> {
   const ai = new GoogleGenAI({ apiKey: opts.apiKey });
   const working: StudentProfile = JSON.parse(JSON.stringify(opts.profile));
@@ -311,11 +430,11 @@ export async function runAgent(opts: {
   const toolEvents: ToolEvent[] = [];
   let revealMatches = false;
 
-  normalizeState(working, updates, opts.message, opts.history);
+  deriveLocation(working, updates, opts.message, opts.history);
 
   // The student's known profile rides in the SYSTEM prompt every turn so the
   // model treats it as authoritative and never re-asks what's already there.
-  const perTurn = `=== THIS STUDENT (use it; don't re-ask what's already here) ===\n${profileSummary(working)}`;
+  const perTurn = `=== THIS STUDENT (use it; don't re-ask what's already here) ===\n${profileSummary(working)}${chosenSchoolLine(working)}`;
   const sysInstruction = `${systemPrompt()}\n\n${perTurn}`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -325,6 +444,11 @@ export async function runAgent(opts: {
   ];
 
   let reply = "";
+  // Dedupe identical read-only tool calls within a turn — the model sometimes
+  // fires school_detail on the same school 2-3× in one hop. Reuse the result and
+  // suppress the duplicate chip instead of repeating the work.
+  const callCache = new Map<string, unknown>();
+  const mayShowSchoolCards = !opts.matchesRevealed || explicitlyRequestsSchoolCards(opts.message);
   for (let hop = 0; hop < 5; hop++) {
     const res = await ai.models.generateContent({
       model: TEXT_MODEL,
@@ -348,10 +472,15 @@ export async function runAgent(opts: {
       // The model occasionally hallucinates a tool name like "default_profile";
       // if it's clearly a profile save, honor it so the facts aren't lost.
       const name = call.name === "update_profile" || (call.name !== "search_universities" && /profile/i.test(call.name ?? "")) ? "update_profile" : call.name;
-      if (name === "update_profile") {
+      // Identical read-only call already run this turn → reuse, skip the dup chip.
+      const sig = `${name}:${JSON.stringify(args)}`;
+      const cached = name !== "update_profile" ? callCache.get(sig) : undefined;
+      if (cached !== undefined) {
+        result = cached;
+      } else if (name === "update_profile") {
         Object.assign(updates, args);
         mergeWorking(working, args);
-        normalizeState(working, updates, opts.message, opts.history);
+        deriveLocation(working, updates, opts.message, opts.history);
       } else if (name === "search_universities") {
         revealMatches = true;
         const ranked = rankInterestMatches(working, 5);
@@ -367,8 +496,10 @@ export async function runAgent(opts: {
             creditFit: m.creditFit.level,
           };
         });
-        // Cards the chat renders inline — ALWAYS shown (the visual payoff).
-        toolEvents.push({ kind: "search", label: "Right-fit schools", detail: `${ranked.length} found`, schools: ranked.map((m) => ({ schoolId: m.schoolId, matchPct: m.overallFit })) });
+        // Cards are a visual payoff, not a every-turn ticker. After the first
+        // reveal, only show them again when the student explicitly asks.
+        if (mayShowSchoolCards)
+          toolEvents.push({ kind: "search", label: "Right-fit schools", detail: `${ranked.length} found`, schools: ranked.map((m) => ({ schoolId: m.schoolId, matchPct: m.overallFit })) });
         // When our seeded list is thin for this interest, the SAME step also pulls
         // real specialized programs from the web so cards never stand alone.
         let webExtras;
@@ -383,16 +514,26 @@ export async function runAgent(opts: {
         const sc = resolveSchool(String(args.school ?? ""));
         if (sc) {
           const m = scoreInterestFit(working, sc);
+          // Pull official outcome figures (grad rate, 10-yr earnings) so a seeded
+          // school shows the SAME real numbers as a Scorecard one — no "N/A"
+          // sitting next to live data. Undefined keys drop out on serialization.
+          const official = await scorecardLookup(sc.name);
+          const wl = await webLookup(ai, `${sc.name} ${opts.message}: program quality, admissions requirements, student life`, working);
           result = {
             school: sc.name,
             // What a student actually cares about, in order:
             fitForYourInterests: { matchPct: m.overallFit, why: m.reasons.slice(0, 3), evidence: m.evidenceBadges.slice(0, 3).map((b) => b.title), strongPrograms: sc.strongMajors },
             wouldYouBelong: m.rating ? { studentsLoveItFor: belongingSignals(m.rating), studentRating: `${m.rating.overall}/5 from ${m.rating.reviewCount} students`, tip: "For real culture/vibe & whether they'd fit in, call web_lookup." } : { tip: "Call web_lookup for student-life/culture color." },
-            yourChances: { odds: admissionsOdds(sc.acceptanceRate), acceptanceRatePct: Math.round(sc.acceptanceRate * 100) },
-            cost: { netPricePerYearAfterAid: sc.netPrice, creditFit: m.creditFit.level },
+            yourChances: { odds: admissionsOdds(official?.acceptanceRate ?? sc.acceptanceRate), acceptanceRatePct: Math.round((official?.acceptanceRate ?? sc.acceptanceRate) * 100), source: official ? "College Scorecard" : "Halda catalog fallback" },
+            cost: { netPricePerYearAfterAid: official?.netPrice ?? sc.netPrice, creditFit: m.creditFit.level, source: official?.netPrice != null ? "College Scorecard" : "Halda catalog fallback" },
+            outcomes: official && (official.medianEarnings != null || official.completionRate != null)
+              ? { gradRatePct: official.completionRate != null ? Math.round(official.completionRate * 100) : undefined, medianEarnings10yr: official.medianEarnings ?? undefined, note: "official U.S. Dept of Education figures" }
+              : undefined,
+            webContext: { answer: wl.answer, sources: wl.sources },
             cautions: m.concerns.slice(0, 1),
           };
-          toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match` });
+          toolEvents.push({ kind: "school", label: `Pulling up ${sc.short}`, detail: `${m.overallFit}% match`, schools: [{ schoolId: sc.id, matchPct: m.overallFit }] });
+          toolEvents.push({ kind: "web", label: `Searched ${sc.short}`, detail: "program context", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
         } else {
           // Not in our catalog (e.g. MIT, Stanford) — never fake a card. Pull REAL
           // figures from College Scorecard first; fall back to the live web.
@@ -409,18 +550,70 @@ export async function runAgent(opts: {
               medianEarnings10yr: card.medianEarnings,
               note: "Official U.S. Dept of Education figures (College Scorecard). Not in our match catalog, so no personalized fit % — but these numbers are real.",
             };
-            toolEvents.push({ kind: "school", label: `Looked up ${card.name}`.slice(0, 42), detail: "official data" });
+            toolEvents.push({
+              kind: "school",
+              label: `Looked up ${card.name}`.slice(0, 42),
+              detail: "official data",
+              media: [{ title: card.name, sub: "Live campus image", ...mediaForSchool(card.name) }],
+            });
           } else {
             const wl = await webLookup(ai, `${school}: acceptance rate, net price after aid, and what it's known for`, working);
             result = { school, source: "web", info: wl.answer, sources: wl.sources, note: "From the live web — confirm on the school's site." };
-            toolEvents.push({ kind: "web", label: `Looked up ${school}`.slice(0, 42), detail: "from the web", items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+            toolEvents.push({
+              kind: "web",
+              label: `Looked up ${school}`.slice(0, 42),
+              detail: "from the web",
+              items: wl.sources.map((s) => ({ title: s.title || s.url, sub: s.url })),
+              media: [{ title: school, sub: "Live campus image", ...mediaForSchool(school) }],
+            });
           }
         }
+      } else if (name === "compare_schools") {
+        const names = (Array.isArray(args.schools) ? args.schools : [])
+          .map(String)
+          .filter(Boolean);
+        mergeTargetSchools(working, names);
+        Object.assign(updates, { targetSchools: working.targetSchools });
+        const comparison = await compareSchools(ai, names, String(args.focus || working.intendedMajors[0] || "computer science"), working);
+        result = comparison;
+        toolEvents.push({
+          kind: "compare",
+          label: "Comparison table",
+          detail: `${comparison.schools.length} schools`,
+          items: comparison.schools.map((s) => ({
+            title: s.school,
+            sub: [
+              s.acceptanceRatePct != null ? `${s.acceptanceRatePct}% admit` : null,
+              s.netPricePerYearAfterAid != null ? `$${s.netPricePerYearAfterAid.toLocaleString()}/yr net` : null,
+              s.medianEarnings10yr != null ? `$${s.medianEarnings10yr.toLocaleString()} earnings` : null,
+              s.gradRatePct != null ? `${s.gradRatePct}% grad` : null,
+            ].filter(Boolean).join(" · "),
+          })),
+        });
+        if (comparison.webContext.sources.length)
+          toolEvents.push({ kind: "web", label: "Program context", detail: String(args.focus || "outcomes").slice(0, 40), items: comparison.webContext.sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
       } else if (name === "web_lookup") {
         const q = cleanWebQuery(String(args.query ?? ""));
         const { answer, sources } = await webLookup(ai, q, working);
         result = { answer, sources };
         toolEvents.push({ kind: "web", label: "Searching the web", detail: String(args.school || q).slice(0, 48), items: sources.map((s) => ({ title: s.title || s.url, sub: s.url })) });
+      } else if (name === "virtual_tour") {
+        const requested = String(args.school ?? "").trim();
+        const sc = resolveSchool(requested);
+        const school = sc?.name ?? requested;
+        const video = await findVirtualTourVideo(school);
+        result = video;
+        toolEvents.push({
+          kind: "video",
+          label: `YouTube virtual tour`,
+          detail: sc?.short ?? school.slice(0, 24),
+          videos: [{
+            title: video.title,
+            sub: video.isSearchFallback ? "Open YouTube search results" : [video.channel, "Campus tour"].filter(Boolean).join(" · "),
+            url: video.url,
+            thumbnailUrl: video.thumbnailUrl,
+          }],
+        });
       } else if (name === "find_scholarships") {
         const found = findScholarships(working);
         result = { scholarships: found };
@@ -432,8 +625,9 @@ export async function runAgent(opts: {
         result = { added: { title: t.title, due: t.due } };
         toolEvents.push({ kind: "task", label: "Added to your tasks", detail: t.title });
       } else {
-        result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, web_lookup, find_scholarships, add_task.` };
+        result = { error: `Unknown tool "${call.name}". Use one of: update_profile, search_universities, school_detail, compare_schools, web_lookup, virtual_tour, find_scholarships, add_task.` };
       }
+      if (name !== "update_profile" && cached === undefined) callCache.set(sig, result);
       } catch (err) {
         // A malformed tool call shouldn't crash the turn — tell the model and move on.
         result = { error: `Could not run ${call.name}: ${(err as Error).message}` };
@@ -444,14 +638,23 @@ export async function runAgent(opts: {
     contents.push({ role: "user", parts: responseParts });
   }
 
-  // Data-loss backstop: if this turn captured no major/interest but the student
-  // said something substantive, force an extraction and apply it ONLY if it found
-  // a major/interest (so we never lose a stated fact, and never add noise).
-  if (!updates.intendedMajors && !updates.interestSignals && opts.message.trim().length >= 12) {
+  // Data-loss backstop: the conversational model often answers a fact-laden
+  // message without saving — or saves only the major and silently drops the
+  // name, grade, first-gen, or budget. Force a temp-0 extraction and merge every
+  // field the model DIDN'T already save this turn, so no stated fact is lost.
+  if (opts.message.trim().length >= 8) {
     const extra = await backstopExtract(ai, opts.message, working);
-    if (extra && (extra.intendedMajors || extra.interestSignals)) {
-      Object.assign(updates, extra);
-      mergeWorking(working, extra);
+    if (extra) {
+      const saved = updates as Record<string, unknown>;
+      const rescued: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(extra)) {
+        if (v != null && saved[k] === undefined) rescued[k] = v;
+      }
+      if (Object.keys(rescued).length) {
+        Object.assign(updates, rescued);
+        mergeWorking(working, rescued);
+        deriveLocation(working, updates, opts.message, opts.history);
+      }
     }
   }
 

@@ -29,6 +29,8 @@ function majorTags(major?: string): string[] {
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const isInternational = (p: StudentProfile) =>
+  !!p.country && !/^(u\.?s\.?a?|united states|america)$/i.test(p.country.trim());
 
 // Why this catalog scholarship fits — lead with the strongest matched reason.
 function whyFor(s: ScholarshipEntry, p: StudentProfile, major?: string): string {
@@ -49,8 +51,14 @@ export function findScholarships(p: StudentProfile): Scholarship[] {
 
   // Personalized basics first — always relevant, always real.
   const basics: Scholarship[] = [];
-  if (p.needsAid)
+  if (p.internationalAidNeed || isInternational(p))
+    basics.push({ name: "International student aid at each target school", why: `${p.country ? `Applying from ${p.country}` : "International status"} changes aid rules — check need-aware admission, merit aid, and I-20 funding proof school by school.` });
+  if (p.needsAid && !isInternational(p))
     basics.push({ name: "Federal aid via FAFSA (incl. Pell Grant)", amount: "up to ~$7,400/yr", why: "You said money's a factor — the FAFSA is the front door to grants you don't pay back. File it senior fall." });
+  if (p.isTransfer)
+    basics.push({ name: "Transfer student scholarships", why: "You are bringing college credit, so each target school's transfer office may have awards and articulation guarantees for incoming transfers." });
+  if (p.worksFullTime)
+    basics.push({ name: "Adult learner and workforce scholarships", why: "Working full time can unlock completion grants, employer tuition benefits, and flexible-degree scholarships." });
   if (p.state)
     basics.push({ name: `${p.state} state grants & promise programs`, why: `Staying in ${p.state} unlocks state-only aid you won't find nationally.` });
 

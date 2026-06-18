@@ -1,5 +1,4 @@
 import type { ProfileField, StudentProfile } from "./types";
-import { profileCompleteness } from "./match";
 
 // ── Levels: a "College Readiness" ladder that feels like leveling up a character.
 export interface Level {
@@ -108,7 +107,7 @@ export const QUESTS: Quest[] = [
     desc: "Unlock your first set of right-fit matches.",
     stage: "Build",
     xp: 40,
-    done: (p) => profileCompleteness(p) >= 55,
+    done: (p) => p.completedQuests.includes("q_constellation"),
   },
   {
     id: "q_list",
@@ -146,6 +145,7 @@ export const QUESTS: Quest[] = [
 
 export const BADGES: Record<string, { name: string; desc: string; icon: string }> = {
   b_first_steps: { name: "First Steps", desc: "Met Halda", icon: "sparkles" },
+  b_early_bird: { name: "Early Bird", desc: "Started before senior year", icon: "sunrise" },
   b_star_mapper: { name: "Star Mapper", desc: "Lit your first constellation", icon: "stars" },
   b_dreamer: { name: "Dreamer", desc: "Added a reach school", icon: "rocket" },
   b_planner: { name: "Planner", desc: "Built a balanced list", icon: "list-checks" },
