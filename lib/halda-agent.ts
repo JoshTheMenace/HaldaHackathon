@@ -144,6 +144,8 @@ function systemPrompt(): string {
 
 YOUR JOB: learn what the student actually cares about — and the INTENT behind it (career? major? serious? community? fan? just fun?) — then connect it to schools where it becomes a path. "I like soccer" can mean 5 things; if it's ambiguous, ask which.
 
+COLD START: if KNOWN SO FAR is empty or nearly empty (you don't know their name + an interest/major yet), do NOT answer a generic question cold. Warmly open with ONE engaging question first — their name and what they're into / what matters most to them in college — so you have something to work with.
+
 Naturally pick up everything that helps: high school, whether they'd be first-gen, campus setting/size, and money reality (budget / needs aid). Save it with update_profile as you go. If a student names their high school but not their city, infer the likely city + state from the school name (e.g. "Austin High School" -> Austin, TX) and save those too as a best estimate.
 
 LOCATION MATTERS: if the student says they want to stay in-state or close to home (e.g. "stay in Utah"), set stayInState=true AND save state (e.g. "UT"), then re-run search_universities so the matches actually show in-state schools first. A single named major (e.g. "biology") is enough to start searching — you don't need a separate interest.
@@ -164,7 +166,7 @@ USE TOOL RESULTS — being specific is the difference between helpful and useles
 
 NEVER INVENT NUMBERS. Only state stats a tool actually gave you (match %, net price, acceptance odds, RateMyProfessor rating). Do NOT make up admit rates, board-pass rates, salaries, or aid amounts — if you don't have the number, speak qualitatively. Banned filler with no specifics: "super respected", "fantastic choice", "great program", "world-class".
 
-DON'T REPEAT YOURSELF: never re-ask something already in KNOWN SO FAR or the history. If you know their AP score, use it. Ask about AP/dual-enrollment at most once, ever. If profile completeness is ≥ 75%, stop interrogating and guide with data.
+DON'T REPEAT YOURSELF: never re-ask something already in KNOWN SO FAR or the history. If you know their AP score, use it. Ask about AP/dual-enrollment at most once, ever. Mention the pre-med "don't skip core science with AP" caution at MOST once, and only when actually discussing pre-med / that credit decision — never in scholarship, sport, or general chat. If profile completeness is ≥ 75%, stop interrogating and guide with data.
 
 Keep replies to 2-4 sentences, plain and warm. Answer the actual question FIRST, then at most ONE fresh follow-up (only if it helps) — don't default to FAFSA/AP every turn.`;
 }
@@ -218,7 +220,7 @@ export async function runAgent(opts: {
   const completeness = profileCompleteness(working);
   const enoughToSearch =
     !!working.name && !!working.grade && !!(working.city || working.state || working.zip) &&
-    working.interestSignals.length >= 1;
+    (working.interestSignals.length >= 1 || working.intendedMajors.length >= 1);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contents: any[] = [

@@ -37,10 +37,11 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
 
   return (
     <main className="scroll">
-      <div className="sec-head">
+      <div className="sec-head" style={{ marginBottom: 4 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700 }}>Top Recommendations</h2>
         <button className="link plain" onClick={() => onAsk("Explain my top school matches")}>See All</button>
       </div>
+      <p className="tagline" style={{ margin: "0 0 14px" }}>Ranked by your interests, budget &amp; location — swipe right to save.</p>
 
       {current ? (
         <>

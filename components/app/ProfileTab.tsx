@@ -10,7 +10,7 @@ import { initials, gradeLabel, dueLabel } from "./helpers";
 const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
 const CREDIT_TYPE: Record<string, string> = { ap: "AP", dual_enrollment: "Dual enrollment", ib: "IB", honors: "Honors", clep: "CLEP" };
 
-export default function ProfileTab() {
+export default function ProfileTab({ onAvatar }: { onAvatar?: () => void }) {
   const { profile, toggleTask, editField } = useHalda();
   const [poolOpen, setPoolOpen] = useState(false);
   const sch = profile.scholarships ?? { applied: 0, won: 0, rejected: 0, pending: 0 };
@@ -20,11 +20,12 @@ export default function ProfileTab() {
   return (
     <main className="scroll" style={{ padding: 0 }}>
       <header className="phead">
-        <span className="pa">{initials(profile.name)}</span>
+        <button className="pa" onClick={onAvatar} aria-label="Profile menu">{initials(profile.name)}</button>
         <div>
           <span className="eyebrow">Student Profile</span>
           <h1>{profile.name || "Your Profile"}</h1>
         </div>
+        <button className="phead-menu" onClick={onAvatar} aria-label="Menu"><Icon name="more_vert" /></button>
       </header>
 
       <div className="wrap">

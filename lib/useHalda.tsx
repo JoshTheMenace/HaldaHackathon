@@ -87,6 +87,23 @@ function freshMaya(): StudentProfile {
   };
 }
 
+// A blank profile — used by "Start fresh" so the user can onboard from zero.
+function freshEmpty(): StudentProfile {
+  return {
+    id: "stu_maya",
+    interests: [], interestSignals: [], intendedMajors: [], tasks: [], creditWallet: [],
+    savedSchoolIds: [], xp: 0, streak: 1, completedQuests: [], badges: [], channelsLinked: ["web"],
+    consent: { fields: ["name", "grade", "location", "interests", "major", "goal"], shareWithPartners: true },
+    createdAt: Date.now(), updatedAt: Date.now(),
+  };
+}
+
+// Fill in any required arrays a persisted profile might be missing, WITHOUT
+// re-injecting demo defaults (so a blank saved profile stays blank).
+function hydrate(p: StudentProfile): StudentProfile {
+  return { ...freshEmpty(), ...p };
+}
+
 export type RewardKind = "xp" | "level" | "badge" | "quest" | "match";
 export interface RewardEvent {
   id: number;
@@ -106,6 +123,7 @@ interface HaldaCtx {
   clearEvent: (id: number) => void;
   send: (text: string, channel?: Channel) => void;
   reset: () => void;
+  startFresh: () => void;
   linkSMS: () => void;
   completeQuest: (id: string, xp: number) => void;
   completeness: number;
@@ -463,9 +481,8 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     [applyTurn, geminiTurn, runAction, handleEssaySeed]
   );
 
-  const reset = useCallback(() => {
-    const m = freshMaya();
-    setProfile(m);
+  const resetTo = useCallback((profile: StudentProfile) => {
+    setProfile(profile);
     setMessages([
       { id: "m0", role: "halda", channel: "web", text: haldaOpener(), ts: Date.now(),
         chips: ["Hey Halda 👋", "Let's go"] },
@@ -477,10 +494,14 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     setEmailOpen(false);
     setPendingAction(null);
     setHasSaved(false);
-    try { localStorage.removeItem(LS_KEY); } catch {}
     turnRef.current = 0;
-    fetch("/api/demo/seed", { method: "POST" }).catch(() => {});
+    try { localStorage.setItem(LS_KEY, JSON.stringify(profile)); } catch {}
   }, []);
+
+  // Reload the seeded demo persona (Maya).
+  const reset = useCallback(() => { resetTo(freshMaya()); }, [resetTo]);
+  // Wipe to a blank profile to onboard from scratch.
+  const startFresh = useCallback(() => { resetTo(freshEmpty()); }, [resetTo]);
 
   const linkSMS = useCallback(() => {
     const base = profileRef.current;
@@ -793,9 +814,11 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
+        // Use the saved profile AS-IS (hydrated) so a "Start fresh" blank slate
+        // persists across refreshes instead of re-seeding the demo persona.
         const saved = JSON.parse(raw) as StudentProfile;
-        if (saved && (saved.name || saved.interestSignals?.length)) {
-          setProfile({ ...freshMaya(), ...saved, interestSignals: saved.interestSignals ?? [] });
+        if (saved && saved.id) {
+          setProfile(hydrate(saved));
           setHasSaved(true);
           if (profileCompleteness(saved) >= 55) setMatchesRevealed(true);
         }
@@ -820,6 +843,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       clearEvent,
       send,
       reset,
+      startFresh,
       linkSMS,
       completeQuest,
       completeness: profileCompleteness(profile),
@@ -847,7 +871,7 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
       hasSaved,
     }),
     [profile, messages, smsMessages, typing, smsTyping, matchesRevealed, events,
-      clearEvent, send, reset, linkSMS, completeQuest,
+      clearEvent, send, reset, startFresh, linkSMS, completeQuest,
       smsOpen, openSMS, closeSMS, emailOpen, openEmail, closeEmail,
       applyUpdates, editField, toggleSavedSchool, upsertInterestSignal, removeInterestSignal,
       pushHaldaMessage, ingestVoiceUser, addTasks, toggleTask, removeTask,
