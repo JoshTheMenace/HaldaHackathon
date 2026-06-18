@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useHalda } from "@/lib/useHalda";
 import { schoolById } from "@/lib/schools";
 import { Icon } from "./Icon";
+import { SchoolLogo } from "./SchoolImage";
 import { initials, gradeLabel, dueLabel } from "./helpers";
 
 const STATUS_LABEL: Record<string, string> = { review: "Under Review", draft: "Draft", action: "Action Needed", saved: "Saved" };
@@ -58,7 +59,7 @@ export default function ProfileTab() {
               const s = schoolById(ts.id);
               return (
                 <div key={ts.id} className="trow">
-                  <span className="tinst"><Icon name="account_balance" /></span>
+                  <span className="tinst">{s ? <SchoolLogo id={ts.id} /> : <Icon name="account_balance" />}</span>
                   <span className="nm">{ts.label || s?.name || ts.id}</span>
                   <span className={`status ${ts.status}`}>{STATUS_LABEL[ts.status]}</span>
                 </div>

@@ -6,6 +6,7 @@ import { rankInterestMatches, schoolById } from "@/lib/interest-match";
 import { ratingStrengths } from "@/lib/ratings";
 import type { InterestAlignedSchoolScore } from "@/lib/interest-match";
 import { Icon } from "./Icon";
+import { CampusPhoto, SchoolLogo } from "./SchoolImage";
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const roiLabel = (fit: number) => (fit >= 85 ? "Strong Alignment" : fit >= 70 ? "Good Value" : "Worth a Look");
@@ -69,13 +70,13 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
         <p style={{ fontSize: 13, color: "var(--h-ink-var)" }}>Swipe right on a school to save it here.</p>
       ) : (
         <div className="gridsaved">
-          {saved.map((id, i) => {
+          {saved.map((id) => {
             const s = schoolById(id);
             const m = deck.find((x) => x.schoolId === id);
             if (!s) return null;
             return (
               <button key={id} className="saved" onClick={() => m && setDetail(m)}>
-                <div className={`sc ${i % 2 === 0 ? "navy" : "soft"}`}><Icon name="school" /></div>
+                <div className="sc"><SchoolLogo id={id} /></div>
                 <h5>{s.short}</h5>
                 <span>{m ? `${m.overallFit}% Match` : "Saved"}</span>
               </button>
@@ -92,20 +93,20 @@ export default function ExploreTab({ onAsk }: { onAsk: (text?: string) => void }
 function SwipeCard({ m, gone, tags, onView }: { m: InterestAlignedSchoolScore; gone: string; tags: string[]; onView: () => void }) {
   const s = schoolById(m.schoolId)!;
   return (
-    <article className={`swcard${gone ? " gone-" + gone : ""}`}>
-      <div className="card-glow" />
-      <div className="crest-wrap">
-        <div className="crest" style={{ background: `linear-gradient(150deg, ${s.accent}, ${s.accent}cc)` }}>
-          <div className="disc">{s.short.slice(0, 3)}</div>
+    <article className={`swcard photo${gone ? " gone-" + gone : ""}`}>
+      <div className="sw-photo">
+        <CampusPhoto id={s.id} />
+        <span className="logo-badge"><SchoolLogo id={s.id} /></span>
+      </div>
+      <div className="sw-body">
+        <div className="idrow">
+          <h3>{s.short}</h3>
+          <span className="matchpill">{m.overallFit}% Match</span>
         </div>
+        <p className="roi">ROI: <b>{roiLabel(m.overallFit)}</b></p>
+        <div className="tags">{tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
+        <button className="cta" onClick={onView}>View Details</button>
       </div>
-      <div className="idrow">
-        <h3>{s.short}</h3>
-        <span className="matchpill">{m.overallFit}% Match</span>
-      </div>
-      <p className="roi">ROI: <b>{roiLabel(m.overallFit)}</b></p>
-      <div className="tags">{tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
-      <button className="cta" onClick={onView}>View Details</button>
     </article>
   );
 }
@@ -132,6 +133,10 @@ function MatchDetail({ m, onClose, onAsk }: { m: InterestAlignedSchoolScore | nu
         </div>
         {m && s && (
           <>
+            <div className="detail-photo">
+              <CampusPhoto id={s.id} />
+              <div className="pin"><span>{s.name}</span></div>
+            </div>
             <div className="detail-card">
               <div className="detail-top">
                 <div className="ring">
