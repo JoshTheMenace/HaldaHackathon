@@ -1,6 +1,6 @@
 // Small presentation helpers shared across the mobile app screens.
 
-export type Tab = "home" | "explore" | "profile" | "connect";
+export type Tab = "home" | "explore" | "profile" | "connect" | "cohort";
 
 export function initials(name?: string): string {
   if (!name) return "·";

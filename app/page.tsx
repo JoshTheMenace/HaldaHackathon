@@ -11,6 +11,7 @@ import HomeTab from "@/components/app/HomeTab";
 import ExploreTab from "@/components/app/ExploreTab";
 import ProfileTab from "@/components/app/ProfileTab";
 import ConnectTab from "@/components/app/ConnectTab";
+import CohortTab from "@/components/app/CohortTab";
 import { Icon } from "@/components/app/Icon";
 import { matchSignature, type Tab } from "@/components/app/helpers";
 
@@ -49,12 +50,13 @@ export default function App() {
         {tab === "explore" && <ExploreTab onAsk={onAsk} />}
         {tab === "profile" && <ProfileTab onAvatar={() => setMenuOpen(true)} />}
         {tab === "connect" && <ConnectTab onAsk={onAsk} />}
+        {tab === "cohort" && <CohortTab />}
 
         <div className={`toast${toast ? " on" : ""}`}><Icon name="auto_awesome" /> Your matches updated</div>
 
         <Dock active={tab} onTab={setTab} onFab={() => setGuideOpen(true)} />
         <AIGuideSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
-        <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} />
+        <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} onViewProfile={() => setTab("profile")} onConnect={() => setTab("connect")} />
       </div>
     </div>
   );

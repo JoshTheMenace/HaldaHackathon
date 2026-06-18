@@ -7,7 +7,7 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: "home", icon: "home", label: "Home" },
   { id: "explore", icon: "explore", label: "Explore" },
   { id: "profile", icon: "person", label: "Profile" },
-  { id: "connect", icon: "sync_alt", label: "Connect" },
+  { id: "cohort", icon: "groups", label: "Cohort" },
 ];
 
 export default function Dock({ active, onTab, onFab }: { active: Tab; onTab: (t: Tab) => void; onFab: () => void }) {
