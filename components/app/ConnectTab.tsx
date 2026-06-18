@@ -12,6 +12,9 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
   const [phone, setPhone] = useState("");
   const [smsState, setSmsState] = useState<"idle" | "linking" | "linked" | "error">("idle");
   const [smsMsg, setSmsMsg] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailState, setEmailState] = useState<"idle" | "linking" | "linked" | "error">("idle");
+  const [emailMsg, setEmailMsg] = useState("");
 
   const linkPhone = async () => {
     setSmsState("linking"); setSmsMsg("");
@@ -22,11 +25,28 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
       });
       const d = await r.json();
       if (!r.ok) { setSmsState("error"); setSmsMsg(d.error || "Couldn't link that number."); return; }
-      editField("phone", phone.trim()); // keep it on the profile too
+      editField("phone", phone.trim());
       setSmsState("linked");
       setSmsMsg(d.sent ? "Texted you! Reply from your phone and we'll keep going." : "Linked — but the SMS couldn't send (check server setup).");
     } catch {
       setSmsState("error"); setSmsMsg("Network error — try again.");
+    }
+  };
+
+  const linkEmail = async () => {
+    setEmailState("linking"); setEmailMsg("");
+    try {
+      const r = await fetch("/api/email/link", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, profile }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setEmailState("error"); setEmailMsg(d.error || "Couldn't link that address."); return; }
+      editField("email", email.trim().toLowerCase());
+      setEmailState("linked");
+      setEmailMsg(d.sent ? "Check your inbox! Reply to that email and we'll keep going." : "Linked — but the email couldn't send (check server setup).");
+    } catch {
+      setEmailState("error"); setEmailMsg("Network error — try again.");
     }
   };
 
@@ -54,6 +74,24 @@ export default function ConnectTab({ onAsk }: { onAsk: (text?: string) => void }
           </div>
           {smsMsg && <p className={`phone-status ${smsState}`}>{smsMsg}</p>}
         </article>
+
+        <article className="hero teal">
+          <span className="gico"><Icon name="mail" /></span>
+          <h4>Continue over email</h4>
+          <p>Add your email and Halda will send you a message — pick up this exact conversation in your inbox, anytime.</p>
+          <div className="phone-link">
+            <input
+              type="email" inputMode="email" value={email} placeholder="you@example.com"
+              onChange={(e) => setEmail(e.target.value)} aria-label="Your email address"
+              disabled={emailState === "linking"}
+            />
+            <button className="pill" onClick={linkEmail} disabled={emailState === "linking" || !email.includes("@")}>
+              {emailState === "linking" ? "Sending…" : emailState === "linked" ? "Linked ✓" : "Email me"} <Icon name="send" />
+            </button>
+          </div>
+          {emailMsg && <p className={`phone-status ${emailState}`}>{emailMsg}</p>}
+        </article>
+
         <article className="hero emerald">
           <span className="gico"><Icon name="ios_share" /></span>
           <h4>Share your plan</h4>

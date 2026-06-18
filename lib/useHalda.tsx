@@ -831,9 +831,12 @@ export function HaldaProvider({ children }: { children: React.ReactNode }) {
         // persists across refreshes instead of re-seeding the demo persona.
         const saved = JSON.parse(raw) as StudentProfile;
         if (saved && saved.id) {
-          setProfile(hydrate(saved));
+          const h = hydrate(saved);
+          setProfile(h);
           setHasSaved(true);
           if (profileCompleteness(saved) >= 55) setMatchesRevealed(true);
+          // Re-push to server store so email/SMS lookups work after a restart.
+          sync(h);
         }
       }
     } catch {}
