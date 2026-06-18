@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHalda } from "@/lib/useHalda";
+import { rankInterestMatches } from "@/lib/interest-match";
 import AppBar from "@/components/app/AppBar";
 import Dock from "@/components/app/Dock";
 import AIGuideSheet from "@/components/app/AIGuideSheet";
@@ -10,19 +11,34 @@ import HomeTab from "@/components/app/HomeTab";
 import ExploreTab from "@/components/app/ExploreTab";
 import ProfileTab from "@/components/app/ProfileTab";
 import ConnectTab from "@/components/app/ConnectTab";
-import type { Tab } from "@/components/app/helpers";
+import { Icon } from "@/components/app/Icon";
+import { matchSignature, type Tab } from "@/components/app/helpers";
 
 export default function App() {
-  const { send } = useHalda();
+  const { send, profile, matchesRevealed } = useHalda();
   const [tab, setTab] = useState<Tab>("home");
   const [guideOpen, setGuideOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [toast, setToast] = useState(false);
 
   // Open the AI guide, optionally sending a starter prompt straight to the agent.
   const onAsk = (text?: string) => {
     setGuideOpen(true);
     if (text) send(text, "web");
   };
+
+  // Fire a "matches updated" toast when new info re-ranks the list.
+  const sig = useMemo(() => (matchesRevealed ? matchSignature(rankInterestMatches(profile, 5)) : ""), [profile, matchesRevealed]);
+  const prevSig = useRef(sig);
+  useEffect(() => {
+    if (matchesRevealed && prevSig.current && sig && sig !== prevSig.current) {
+      setToast(true);
+      const t = setTimeout(() => setToast(false), 2800);
+      prevSig.current = sig;
+      return () => clearTimeout(t);
+    }
+    prevSig.current = sig;
+  }, [sig, matchesRevealed]);
 
   return (
     <div className="appwrap">
@@ -33,6 +49,8 @@ export default function App() {
         {tab === "explore" && <ExploreTab onAsk={onAsk} />}
         {tab === "profile" && <ProfileTab onAvatar={() => setMenuOpen(true)} />}
         {tab === "connect" && <ConnectTab onAsk={onAsk} />}
+
+        <div className={`toast${toast ? " on" : ""}`}><Icon name="auto_awesome" /> Your matches updated</div>
 
         <Dock active={tab} onTab={setTab} onFab={() => setGuideOpen(true)} />
         <AIGuideSheet open={guideOpen} onClose={() => setGuideOpen(false)} />

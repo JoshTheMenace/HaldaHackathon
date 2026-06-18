@@ -2,14 +2,14 @@
 
 import { useHalda } from "@/lib/useHalda";
 import { Icon } from "./Icon";
-import { monthDay } from "./helpers";
+import { monthDay, nextStep, journeyProgress } from "./helpers";
 
 export default function HomeTab({ onAsk, onGoExplore }: { onAsk: (text?: string) => void; onGoExplore: () => void }) {
-  const { profile } = useHalda();
+  const { profile, matchesRevealed } = useHalda();
   const first = profile.name?.split(/\s+/)[0] || "there";
-  const done = profile.checklistDone ?? 0;
-  const total = profile.checklistTotal ?? 20;
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const step = nextStep(profile, matchesRevealed);
+  const { done, total, pct } = journeyProgress(profile, matchesRevealed);
+  const onStep = () => (step.kind === "explore" ? onGoExplore() : onAsk(step.arg));
 
   const upcoming = profile.tasks
     .filter((t) => t.status === "open" && t.due)
@@ -23,6 +23,17 @@ export default function HomeTab({ onAsk, onGoExplore }: { onAsk: (text?: string)
       <h1 className="greeting">Good morning, {first}!</h1>
       <p className="tagline">I learn what you actually care about and find schools where it becomes a career — backed by real student reviews.</p>
 
+      {/* the Next Step engine — one contextual action, always */}
+      <button className="nextstep" onClick={onStep}>
+        <span className="ns-ico"><Icon name={step.icon} /></span>
+        <div className="ns-b">
+          <span className="ns-eyebrow">Next step</span>
+          <h3>{step.title}</h3>
+          <p>{step.sub}</p>
+        </div>
+        <span className="ns-cta"><Icon name="arrow_forward" /></span>
+      </button>
+
       <div className="sec-head baseline">
         <h2>My Schedule</h2>
         <button className="link plain" onClick={onGoExplore}>View Calendar</button>
@@ -33,8 +44,8 @@ export default function HomeTab({ onAsk, onGoExplore }: { onAsk: (text?: string)
           <div className="id">
             <span className="ico"><Icon name="checklist" /></span>
             <div>
-              <h4>Senior Checklist</h4>
-              <span>{done} of {total} steps complete</span>
+              <h4>Your college journey</h4>
+              <span>{done} of {total} steps done</span>
             </div>
           </div>
           <div className="pct"><b>{pct}%</b><small>Done</small></div>

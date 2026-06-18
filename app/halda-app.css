@@ -46,6 +46,24 @@
 .phone .greeting { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -.02em; margin: 18px 0 4px; }
 .phone .tagline { font-size: 14px; line-height: 1.45; color: var(--h-ink-var); margin: 2px 0 4px; max-width: 38ch; }
 
+/* Next Step engine card */
+.phone .nextstep { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; border: none; cursor: pointer; font-family: inherit; margin: 14px 0 4px; padding: 18px; border-radius: 22px; background: linear-gradient(140deg,#0a6b5e,#064a40); color: #eafff7; box-shadow: 0 16px 36px -14px rgba(10,74,62,.6); position: relative; overflow: hidden; transition: transform .15s; }
+.phone .nextstep:active { transform: scale(.99); }
+.phone .nextstep::after { content: ""; position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: #16b89e; filter: blur(40px); opacity: .4; }
+.phone .ns-ico { width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0; display: grid; place-items: center; background: rgba(255,255,255,.16); position: relative; z-index: 1; }
+.phone .ns-ico .material-symbols-outlined { font-size: 26px; font-variation-settings: 'FILL' 1; }
+.phone .ns-b { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.phone .ns-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,255,247,.7); }
+.phone .ns-b h3 { font-size: 17px; font-weight: 800; letter-spacing: -.01em; margin-top: 3px; line-height: 1.15; }
+.phone .ns-b p { font-size: 13px; color: rgba(234,255,247,.85); margin-top: 4px; line-height: 1.4; }
+.phone .ns-cta { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; background: rgba(255,255,255,.18); position: relative; z-index: 1; }
+.phone .ns-cta .material-symbols-outlined { font-size: 20px; }
+
+/* "matches updated" toast */
+.phone .toast { position: absolute; top: 14px; left: 50%; transform: translateX(-50%) translateY(-14px); z-index: 70; display: flex; align-items: center; gap: 8px; background: var(--h-primary-deep); color: #eafff7; padding: 10px 16px; border-radius: 9999px; font-size: 13px; font-weight: 700; box-shadow: 0 12px 30px -8px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; }
+.phone .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+.phone .toast .material-symbols-outlined { font-size: 18px; font-variation-settings: 'FILL' 1; color: var(--h-secondary-c); }
+
 /* profile header */
 .phone .phead { position: relative; display: flex; align-items: center; gap: 14px; padding: 22px 20px 18px;
   background: linear-gradient(120deg,#e9f3f0 0%,#dff0ec 45%,#cfeae6 100%); }
